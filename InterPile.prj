@@ -1,0 +1,117 @@
+<deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
+  <configuration build-checksum="2985239277" file="C:\interpile\interpile\InterPile.prj" location="C:\interpile\interpile" name="InterPile" preferred-package-location="C:\interpile\interpile\mcc\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+    <param.appname>InterPile</param.appname>
+    <param.icon>${PROJECT_ROOT}\InterPile_resources\icon.ico</param.icon>
+    <param.icons>
+      <file>${PROJECT_ROOT}\InterPile_resources\icon_48.png</file>
+      <file>${PROJECT_ROOT}\InterPile_resources\icon_32.png</file>
+      <file>${PROJECT_ROOT}\InterPile_resources\icon_24.png</file>
+      <file>${PROJECT_ROOT}\InterPile_resources\icon_16.png</file>
+    </param.icons>
+    <param.version>1.0</param.version>
+    <param.authnamewatermark>Moritz Lang</param.authnamewatermark>
+    <param.email />
+    <param.company>IST Austria, Klosterneuburg, Austria</param.company>
+    <param.summary>Interactive user interface for the Abelian sandpile model.</param.summary>
+    <param.description>For more information on Interpile, visit the project's github repository https://github.com/langmo/interpile</param.description>
+    <param.screenshot>${PROJECT_ROOT}\resources\splash.png</param.screenshot>
+    <param.guid />
+    <param.net.saved.interface />
+    <param.installpath.string>\InterPile\</param.installpath.string>
+    <param.installpath.combo>option.installpath.programfiles</param.installpath.combo>
+    <param.logo>${PROJECT_ROOT}\resources\logo.png</param.logo>
+    <param.install.notes>Interactive user interface for the Abelian sandpile model.</param.install.notes>
+    <param.intermediate>${PROJECT_ROOT}\mcc\for_testing</param.intermediate>
+    <param.files.only>${PROJECT_ROOT}\mcc\for_redistribution_files_only</param.files.only>
+    <param.output>${PROJECT_ROOT}\mcc\for_redistribution</param.output>
+    <param.enable.clean.build>false</param.enable.clean.build>
+    <param.user.defined.mcr.options />
+    <param.embed.ctf>true</param.embed.ctf>
+    <param.target.type>subtarget.standalone</param.target.type>
+    <param.support.packages />
+    <param.required.mcr.products>
+      <item>35000</item>
+      <item>35010</item>
+      <item>35001</item>
+    </param.required.mcr.products>
+    <param.web.mcr>true</param.web.mcr>
+    <param.package.mcr>false</param.package.mcr>
+    <param.no.mcr>false</param.no.mcr>
+    <param.web.mcr.name>InterpileInstaller</param.web.mcr.name>
+    <param.package.mcr.name>MyAppInstaller_mcr</param.package.mcr.name>
+    <param.no.mcr.name>MyAppInstaller_app</param.no.mcr.name>
+    <param.windows.command.prompt>true</param.windows.command.prompt>
+    <param.create.log>false</param.create.log>
+    <param.log.file />
+    <unset>
+      <param.version />
+      <param.authnamewatermark />
+      <param.company />
+      <param.guid />
+      <param.net.saved.interface />
+      <param.installpath.combo />
+      <param.enable.clean.build />
+      <param.user.defined.mcr.options />
+      <param.embed.ctf />
+      <param.target.type />
+      <param.support.packages />
+      <param.web.mcr />
+      <param.package.mcr />
+      <param.no.mcr />
+      <param.package.mcr.name />
+      <param.no.mcr.name />
+      <param.windows.command.prompt />
+      <param.create.log />
+      <param.log.file />
+    </unset>
+    <fileset.main>
+      <file>${PROJECT_ROOT}\src\interPile.m</file>
+    </fileset.main>
+    <fileset.resources>
+      <file>${PROJECT_ROOT}\src\harmonicC.m</file>
+      <file>${PROJECT_ROOT}\src\harmonicCross.m</file>
+      <file>${PROJECT_ROOT}\src\harmonicDoubleT.m</file>
+      <file>${PROJECT_ROOT}\src\harmonicL.m</file>
+      <file>${PROJECT_ROOT}\src\harmonicO.m</file>
+      <file>${PROJECT_ROOT}\src\harmonicT.m</file>
+      <file>${PROJECT_ROOT}\src\icon.tif</file>
+      <file>${PROJECT_ROOT}\src\interPile.m</file>
+      <file>${PROJECT_ROOT}\src\inversePile.m</file>
+      <file>${PROJECT_ROOT}\src\isRecurrentPile.m</file>
+      <file>${PROJECT_ROOT}\src\printPile.m</file>
+      <file>${PROJECT_ROOT}\src\randomSandPile.m</file>
+      <file>${PROJECT_ROOT}\src\randomSquare45.m</file>
+      <file>${PROJECT_ROOT}\src\relaxPile.m</file>
+      <file>${PROJECT_ROOT}\src\setWindowIcon.m</file>
+      <file>${PROJECT_ROOT}\src\square45.m</file>
+      <file>C:\OneDrive\sand_piles\nullPile.m</file>
+      <file>C:\OneDrive\sand_piles\toDistribution.m</file>
+    </fileset.resources>
+    <fileset.package />
+    <build-deliverables>
+      <file location="${PROJECT_ROOT}\mcc\for_testing" name="readme.txt" optional="true">C:\interpile\interpile\mcc\for_testing\readme.txt</file>
+      <file location="${PROJECT_ROOT}\mcc\for_testing" name="splash.png" optional="false">C:\interpile\interpile\mcc\for_testing\splash.png</file>
+      <file location="${PROJECT_ROOT}\mcc\for_testing" name="InterPile.exe" optional="false">C:\interpile\interpile\mcc\for_testing\InterPile.exe</file>
+    </build-deliverables>
+    <workflow />
+    <matlab>
+      <root>C:\Program Files\MATLAB\R2015a</root>
+      <toolboxes />
+    </matlab>
+    <platform>
+      <unix>false</unix>
+      <mac>false</mac>
+      <windows>true</windows>
+      <win2k>false</win2k>
+      <winxp>false</winxp>
+      <vista>false</vista>
+      <linux>false</linux>
+      <solaris>false</solaris>
+      <osver>6.1</osver>
+      <os32>false</os32>
+      <os64>true</os64>
+      <arch>win64</arch>
+      <matlab>true</matlab>
+    </platform>
+  </configuration>
+</deployment-project>
