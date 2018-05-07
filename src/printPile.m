@@ -8,17 +8,17 @@ end
 if nargin >= 2 && ~isempty(fgh) && ishandle(fgh)
     set(get(gca(), 'Children'), 'CData', S+1);
 else
-    colors = [...
-        1, 1, 1;
-        0.3, 1, 0.3;...
-        0, 0, 1;...
-        0,0,0;...
-        autumn(6)];
+    colors = pileColors();
     
     if rawPlot
-        fgh = figure('Units', 'pixels', 'Position', [3,30, size(S, 2), size(S, 1)], 'Color', ones(1,3));
-        fgh.PaperSize = [size(S, 2), size(S, 1)];
-        fgh.PaperPosition = [1,1,size(S, 2), size(S, 1)];
+        fgh = figure('Units', 'pixels', 'Position', [3,100, size(S, 2), size(S, 1)], 'Color', ones(1,3));
+        try
+            setWindowIcon();
+        catch
+            % do nothing, default icon is fine, too.
+        end
+        %fgh.PaperSize = [size(S, 2), size(S, 1)];
+        %fgh.PaperPosition = [1,1,size(S, 2), size(S, 1)];
         image(S+1);
         colormap(colors)
         xlim([0.5, size(S, 2)+0.5]);
@@ -34,6 +34,11 @@ else
         height = width/size(S, 2)*size(S, 1);
         
         fgh = figure('Units', 'centimeters', 'Position', [3,3, width+1, height+2], 'Color', ones(1,3));
+        try
+            setWindowIcon();
+        catch
+            % do nothing, default icon is fine, too.
+        end
         image(S+1);
         colormap(colors)
         

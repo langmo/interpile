@@ -29,12 +29,7 @@ harmonics = {...
     {'T', @harmonicT},...
     {'O', @harmonicO}...
     };
-colors = [...
-    1, 1, 1;
-    0.3, 1, 0.3;...
-    0, 0, 1;...
-    0,0,0;...
-    autumn(6)];
+colors = pileColors();
 
 %% Create figure
 figH = figure('Color', ones(1,3), 'NumberTitle', 'off', 'Units', 'pixels', 'MenuBar', 'none');
@@ -56,15 +51,23 @@ uimenu(fileMenu, 'Label',...
 uimenu(fileMenu, 'Label',...
         'Clone Window', ...
         'Callback', @(figH, ~)interPile(getData(figH)));
+uimenu(fileMenu, 'Label',...
+    'Display Pile as Image', ...
+    'Callback', @(figH, ~)printPile(getPile(figH)), 'Separator','on');
+uimenu(fileMenu, 'Label',...
+    'Save Pile as Image', ...
+    'Callback', @(figH, ~)savePileAsImage(figH));
     
 % Edit
 editMenu = uimenu(figH, 'Label', 'Edit');
-uimenu(editMenu, 'Label',...
-        'Export Pile to Workspace', ...
-        'Callback', @(figH, ~)assignin('base', 'S', getPile(figH)));
-uimenu(editMenu, 'Label',...
-        'Add Pile from Workspace', ...
-        'Callback', @(figH, ~)plotPile(getPile(figH)+evalin('base', 'S'), figH));
+if ~isdeployed()
+    uimenu(editMenu, 'Label',...
+            'Export Pile to Workspace', ...
+            'Callback', @(figH, ~)assignin('base', 'S', getPile(figH)));
+    uimenu(editMenu, 'Label',...
+            'Add Pile from Workspace', ...
+            'Callback', @(figH, ~)plotPile(getPile(figH)+evalin('base', 'S'), figH));
+end
 uimenu(editMenu, 'Label',...
         'Undo', ...
         'Callback', @undo, 'Separator','on');
@@ -255,6 +258,17 @@ end
 
 % Drop deterministic
 dropDeterministicMenu = uimenu(figH, 'Label', 'Drop Deterministic'); 
+subMenu = uimenu(dropDeterministicMenu, 'Label', 'Cross');
+uimenu(subMenu, 'Label',...
+        'User defined', ...
+        'Callback', @(figH, ~)dropCross(figH, round(askForInput(figH, 'Number of particles in cross fields:'))));
+sizes = 1:1:10;
+for mySize = sizes
+    name = sprintf('%g Particles/field', mySize);
+    uimenu(subMenu, 'Label',...
+        name, ...
+        'Callback', @(figH, ~)dropCross(figH, mySize));
+end
 subMenu = uimenu(dropDeterministicMenu, 'Label', 'Circle');
 uimenu(subMenu, 'Label',...
         'User defined', ...
@@ -362,6 +376,14 @@ onResize(figH);
 set(figH, 'ResizeFcn', @onResize); 
 set(figH, 'WindowButtonMotionFcn', {@mouseMove});
 
+end
+function savePileAsImage(figH)
+    [filename,ext,user_canceled] = imputfile();
+    if user_canceled
+        return;
+    end
+
+    imwrite(getPile(figH)+1, pileColors(), filename, ext);
 end
 function keyDown(figH, evt)
     if strcmp(evt.Character, sprintf('\b'))
@@ -666,10 +688,27 @@ function dropRandomHarmonic(figH, k, harmonic)
     end
     plotPileRelax(S, figH);
 end
-
+function dropCross(figH, k)
+    S = getPile(figH);
+    width = size(S, 2);
+    height = size(S, 1);
+    if mod(height, 2) == 1
+        S(ceil(height/2), 1:width) = S(ceil(height/2), 1:width) + 2*k;
+    else
+        S(height/2, 1:width) = S(height/2, 1:width) + 1*k;
+        S(height/2+1, 1:width) = S(height/2+1, 1:width) + 1*k;
+    end
+    if mod(width, 2) == 1
+        S(1:height, ceil(width/2)) = S(1:height, ceil(width/2)) + 2*k;
+    else
+        S(1: height, width/2) = S(1: height, width/2) + 1*k;
+        S(1: height, width/2+1) = S(1: height, width/2+1) + 1*k;
+    end
+    plotPileRelax(S, figH);
+end
 function dropCircle(figH, k)
     S = getPile(figH);
-    width = size(S, 1);
+    width = size(S, 2);
     S = S + k*double(repmat(abs((1:width)-width/2-0.5), width, 1).^2+repmat(abs((1:width)'-width/2-0.5), 1, width).^2<=(width/2)^2);
     plotPileRelax(S, figH);
 end
