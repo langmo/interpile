@@ -22,7 +22,7 @@ function varargout = detMovieDialog(varargin)
 
 % Edit the above text to modify the response to help detMovieDialog
 
-% Last Modified by GUIDE v2.5 24-May-2018 15:05:50
+% Last Modified by GUIDE v2.5 24-May-2018 19:04:19
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -68,6 +68,7 @@ fieldStart_Callback(figH, eventdata, handles);
 fieldMode_Callback(figH, eventdata, handles);
 autoSetPath(figH);
 
+
 function autoSetPath(figH)
 figH = ancestor(figH,'figure');
 fieldPath = findall(figH, 'Tag', 'fieldPath');
@@ -81,11 +82,30 @@ else
     end
 end
 
+fieldMode = findall(figH, 'Tag', 'fieldMode');
+if fieldMode.Value == 2
+    polynomial = 'custom';
+elseif fieldMode.Value == 3
+    fieldDropZone = findall(figH, 'Tag', 'fieldDropZone');
+    polynomial = fieldDropZone.UserData{fieldDropZone.Value}.name;
+    polynomial(polynomial==' ')=[];
+    polynomial = lower(polynomial);
+else
+    fieldHarmonic = findall(figH, 'Tag', 'fieldHarmonic');
+    polynomial = fieldHarmonic.UserData{fieldHarmonic.Value}{1};
+    polynomial(polynomial==' ')=[];
+    polynomial = lower(polynomial);
+end
+
 fieldStart = findall(figH, 'Tag', 'fieldStart');
 start = fieldStart.String{fieldStart.Value};
 start(start==' ')=[];
 start = lower(start);
-if fieldStart.Value == 2
+if fieldMode.Value == 3
+    X = fieldDropZone.UserData{fieldDropZone.Value}.dropZone();
+    width = size(X, 2);
+    height = size(X, 1);
+elseif fieldStart.Value == 2
     width = size(figH.UserData.S, 2);
     height = size(figH.UserData.S, 1);
 else
@@ -94,16 +114,6 @@ else
     
     width = str2double(fieldWidth.String);
     height = str2double(fieldHeight.String);
-end
-
-fieldMode = findall(figH, 'Tag', 'fieldMode');
-if fieldMode.Value == 2
-    polynomial = 'custom';
-else
-    fieldHarmonic = findall(figH, 'Tag', 'fieldHarmonic');
-    polynomial = fieldHarmonic.UserData{fieldHarmonic.Value}{1};
-    polynomial(polynomial==' ')=[];
-    polynomial = lower(polynomial);
 end
 
 fileName = sprintf('%s_fct_%s_%gx%g', start, polynomial, height, width);
@@ -247,6 +257,9 @@ if fieldMode.Value == 2
     fieldPolynomial = findall(figH, 'Tag', 'fieldPolynomial');
     polynomialString = fieldPolynomial.String;
     polynomial = @(y,x)eval(polynomialString);
+elseif fieldMode.Value == 3
+    fieldDropZone = findall(figH, 'Tag', 'fieldDropZone');
+    polynomial = fieldDropZone.UserData{fieldDropZone.Value}.dropZone();
 else
     fieldHarmonic = findall(figH, 'Tag', 'fieldHarmonic');
     polynomial = fieldHarmonic.UserData{fieldHarmonic.Value}{2};
@@ -276,16 +289,25 @@ end
 
 fieldStart = findall(figH, 'Tag', 'fieldStart');
 if fieldStart.Value == 2
-    S = figH.UserData.S;
-else
-    fieldWidth = findall(figH, 'Tag', 'fieldWidth');
-    fieldHeight = findall(figH, 'Tag', 'fieldHeight');
-    
-    width = str2double(fieldWidth.String);
-    height = str2double(fieldHeight.String);
-    if isnan(width) || width < 1 || mod(width, 1) ~= 0 || isnan(height) || height < 1 || mod(height, 1) ~= 0
-        errordlg('Sandpile width and height must each be integers greater than zero.', 'Invalid Input');
+    if ~isa(polynomial, 'function_handle')
+        errordlg('Mode "Drop Zone" cannot be combined with current sandpile as start pile.', 'Invalid combination');
         return;
+    end
+    S = figH.UserData.S;    
+else
+    if isa(polynomial, 'function_handle')
+        fieldWidth = findall(figH, 'Tag', 'fieldWidth');
+        fieldHeight = findall(figH, 'Tag', 'fieldHeight');
+
+        width = str2double(fieldWidth.String);
+        height = str2double(fieldHeight.String);
+        if isnan(width) || width < 1 || mod(width, 1) ~= 0 || isnan(height) || height < 1 || mod(height, 1) ~= 0
+            errordlg('Sandpile width and height must each be integers greater than zero.', 'Invalid Input');
+            return;
+        end
+    else
+        width = size(polynomial, 2);
+        height = size(polynomial, 1);
     end
     
     if fieldStart.Value == 1
@@ -337,22 +359,32 @@ fieldMode = findall(figH, 'Tag', 'fieldMode');
 if fieldMode.Value == 2
     modeCustom = 'on';
     modeHarmonic = 'off';
+    modeDropZone = 'off';
+elseif fieldMode.Value == 3
+    modeCustom = 'off';
+    modeHarmonic = 'off';
+    modeDropZone = 'on';
 else
     modeCustom = 'off';
     modeHarmonic = 'on';
+    modeDropZone = 'off';
 end
 
 fieldHarmonic = findall(figH, 'Tag', 'fieldHarmonic');
 fieldPolynomial = findall(figH, 'Tag', 'fieldPolynomial');
+fieldDropZone = findall(figH, 'Tag', 'fieldDropZone');
 textHarmonic = findall(figH, 'Tag', 'textHarmonic');
 textPolynomial = findall(figH, 'Tag', 'textPolynomial');
+textDropZone = findall(figH, 'Tag', 'textDropZone');
 
 fieldHarmonic.Visible = modeHarmonic;
 fieldPolynomial.Visible = modeCustom;
+fieldDropZone.Visible = modeDropZone;
 textHarmonic.Visible = modeHarmonic;
 textPolynomial.Visible = modeCustom;
+textDropZone.Visible = modeDropZone;
 
-autoSetPath(hObject);
+fieldStart_Callback(hObject, eventdata, handles)
 
 % --- Executes during object creation, after setting all properties.
 function fieldMode_CreateFcn(hObject, eventdata, handles)
@@ -402,7 +434,8 @@ function fieldStart_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from fieldStart
 figH = ancestor(hObject,'figure');
 fieldStart = findall(figH, 'Tag', 'fieldStart');
-if fieldStart.Value == 2
+fieldMode = findall(figH, 'Tag', 'fieldMode');
+if fieldStart.Value == 2 || fieldMode.Value == 3
     showSize = 'off';
 else
     showSize = 'on';
@@ -471,3 +504,28 @@ function fieldWidth_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on selection change in fieldDropZone.
+function fieldDropZone_Callback(hObject, eventdata, handles)
+% hObject    handle to fieldDropZone (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+autoSetPath(hObject);
+
+
+% --- Executes during object creation, after setting all properties.
+function fieldDropZone_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to fieldDropZone (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+zones = dropZones();
+hObject.String = cellfun(@(x)x.name, zones, 'UniformOutput', false);
+hObject.UserData = zones;

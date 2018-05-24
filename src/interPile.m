@@ -50,6 +50,13 @@ uimenu(fileMenu, 'Label',...
 uimenu(fileMenu, 'Label',...
     'Save Pile as Image', ...
     'Callback', @(figH, ~)savePileAsImage(figH));
+uimenu(fileMenu, 'Label',...
+    'Save Pile as Mat', ...
+    'Callback', @(figH, ~)savePileAsMat(figH));
+uimenu(fileMenu, 'Label',...
+    'Save Pile as Dropzone', ...
+    'Callback', @(figH, ~)savePileAsDropZone(figH));
+
 
 uimenu(fileMenu, 'Label',...
     'Stochastic Movie', ...
@@ -385,6 +392,31 @@ function savePileAsImage(figH)
     end
 
     imwrite(getPile(figH)+1, pileColors(), filename, ext);
+end
+function savePileAsMat(figH)
+    [fileName,pathName] = uiputfile('sandpile.mat', 'Save Sandpile');
+    if ~ischar(fileName)
+        return;
+    end
+    S = getPile(figH); %#ok<NASGU>
+    save(fullfile(pathName, fileName), 'S');
+end
+function savePileAsDropZone(figH)
+    name = inputdlg({'Dropzone Name:'}, 'Save Sandpile as Dropzone', 1, {'drop_zone_name'});
+    if isempty(name)
+        return;
+    end
+    name = name{1};
+    S = getPile(figH); %#ok<NASGU>
+    if ~isdeployed()
+        dirName = 'drop_zones';
+    else
+        dirName = fullfile(ctfroot(), 'drop_zones');
+    end
+    if ~exist(dirName, 'dir')
+        mkdir(dirName);
+    end
+    save(fullfile(dirName, [name, '.mat']), 'S');
 end
 function keyDown(figH, evt)
     if strcmp(evt.Character, sprintf('\b'))
