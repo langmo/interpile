@@ -1,4 +1,4 @@
-function configPath = generateDetFrames(S, F, folder, numRounds, stepsPerRound, callback)
+function configPath = generateStochFrames(S, F, folder, numRounds, stepsPerRound, callback)
 % S... sandpile to start from
 % F...dropzone
 if ~exist('stepsPerRound', 'var') || isempty(stepsPerRound)
@@ -13,11 +13,21 @@ end
 fileTemplate = 'step%g.mat';
 configPath = fullfile(folder, 'config.mat');
 
-    
-%% The number of elements we have already dropped in the last rounds
-D = zeros(size(S));
-
 %% start iteration
+if sum(sum(F))<=1e8
+    distri = toDistribution(F);
+    distriN = size(distri, 1);
+    directMethod = true;
+else
+    [distri, distriN] = toDistributionReal(F);
+    ps = distri(:, 3);
+    directMethod = false;
+end
+xs = distri(:, 2);
+ys = distri(:, 1);
+
+coinsPerStep = round(distriN/stepsPerRound);
+stepsPerRound = distriN / coinsPerStep;
 numSteps = ceil(numRounds*stepsPerRound);
 
 emptyFolder = false;
@@ -35,19 +45,29 @@ SFile = fullfile(folder, sprintf(fileTemplate, 0));
 if emptyFolder || ~exist(SFile, 'file')
     save(SFile, 'S');
 end
+
+ticVal = uint64(0);
 for s=1:numSteps
-    callback((s-1)/(numSteps));
-    
-    n = s/stepsPerRound;
-
-    Dnew = floor(n.*F);
-
-    X = Dnew - D;
-    D = Dnew;
+    if toc(ticVal) > 5
+        callback((s-1)/(numSteps));
+        ticVal = tic();
+    end
 
     SFile = fullfile(folder, sprintf(fileTemplate, s));
     if emptyFolder || ~exist(SFile, 'file')
-        S = relaxPile(S+X);
+        if directMethod
+            for k=1:coinsPerStep
+                idx = randi(distriN);
+                S(ys(idx), xs(idx)) = S(ys(idx), xs(idx)) + 1;
+            end
+        else
+            for k=1:coinsPerStep
+                r = rand();
+                idx = find(ps>=r, 1);
+                S(ys(idx), xs(idx)) = S(ys(idx), xs(idx)) + 1;
+            end
+        end
+        S = relaxPile(S);
         save(SFile, 'S');
     else
         load(SFile, 'S');
@@ -55,4 +75,3 @@ for s=1:numSteps
 end
 callback(1);
 end
-

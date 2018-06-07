@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="2985239277" file="C:\interpile\interpile\InterPile.prj" location="C:\interpile\interpile" name="InterPile" preferred-package-location="C:\interpile\interpile\mcc\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="3830933945" file="C:\interpile\interpile\InterPile.prj" location="C:\interpile\interpile" name="InterPile" preferred-package-location="C:\interpile\interpile\mcc\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>InterPile</param.appname>
     <param.icon>${PROJECT_ROOT}\InterPile_resources\icon.ico</param.icon>
     <param.icons>
@@ -68,24 +68,43 @@
       <file>${PROJECT_ROOT}\src\interPile.m</file>
     </fileset.main>
     <fileset.resources>
-      <file>${PROJECT_ROOT}\src\harmonicC.m</file>
-      <file>${PROJECT_ROOT}\src\harmonicCross.m</file>
-      <file>${PROJECT_ROOT}\src\harmonicDoubleT.m</file>
-      <file>${PROJECT_ROOT}\src\harmonicL.m</file>
-      <file>${PROJECT_ROOT}\src\harmonicO.m</file>
-      <file>${PROJECT_ROOT}\src\harmonicT.m</file>
+      <file>${PROJECT_ROOT}\src\assembleMovie.m</file>
+      <file>${PROJECT_ROOT}\src\detMovieDialog.fig</file>
+      <file>${PROJECT_ROOT}\src\detMovieDialog.m</file>
+      <file>${PROJECT_ROOT}\src\dropZoneC.m</file>
+      <file>${PROJECT_ROOT}\src\dropZoneCross.m</file>
+      <file>${PROJECT_ROOT}\src\dropZoneCubic.m</file>
+      <file>${PROJECT_ROOT}\src\dropZoneDoubleT.m</file>
+      <file>${PROJECT_ROOT}\src\dropZoneHorizontal.m</file>
+      <file>${PROJECT_ROOT}\src\dropZoneIrregular.m</file>
+      <file>${PROJECT_ROOT}\src\dropZoneL.m</file>
+      <file>${PROJECT_ROOT}\src\dropZoneO.m</file>
+      <file>${PROJECT_ROOT}\src\dropZones.m</file>
+      <file>${PROJECT_ROOT}\src\dropZoneT.m</file>
+      <file>${PROJECT_ROOT}\src\dropZoneVertical.m</file>
+      <file>${PROJECT_ROOT}\src\generateDetFrames.m</file>
+      <file>${PROJECT_ROOT}\src\generateDetMovie.m</file>
+      <file>${PROJECT_ROOT}\src\generateDropZone.m</file>
+      <file>${PROJECT_ROOT}\src\generateMovie.m</file>
+      <file>${PROJECT_ROOT}\src\harmonicDropZones.m</file>
+      <file>${PROJECT_ROOT}\src\harmonicFunctions.m</file>
       <file>${PROJECT_ROOT}\src\icon.tif</file>
       <file>${PROJECT_ROOT}\src\interPile.m</file>
+      <file>${PROJECT_ROOT}\src\interViewer.m</file>
       <file>${PROJECT_ROOT}\src\inversePile.m</file>
       <file>${PROJECT_ROOT}\src\isRecurrentPile.m</file>
+      <file>${PROJECT_ROOT}\src\movieDialog.fig</file>
+      <file>${PROJECT_ROOT}\src\movieDialog.m</file>
+      <file>${PROJECT_ROOT}\src\nullPile.m</file>
+      <file>${PROJECT_ROOT}\src\pileColors.m</file>
       <file>${PROJECT_ROOT}\src\printPile.m</file>
       <file>${PROJECT_ROOT}\src\randomSandPile.m</file>
       <file>${PROJECT_ROOT}\src\randomSquare45.m</file>
       <file>${PROJECT_ROOT}\src\relaxPile.m</file>
       <file>${PROJECT_ROOT}\src\setWindowIcon.m</file>
       <file>${PROJECT_ROOT}\src\square45.m</file>
-      <file>C:\OneDrive\sand_piles\nullPile.m</file>
-      <file>C:\OneDrive\sand_piles\toDistribution.m</file>
+      <file>${PROJECT_ROOT}\src\toDistribution.m</file>
+      <file>${PROJECT_ROOT}\src\toDistributionReal.m</file>
     </fileset.resources>
     <fileset.package />
     <build-deliverables>

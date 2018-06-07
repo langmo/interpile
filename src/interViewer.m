@@ -2,7 +2,7 @@ function figH = interViewer(varargin)
 %% Pre-process input
 if nargin <1 || isempty(varargin{1})
     [filename, pathname, ~] = uigetfile({'config.mat'}, 'Select movie configuration file', fullfile(cd(), 'config.mat'));
-    if isempty(filename)
+    if isempty(filename) || (isnumeric(filename) && numel(filename) == 1 && filename == 0)
         return;
     end
     configFile = fullfile(pathname, filename);
@@ -16,6 +16,7 @@ if isstruct(configFile)
     data = configFile;
 else
     load(configFile);
+    [folder, ~, ~] = fileparts(configFile);
     data = struct();
     data.configFile = configFile;
     data.fileTemplate = fileTemplate;
@@ -119,7 +120,7 @@ function setIndex(figH, index)
     figH.UserData.currentIndex = index;
     plotPile(figH);
     timeField = findall(figH, 'Tag', 'timeField');
-    timeField.Value = (figH.UserData.currentIndex-1)/(figH.UserData.numSteps-1);
+    timeField.Value = (figH.UserData.currentIndex)/(figH.UserData.numSteps);
 end
 function index = getIndex(figH)
     index = figH.UserData.currentIndex;
@@ -166,8 +167,10 @@ function plotPile(figH)
     axH = findall(figH, 'Tag', 'Splot');
     axes(axH);
     cla();
-    
-    load(fullfile(figH.UserData.folder, sprintf(figH.UserData.fileTemplate, figH.UserData.currentIndex)), 'S');
+    fileName = fullfile(figH.UserData.folder, sprintf(figH.UserData.fileTemplate, figH.UserData.currentIndex));
+    if exist(fileName, 'file')
+        load(fileName, 'S');
+    end
     if ~exist('S', 'var')
         if isfield(figH.UserData, 'S')
             S = zeros(size(figH.UserData.S));
@@ -180,7 +183,7 @@ function plotPile(figH)
     setPile(figH, S);
     
     timeText = findall(figH, 'Tag', 'timeText');
-    timeText.String = sprintf('Time %1.3f (Image %g of %g)', (figH.UserData.currentIndex)/(figH.UserData.stepsPerRound),...
+    timeText.String = sprintf('Time %1.5f (Image %g of %g)', (figH.UserData.currentIndex)/(figH.UserData.stepsPerRound),...
         figH.UserData.currentIndex,figH.UserData.numSteps);
 end
 function onResize(figH, ~)

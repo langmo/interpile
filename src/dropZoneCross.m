@@ -1,4 +1,4 @@
-function S = harmonicCross(height, width )
+function S = dropZoneCross(height, width )
 if nargin < 1
     width = 12;
     height = 6;

@@ -57,6 +57,9 @@ uimenu(fileMenu, 'Label',...
     'Save Pile as Mat', ...
     'Callback', @(figH, ~)savePileAsMat(figH));
 uimenu(fileMenu, 'Label',...
+    'Load Pile from Mat', ...
+    'Callback', @(figH, ~)loadPileAsMat(figH));
+uimenu(fileMenu, 'Label',...
     'Save Pile as Dropzone', ...
     'Callback', @(figH, ~)savePileAsDropZone(figH));
 
@@ -403,6 +406,26 @@ function savePileAsMat(figH)
     end
     S = getPile(figH); %#ok<NASGU>
     save(fullfile(pathName, fileName), 'S');
+end
+function loadPileAsMat(figH)
+    figH = ancestor(figH, 'figure');
+    
+    [fileName,pathName, ~] = uigetfile('*.mat', 'Load Sandpile');
+    if ~ischar(fileName)
+        return;
+    end
+    fileName = fullfile(pathName, fileName);
+    if ~exist(fileName, 'file')
+        return;
+    end
+    load(fileName, 'S');
+    plotPile(S, figH);
+    
+    axH = findall(figH, 'Tag', 'Splot');
+    xlim(axH, [0.5, size(S, 2)+0.5]);
+    ylim(axH, [0.5, size(S, 1)+0.5]);
+    figH.Name = sprintf('InterPile - %gx%g board', height, width);
+    onResize(figH);
 end
 function savePileAsDropZone(figH)
     name = inputdlg({'Dropzone Name:'}, 'Save Sandpile as Dropzone', 1, {'drop_zone_name'});

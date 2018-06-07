@@ -22,7 +22,7 @@ function varargout = detMovieDialog(varargin)
 
 % Edit the above text to modify the response to help detMovieDialog
 
-% Last Modified by GUIDE v2.5 24-May-2018 19:04:19
+% Last Modified by GUIDE v2.5 04-Jun-2018 17:11:13
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -116,7 +116,14 @@ else
     height = str2double(fieldHeight.String);
 end
 
-fileName = sprintf('%s_fct_%s_%gx%g', start, polynomial, height, width);
+fieldStochDet = findall(figH, 'Tag', 'fieldStochDet');
+if fieldStochDet.Value == 2
+    stochExtension = '_stoch';
+else
+    stochExtension = '';
+end
+
+fileName = sprintf('%s_fct_%s_%gx%g%s', start, polynomial, height, width, stochExtension);
 fieldPath.String = fullfile(path, [fileName, ext]);
 figH.UserData.lastAutoPath = fileName;
 
@@ -246,7 +253,7 @@ filePath = fieldPath.String;
 if exist(filePath, 'file')
     choice = questdlg(['File ', filePath, ' already exists. Overwrite?'], ...
         'File already exists', ...
-        'Yes','No');
+        'Yes','No', 'No');
     if strcmpi(choice, 'No')
         return;
     end
@@ -265,6 +272,8 @@ else
     polynomial = fieldHarmonic.UserData{fieldHarmonic.Value}{2};
 end
 
+fieldStochDet = findall(figH, 'Tag', 'fieldStochDet');
+stochMovie = fieldStochDet.Value == 2;
 
 fieldStepsPerIter = findall(figH, 'Tag', 'fieldStepsPerIter');
 stepsPerIter = str2double(fieldStepsPerIter.String);
@@ -319,7 +328,7 @@ end
 
 
 close(figH);
-generateDetMovie(S, filePath, polynomial, numIter, stepsPerIter, timePerIter);
+generateDetMovie(S, filePath, polynomial, numIter, stepsPerIter, timePerIter, true, stochMovie);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -529,3 +538,24 @@ end
 zones = dropZones();
 hObject.String = cellfun(@(x)x.name, zones, 'UniformOutput', false);
 hObject.UserData = zones;
+
+
+% --- Executes on selection change in fieldStochDet.
+function fieldStochDet_Callback(hObject, eventdata, handles)
+% hObject    handle to fieldStochDet (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+autoSetPath(hObject);
+
+% --- Executes during object creation, after setting all properties.
+function fieldStochDet_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to fieldStochDet (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

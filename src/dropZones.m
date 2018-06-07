@@ -1,4 +1,4 @@
-function dropZones = getDropZones()
+function dropZones = dropZones()
 
 harmonicZones = harmonicDropZones();
 
@@ -8,10 +8,9 @@ else
     dirName = fullfile(ctfroot(), 'drop_zones');
 end
 if ~exist(dirName, 'dir')
-    dropZones = {};
-    return;
+    dropZoneFiles = {};
 end
-dropZoneFiles = dir(fullfile(dirName, '*.mat'));
+
 
 dropZones = cell(1, length(dropZoneFiles)+length(harmonicZones));
 for i=1:length(dropZoneFiles)

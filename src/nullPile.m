@@ -7,6 +7,14 @@ function S = nullPile(n, m)
 % Therefore, (6-6*)* has to be the zero of the sandpile group.
 %S = relaxPile(6*ones(n,m)-relaxPile(6*ones(n,m)));
 % Same works also from 5, since 2 is always reachable for rectangles.
+
+if nargin < 1
+    n = 128;
+end
+if nargin < 2
+    m = n;
+end
+
 if ~isdeployed()
     dirName = 'null_piles';
 else
