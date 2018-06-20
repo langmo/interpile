@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+	{% include head.html %}
+	<body>
+		<div id="header">
+			{% include header.html %}
+		</div>
+		<div id="central">
+			<div id="leftColumn">
+				{% include left_column.html %}
+			</div>
+			<div id="main">
+				<h1>{{ page.title }}</h1>
+				{{ content }}
+			</div>
+			<div id="rightColumn">
+				{% include right_column.html %}
+			</div>			
+		</div>
+		<div id="footer">
+			{% include footer.html %}
+		</div>
+	
+	</body>
+</html>

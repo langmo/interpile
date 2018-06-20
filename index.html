@@ -1,5 +1,24 @@
-<html>
-<body>
-Test
-</body>
-</html>
+---
+layout : layout
+title : Abelian sandpiles and their harmonic dynamics
+pagetitle : Abelian sandpiles and their harmonic dynamics
+---
+
+<p>
+The identity of the Abelian sandpile group shows smooth 1-periodic dynamics induced by harmonic fields. This website summarizes results on the properties of such dynamics, and also provides an open-source software solution called <i>InterPile</i> to interactively explore and manipulate sandpiles on various lattices, as well as to generate movies showing the dynamics of the sandpile identity or any other recurrent configuration induced by arbitrary harmonic functions and for arbitrarily defined lattices.
+
+</p>
+<p style="text-align:right;">
+	<a href="{{ site.github.url }}/documentation.html">Read More</a>&nbsp;&nbsp;<a href="{{ site.github.url }}/download.html">Download</a>
+</p>
+<br style="clear:left;" />
+<h2>News</h2>
+{% for post in site.posts %}
+<div class="post">
+	<h3>{{ post.date | date: "%d.%m.%Y"}}&nbsp;&ndash;&nbsp;{{ post.title }}</h3>
+	<p>{{ post.excerpt | remove: '<p>' | remove: '</p>' }}</p>
+	<p style="text-align:right;">
+		<a href="{{ post.url | prepend: site.github.url }}">Read More</a>
+	</p>
+</div>
+{% endfor %}
