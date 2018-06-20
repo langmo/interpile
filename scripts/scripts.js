@@ -62,7 +62,7 @@ function displayReleaseLinks(release)
 			var assetURL = document.createElement("a");
 			assetURL.href = assets[lID].browser_download_url;
 			assetURL.target = "_blank";
-			assetURL.innerHTML = "Stand-Alone";			
+			assetURL.innerHTML = "Stand-Alone (Win64)";			
 			assetElem.appendChild(assetURL);
 			break;
 		}
@@ -71,7 +71,7 @@ function displayReleaseLinks(release)
 	for(var lID =0; lID < assets.length; lID++)
 	{
 		var name = assets[lID].name.toLowerCase();
-		if(name.indexOf("matlabtoolbox")>=0)
+		if(name.indexOf("interpiletoolbox")>=0)
 		{
 			var assetURL = document.createElement("a");
 			assetURL.href = assets[lID].browser_download_url;

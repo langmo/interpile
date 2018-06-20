@@ -159,7 +159,7 @@ function createReleaseElement(release, show)
 			{
 				var assetElem = document.createElement("p");
 				var assetElemText = document.createElement("span");
-				assetElemText.appendChild(document.createTextNode("Stand-Alone: "));
+				assetElemText.appendChild(document.createTextNode("Stand-Alone (Win64): "));
 				assetElemText.style.fontWeight="bold";
 				assetElem.appendChild(assetElemText);
 				assetElem.appendChild(addAsset(assets[lID]));
@@ -171,7 +171,7 @@ function createReleaseElement(release, show)
 		for(var lID =0; lID < assets.length; lID++)
 		{
 			var name = assets[lID].name.toLowerCase();
-			if(name.indexOf("matlabtoolbox")>=0)
+			if(name.indexOf("interpiletoolbox")>=0)
 			{
 				var assetElem = document.createElement("p");
 				var assetElemText = document.createElement("span");
