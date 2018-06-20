@@ -57,7 +57,7 @@ function displayReleaseLinks(release)
 	for(var lID =0; lID < assets.length; lID++)
 	{
 		var name = assets[lID].name.toLowerCase();
-		if(name.indexOf("InterpileInstaller")>=0)
+		if(name.indexOf("interpileinstaller")>=0)
 		{
 			var assetURL = document.createElement("a");
 			assetURL.href = assets[lID].browser_download_url;
@@ -71,7 +71,7 @@ function displayReleaseLinks(release)
 	for(var lID =0; lID < assets.length; lID++)
 	{
 		var name = assets[lID].name.toLowerCase();
-		if(name.indexOf("MatlabToolbox")>=0)
+		if(name.indexOf("matlabtoolbox")>=0)
 		{
 			var assetURL = document.createElement("a");
 			assetURL.href = assets[lID].browser_download_url;
