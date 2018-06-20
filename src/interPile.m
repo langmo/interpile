@@ -82,6 +82,11 @@ if ~isdeployed()
             'Add Pile from Workspace', ...
             'Callback', @(figH, ~)plotPile(getPile(figH)+evalin('base', 'S'), figH));
 end
+
+uimenu(editMenu, 'Label',...
+        'Set Mask', ...
+        'Callback', @setMask, 'Separator','on');
+
 uimenu(editMenu, 'Label',...
         'Undo', ...
         'Callback', @undo, 'Separator','on');
@@ -337,7 +342,7 @@ uicontrol('Style', 'text', 'String', 'valid',...
 %% Main plot
 axH = axes('Tag', 'Splot', 'Units', 'pixels');
 colormap(colors)
-colorbar('south', 'Ticks', (1:size(colors, 1))+0.5, 'TickLabels', arrayfun(@(x)int2str(x), 0:size(colors, 1)-1, 'UniformOutput', false), 'Units', 'centimeters', 'Tag', 'colorbar');
+colorbar('south', 'Ticks', (1:size(colors, 1))+0.5, 'TickLabels', [arrayfun(@(x)int2str(x), 0:size(colors, 1)-2, 'UniformOutput', false), {'-'}], 'Units', 'centimeters', 'Tag', 'colorbar');
 hold on;
 plotPile(data.S, figH, true, false);
 %axis off;
@@ -506,7 +511,10 @@ function plotPile(S, figH, allowEdits, saveUndo)
     axH = findall(figH, 'Tag', 'Splot');
     axes(axH);
     cla();
-    imageH = image(S+1);
+    
+    Stemp = S;
+    Stemp(isinf(Stemp)) = 10;
+    imageH = image(Stemp+1);
     
     if allowEdits
         set(imageH,'ButtonDownFcn',{@dropParticle})
@@ -568,6 +576,37 @@ function setPile(figH, S, saveUndo)
     end
     set(ancestor(figH,'figure'), 'UserData', data);
 end
+
+function setMask(figH, ~)
+    data = getData(figH);
+    S = getPile(figH);
+    width = size(S, 2);
+    height = size(S, 1);
+    
+    prompt = {'Mask name:', 'Mask formula (variables x and y measure distance from center):'};
+    title = 'Size of sandpile';
+    dims = [1 35];
+    definput = {'ellipsoid', sprintf('x.^2/%g.^2+y.^2/%g.^2<1', (width+1)/2, (height+1)/2)};
+    answer = inputdlg(prompt,title,dims,definput);
+    if isempty(answer)
+        return;
+    end
+    try
+        X=repmat((0:width-1) - (width-1)/2, height, 1);
+        Y=repmat(((0:height-1) - (height-1)/2)', 1, width);
+        maskFct = @(y,x)eval(answer{2});
+        mask = maskFct(Y,X);
+    catch
+        errordlg(sprintf('Could not determine mask from function "%s"!', answer{2}), 'Invalid Input');
+        return;
+    end
+    data.currentMaskName = answer{1};
+    set(ancestor(figH,'figure'), 'UserData', data);
+    S(isinf(S))=0;
+    S(~mask) = -inf;
+    plotPile(S, figH);
+end
+
 function redo(figH, ~)
     data = getData(figH);
     if isempty(data) || length(data.Sredo)< 1
@@ -877,7 +916,19 @@ end
 
 function fillNullPile(figH, ~)
     S = getPile(figH);
-    plotPile(nullPile(size(S, 1), size(S, 2)), figH);
+    mask = ~isinf(S);
+    if all(all(mask))
+        S = nullPile(size(S, 1), size(S, 2));
+    else
+        data = getData(figH);
+        if isfield(data, 'currentMaskName')
+            currentMaskName = data.currentMaskName;
+        else
+            currentMaskName = 'unknownMask';
+        end
+        S = nullPile(size(S, 1), size(S, 2), mask, currentMaskName);
+    end
+    plotPile(S, figH);
 end
 function fillRandom(figH, ~)
     S = getPile(figH);

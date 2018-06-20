@@ -1,4 +1,4 @@
-function S = nullPile(n, m)
+function S = nullPile(n, m, mask, maskName)
 % Based on the following algorithm:
 % if f and g are two states then (f+g*)*=(f+g)*
 % (where * denotes the relaxation)
@@ -14,18 +14,35 @@ end
 if nargin < 2
     m = n;
 end
+if nargin < 3
+    mask = ones(n, m);
+end
+if nargin < 4
+    maskName = 'customMask';
+end
+maskName = ['_', maskName];
+if all(all(mask == ones(n, m)))
+    maskName = '';
+end
+
 
 if ~isdeployed()
     dirName = 'null_piles';
 else
     dirName = fullfile(ctfroot(), 'null_piles');
 end
-fileName = fullfile(dirName, sprintf('%gx%g.mat', n, m));
+fileName = fullfile(dirName, sprintf('%gx%g%s.mat', n, m, maskName));
 if exist(fileName, 'file')
     load(fileName, 'S');
     return;
 end
-S = relaxPile(5*ones(n,m)-relaxPile(5*ones(n,m)));
+
+filled = 5*ones(n,m);
+filled(~mask) = -inf;
+
+S = filled-relaxPile(filled);
+S(~mask) = -inf;
+S = relaxPile(S);
 try
     if ~exist(dirName, 'dir')
         mkdir(dirName);

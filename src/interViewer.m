@@ -43,11 +43,14 @@ end
 % File
 fileMenu = uimenu(figH, 'Label', 'File'); 
 uimenu(fileMenu, 'Label',...
-        'New Window', ...
+        'Open Movie', ...
         'Callback', @(figH, ~)interViewer());
 uimenu(fileMenu, 'Label',...
         'Clone Window', ...
         'Callback', @(figH, ~)interViewer(getData(figH)));
+uimenu(fileMenu, 'Label',...
+    'Edit Pile in InterPile', ...
+    'Callback', @(figH, ~)interPile(getPile(figH)), 'Separator','on');
 uimenu(fileMenu, 'Label',...
     'Display Pile as Image', ...
     'Callback', @(figH, ~)printPile(getPile(figH)), 'Separator','on');
@@ -99,8 +102,11 @@ function savePileAsImage(figH)
     if user_canceled
         return;
     end
-
-    imwrite(getPile(figH)+1, pileColors(), filename, ext);
+    
+    S = getPile(figH);
+    S(isnan(S)) = 0;
+    
+    imwrite(S+1, pileColors(), filename, ext);
 end
 function savePileAsMat(figH)
     [fileName,pathName] = uiputfile('sandpile.mat', 'Save Sandpile');
@@ -178,12 +184,14 @@ function plotPile(figH)
             S = zeros(100, 100);
         end
     end
-    
-    image(S+1);
+    Stemp = S;
+    Stemp(isinf(Stemp)) = 10;
+    image(Stemp+1);
+
     setPile(figH, S);
     
     timeText = findall(figH, 'Tag', 'timeText');
-    timeText.String = sprintf('Time %1.5f (Image %g of %g)', (figH.UserData.currentIndex)/(figH.UserData.stepsPerRound),...
+    timeText.String = sprintf('Time %1.7f (Image %g of %g)', (figH.UserData.currentIndex)/(figH.UserData.stepsPerRound),...
         figH.UserData.currentIndex,figH.UserData.numSteps);
 end
 function onResize(figH, ~)

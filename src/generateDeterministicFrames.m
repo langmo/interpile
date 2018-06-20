@@ -1,4 +1,4 @@
-function configPath = generateDetFrames(S, F, folder, numRounds, stepsPerRound, callback)
+function configPath = generateDeterministicFrames(S, excitation, folder, numRounds, stepsPerRound, callback)
 % S... sandpile to start from
 % F...dropzone
 if ~exist('stepsPerRound', 'var') || isempty(stepsPerRound)
@@ -15,7 +15,10 @@ configPath = fullfile(folder, 'config.mat');
 
     
 %% The number of elements we have already dropped in the last rounds
-D = zeros(size(S));
+Xl_t = zeros(size(S));
+Xt_t = zeros(size(S));
+Xr_t = zeros(size(S));
+Xb_t = zeros(size(S));
 
 %% start iteration
 numSteps = ceil(numRounds*stepsPerRound);
@@ -26,13 +29,9 @@ if ~exist(folder, 'dir')
     emptyFolder = true;
 end
 if emptyFolder || ~exist(configPath, 'file')
-    save(configPath, 'S', 'F', 'stepsPerRound', 'fileTemplate', 'numSteps', 'numRounds', 'folder');
+    save(configPath, 'S', 'excitation', 'stepsPerRound', 'fileTemplate', 'numSteps', 'numRounds', 'folder');
 else
-    numRoundsTemp = numRounds;
     load(configPath);
-    numRounds = max(numRoundsTemp, numRounds);
-    numSteps = ceil(numRounds*stepsPerRound);
-    save(configPath, 'S', 'F', 'stepsPerRound', 'fileTemplate', 'numSteps', 'numRounds', 'folder');
 end
 
 SFile = fullfile(folder, sprintf(fileTemplate, 0));
@@ -47,16 +46,27 @@ for s=1:numSteps
         ticVal = tic();
     end
     
-    n = s/stepsPerRound;
+    t = s/stepsPerRound;
 
-    Dnew = floor(n.*F);
+    Xl_tp = floor(t.*excitation.Xl);
+    dXl = Xl_tp - Xl_t;
+    Xl_t = Xl_tp;
 
-    X = Dnew - D;
-    D = Dnew;
-
+    Xr_tp = floor(t.*excitation.Xr);
+    dXr = Xr_tp - Xr_t;
+    Xr_t = Xr_tp;
+    
+    Xt_tp = floor(t.*excitation.Xt);
+    dXt = Xt_tp - Xt_t;
+    Xt_t = Xt_tp;
+    
+    Xb_tp = floor(t.*excitation.Xb);
+    dXb = Xb_tp - Xb_t;
+    Xb_t = Xb_tp;
+    
     SFile = fullfile(folder, sprintf(fileTemplate, s));
     if emptyFolder || ~exist(SFile, 'file')
-        S = relaxPile(S+X);
+        S = relaxPile(S+dXl+dXr+dXt+dXb);
         save(SFile, 'S');
     else
         load(SFile, 'S');

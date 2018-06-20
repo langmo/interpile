@@ -7,8 +7,10 @@ if nargin < 4 || isempty(numRounds)
     numRounds = 1;
 end
 if nargin < 2 || isempty(harmonic)
-    harmonic = @(y,x) x.*y;
-    harmonicName = 'xy';
+    %harmonic = @(y,x) x;
+    %harmonicName = 'x';
+    harmonic = @(y,x) x.*(x.^2-3.*y.^2);
+    harmonicName = 'x^3 - 3 x y^2';
 elseif nargin < 3 || isempty(harmonic)
     harmonicName = 'userDefined';
 end
@@ -16,7 +18,11 @@ width = size(S, 2);
 height = size(S, 1);
 
 if ~exist('fileName', 'var') || isempty(fileName)
-    fileName = fullfile('avalancheDistributions', sprintf('fct_%s_%gx%g_%grounds.mat', harmonicName, height, width, numRounds));
+    folder = 'avalancheDistributions';
+    if ~exist(folder, 'dir')
+        mkdir(folder);
+    end
+    fileName = fullfile(folder, sprintf('fct_%s_%gx%g_%grounds.mat', harmonicName, height, width, numRounds));
 end
 
 %% Initialize variables

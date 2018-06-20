@@ -1,4 +1,4 @@
-function configPath = generateStochFrames(S, F, folder, numRounds, stepsPerRound, callback)
+function configPath = generateStochFrames(S, excitation, folder, numRounds, stepsPerRound, callback)
 % S... sandpile to start from
 % F...dropzone
 if ~exist('stepsPerRound', 'var') || isempty(stepsPerRound)
@@ -13,13 +13,19 @@ end
 fileTemplate = 'step%g.mat';
 configPath = fullfile(folder, 'config.mat');
 
+% For the stochastic approach, we do not have to distinguish from where we
+% drop particles...
+if isstruct(excitation)
+    excitation = excitation.Xt + excitation.Xb + excitation.Xl + excitation.Xr;
+end
+
 %% start iteration
-if sum(sum(F))<=1e8
-    distri = toDistribution(F);
+if sum(sum(excitation))<=1e8
+    distri = toDistribution(excitation);
     distriN = size(distri, 1);
     directMethod = true;
 else
-    [distri, distriN] = toDistributionReal(F);
+    [distri, distriN] = toDistributionReal(excitation);
     ps = distri(:, 3);
     directMethod = false;
 end
@@ -36,7 +42,7 @@ if ~exist(folder, 'dir')
     emptyFolder = true;
 end
 if emptyFolder || ~exist(configPath, 'file')
-    save(configPath, 'S', 'F', 'stepsPerRound', 'fileTemplate', 'numSteps', 'numRounds', 'folder');
+    save(configPath, 'S', 'excitation', 'stepsPerRound', 'fileTemplate', 'numSteps', 'numRounds', 'folder');
 else
     load(configPath);
 end
@@ -62,8 +68,9 @@ for s=1:numSteps
             end
         else
             for k=1:coinsPerStep
-                r = rand();
-                idx = find(ps>=r, 1);
+                %r = rand();
+                %idx = find(ps>=r, 1);
+                idx = find_halfspace(ps, rand());
                 S(ys(idx), xs(idx)) = S(ys(idx), xs(idx)) + 1;
             end
         end
@@ -74,4 +81,25 @@ for s=1:numSteps
     end
 end
 callback(1);
+end
+
+function X = find_halfspace(Y,T)
+    % returns the index of the first element in the ascending array Y which
+    % is greater or equal to T, i.e. a value of X s.t. Y(X)>=T, Y(X-1)<T
+    % in the ASCENDING array data that is
+    % <x using a simple half space search
+    L = 1;
+    R = length(Y);
+    while L < R
+        M = floor((L + R)/2);
+        if T < Y(M)
+            R = M;
+        elseif T > Y(M)
+            L = M + 1;
+        else
+            X = M;
+            return;
+        end
+    end
+    X = L;
 end

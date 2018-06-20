@@ -47,7 +47,7 @@ wbh = waitbar(0, 'Preparing movie...');
 % Either dropZone is already the drop zone, or a function corresponding
 % to the intended toppling function. If the latter, generate the drop zone.
 if isa(dropZone, 'function_handle')
-    F = generateDropZone(dropZone, height, width);
+    F = generateDropZone(dropZone, height, width, ~isinf(S));
 else
     F = dropZone;
 end

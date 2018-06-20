@@ -8,7 +8,9 @@ else
     dirName = fullfile(ctfroot(), 'drop_zones');
 end
 if ~exist(dirName, 'dir')
-    dropZoneFiles = {};
+    dropZoneFiles = struct([]);
+else
+    dropZoneFiles = dir(fullfile(dirName, '*.mat'));
 end
 
 
