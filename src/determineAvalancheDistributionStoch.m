@@ -1,7 +1,7 @@
 function [A, nA, varargout] = determineAvalancheDistributionStoch(S, harmonic, harmonicName, numRounds, fileName)
 %% Configuration
 if nargin < 1 || isempty(S)
-    S = nullPile(255, 255);
+    S = nullPile(127, 127);
 end
 if nargin < 4 || isempty(numRounds)
     numRounds = 1;
