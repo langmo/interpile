@@ -39,11 +39,19 @@ If player is not loading or an error occurred, you can visit our YouTube channel
     <script>
 	var videos = [
 		// NAME					Configuration 		Harmonic 			VideoID
-		["255 x 255 Square", 	"Identity", 		"H1a=i", 			"-zEr86gUSYI"],
-		["255 x 255 Square", 	"Identity", 		"H2a=ij", 			"5zzCqd4LGpQ"],
-		["255 x 255 Square", 	"Identity", 		"H2b=i^2-j^2", 		"Hi5NCynHr4Q"],
-		["255 x 255 Square", 	"Identity", 		"H3a=i^3-3ij^2", 	"ef0yOgDrklU"],
-		["255 x 255 Square", 	"Identity", 		"H4a=i^4-6i^2j^2+j^4-i^2-j^2", 	"MSpSiJQ64xk"]
+		["255 x 255 Square", 	"Identity", 		"H1a=i", 			"h4yStj7Oh2M"],
+		["255 x 255 Square", 	"Identity", 		"H2a=ij", 			"4_WaR-ynTGw"],
+		["255 x 255 Square", 	"Identity", 		"H2b=i^2-j^2", 		"b0zoIcrHmnw"],
+		["255 x 255 Square", 	"Identity", 		"H3a=i^3-3ij^2", 	"NTE09UmqZU8"],
+		["255 x 255 Square", 	"Identity", 		"H4a=i^4-6i^2j^2+j^4-i^2-j^2", 	"HW4YQZyDMWw"],
+		["255 x 255 Square", 	"Identity", 		"H4b=i^3j-ij^3", 	"WeWkpKV5AuI"],
+		
+		["Circle, d=255", 	"Identity", 		"H1a=i", 			"NAn3N4mHANg"],
+		["Circle, d=255", 	"Identity", 		"H2a=ij", 			"tC3CpkDjIAw"],
+		["Circle, d=255", 	"Identity", 		"H2b=i^2-j^2", 		"nwJA1a0CMdk"],
+		["Circle, d=255", 	"Identity", 		"H3a=i^3-3ij^2", 	"xqs-7_aY5mM"],
+		["Circle, d=255", 	"Identity", 		"H4a=i^4-6i^2j^2+j^4-i^2-j^2", 	"DUE9nBCGwss"],
+		["Circle, d=255", 	"Identity", 		"H4b=i^3j-ij^3", 	"4KPbfS9Pnio"]
 	  ];
 	  initDomains();
 	
@@ -58,8 +66,8 @@ If player is not loading or an error occurred, you can visit our YouTube channel
       var player;
       function onYouTubeIframeAPIReady() {
         player = new YT.Player('player', {
-          height: '255',
-          width: '255',
+          height: '813',
+          width: '757',
           videoId: getCurrentVideoUrl(),
 		  playerVars: {
 			'autoplay': 0,
