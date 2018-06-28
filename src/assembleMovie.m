@@ -2,6 +2,9 @@ function assembleMovie(filePath, configPath, timePerRound, smallMovie, scaling, 
 load(configPath);
 [~,~,ext] = fileparts(filePath);
 %% Generate movie
+if ~exist('deltaT', 'var') || isempty(deltaT)
+    deltaT = 1;
+end
 frameRate = stepsPerRound/timePerRound/deltaT;
 if smallMovie
     v = VideoWriter(filePath, 'Indexed AVI');
@@ -17,9 +20,7 @@ end
 if ~exist('scaling', 'var') || isempty(scaling)
     scaling = 1;
 end
-if ~exist('deltaT', 'var') || isempty(deltaT)
-    deltaT = 1;
-end
+
 v.FrameRate = frameRate;
 open(v);
 
