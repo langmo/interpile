@@ -3,7 +3,217 @@ layout : layout
 title : Videos
 ---
 
-<h2>Videos</h2>
+<h2>Videos of sandpile identity dynamics</h2>
 <p>
-Videos showing the Abelian sandpile identity dynamics induced by different harmonics will be made available on public video sharing platforms and linked here, as soon as the preprint of our manuscript is published.
+Select below for which domain, start configuration and harmonic field you want to display the harmonic sandpile dynamics.
+</p>
+<p>
+If player is not loading or an error occurred, you can visit our YouTube channel to watch the movies directly:<br />
+<a href="https://www.youtube.com/channel/UCD-1U3y52P7jx_RNqthASpQ" target="_blank">https://www.youtube.com/channel/UCD-1U3y52P7jx_RNqthASpQ</a>.
+</p>
+<div style="width:100%;">
+	<div style="float:left;padding: 0px 10px 5px 10px;border: 1px solid black;margin:0px 0px 10px 0px;width:200px;">
+		<p style="margin: 0px 0 0px 0;">
+			Domain:<br />
+			<select name="domains" id="domains" size="1" onchange="initConfiguration()"> 
+			</select>
+		</p>
+	</div>
+	<div style="float:left;padding: 0px 10px 5px 10px;border: 1px solid black;margin:0px 0px 10px 0px;width:200px;">
+		<p style="margin: 0px 0 0px 0;">
+			Start Configuration:<br />
+			<select name="configuration" id="configuration" size="1" onchange="initHarmonic()"> 
+			</select>
+		</p>
+	</div>
+	<div style="float:left;padding: 0px 10px 5px 10px;border: 1px solid black;margin:0px 0px 10px 0px;width:200px;">
+		<p style="margin: 0px 0 0px 0;">
+			Harmonic Field:<br />
+			<select name="harmonic" id="harmonic" size="1"> 
+			</select>
+			</p>
+	</div>
+</div><br clear ="all" />
+<div id="player"></div>
+<p>White pixels represent vertices carrying zero particles, while green, blue and black pixels represent vertices carrying one, two or three particles, respectively.</p>
+    <script>
+	var videos = [
+		// NAME					Configuration 		Harmonic 			VideoID
+		["255 x 255 Square", 	"Identity", 		"H1a=i", 			"-zEr86gUSYI"],
+		["255 x 255 Square", 	"Identity", 		"H2a=ij", 			"5zzCqd4LGpQ"],
+		["255 x 255 Square", 	"Identity", 		"H2b=i^2-j^2", 		"Hi5NCynHr4Q"],
+		["255 x 255 Square", 	"Identity", 		"H3a=i^3-3ij^2", 	"ef0yOgDrklU"],
+		["255 x 255 Square", 	"Identity", 		"H4a=i^4-6i^2j^2+j^4-i^2-j^2", 	"MSpSiJQ64xk"]
+	  ];
+	  initDomains();
+	
+      // load IFrame Player API code asynchronously.
+      var tag = document.createElement('script');
+      tag.src = "https://www.youtube.com/iframe_api";
+      var firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+      // Create YouTube player after Player API downloaded (called by Player API).
+      //    after the API code downloads.
+      var player;
+      function onYouTubeIframeAPIReady() {
+        player = new YT.Player('player', {
+          height: '255',
+          width: '255',
+          videoId: getCurrentVideoUrl(),
+		  playerVars: {
+			'autoplay': 0,
+			'enablejsapi': 1,
+			'iv_load_policy': 3,
+			'modestbranding': 0,
+			'rel': 0,
+			'showinfo': 0
+		  },
+          events: {
+            'onReady': onPlayerReady
+            //'onStateChange': onPlayerStateChange
+          }
+        });
+      }
+	  function onPlayerReady(evt) 
+	  {
+		document.getElementById("harmonic").onchange = playVideo;
+	  }
+
+	  
+	  function domainFilter(value, index, self) 
+	  {
+		for(var i=0; i<self.length; i++)
+		{
+			if(self[i][0] === value[0])
+				return i===index;
+		}
+		return true;
+	  }
+	  function configurationFilter(value, index, self) 
+	  {
+		if(value[0] != this)
+			return false;
+		for(var i=0; i<index; i++)
+		{
+			if(self[i][0] == this && self[i][1] === value[1])
+				return false;
+		}
+		return true;
+	  }
+	  function harmonicFilter(value, index, self) 
+	  {
+		if(value[0] != this[0] || value[1] != this[1])
+			return false;
+		else
+			return true;
+	  }
+      function initDomains()
+	  {
+		var domainObject = document.getElementById("domains");
+		var uniqueDomains = videos.filter(domainFilter);
+		for(var i=0; i<uniqueDomains.length; i++)
+		{
+			var newOption = document.createElement("option");
+			newOption.text = uniqueDomains[i][0];
+			domainObject.add(newOption); 
+		}
+		initConfiguration()
+	  }
+	  function initConfiguration()
+	  {
+		var domain = document.getElementById("domains").value;
+		var configurationObject = document.getElementById("configuration");
+		var lastConfiguration = configurationObject.value;
+		while(configurationObject.length > 0)
+		{
+			configurationObject.remove(0);
+		}
+		
+		var uniqueConfigurations = videos.filter(configurationFilter, domain);
+		for(var i=0; i<uniqueConfigurations.length; i++)
+		{
+			var newOption = document.createElement("option");
+			newOption.text = uniqueConfigurations[i][1];
+			configurationObject.add(newOption); 
+		}
+		for(var i=0; i<configurationObject.length; i++)
+		{
+			if(configurationObject.options.item(i).text == lastConfiguration)
+			{
+				configurationObject.selectedIndex = i;
+				break;
+			}
+		}
+		initHarmonic();
+	  }
+	  
+	  function initHarmonic()
+	  {
+		var domain = document.getElementById("domains").value;
+		var configuration = document.getElementById("configuration").value;
+		var harmonicObject = document.getElementById("harmonic");
+		var lastHarmonic = harmonicObject.value;
+		while(harmonicObject.length > 0)
+		{
+			harmonicObject.remove(0);
+		}
+		
+		var uniqueHarmonics = videos.filter(harmonicFilter, [domain, configuration]);
+		for(var i=0; i<uniqueHarmonics.length; i++)
+		{
+			var newOption = document.createElement("option");
+			newOption.text = uniqueHarmonics[i][2];
+			harmonicObject.add(newOption); 
+		}
+		for(var i=0; i<harmonicObject.length; i++)
+		{
+			if(harmonicObject.options.item(i).text == lastHarmonic)
+			{
+				harmonicObject.selectedIndex = i;
+				break;
+			}
+		}
+		playVideo();
+	  }
+	  function getCurrentVideoUrl()
+	  {
+		var domain = document.getElementById("domains").value;
+		var configuration = document.getElementById("configuration").value;
+		var harmonic = document.getElementById("harmonic").value;
+		for(var i=0; i<videos.length; i++)
+		{
+			if(videos[i][0] == domain && videos[i][1]==configuration && videos[i][2]==harmonic)
+			{
+				return videos[i][3];
+			}
+		}
+		return videos[0][3];
+	  }
+	  function playVideo()
+	  {
+		var domain = document.getElementById("domains").value;
+		var configuration = document.getElementById("configuration").value;
+		var harmonic = document.getElementById("harmonic").value;
+		if(player)
+		{
+			//player.loadVideoById({videoId:url});
+			player.cueVideoById(
+			{
+				'videoId': getCurrentVideoUrl(),
+				'playerVars': {
+					'autoplay': 0,
+					'enablejsapi': 1,
+					'iv_load_policy': 3,
+					'modestbranding': 0,
+					'rel': 0,
+					'showinfo': 0
+				  }
+			});
+				
+		}
+	  }
+    </script>
+
+
 </p>
