@@ -34,7 +34,7 @@ If player is not loading or an error occurred, you can visit our YouTube channel
 			</p>
 	</div>
 </div><br clear ="all" />
-<div id="player"></div>
+<div id="playerBox" style="width: 100%;padding: 0px;margin:0px"><div id="player"></div></div>
 <p>White pixels represent vertices carrying zero particles, while green, blue and black pixels represent vertices carrying one, two or three particles, respectively.</p>
     <script>
 	var videos = [
@@ -221,6 +221,24 @@ If player is not loading or an error occurred, you can visit our YouTube channel
 				
 		}
 	  }
+	  
+	  function onResize()
+	  {
+		var refHeight = 813;
+        var refWidth = 757;
+	  
+		var playerObj = document.getElementById("player");
+		var playerBoxObj = document.getElementById("playerBox");
+		if(!playerObj || !playerBoxObj)
+			return;
+		var width = Math.min(playerBox.offsetWidth, refWidth);
+		var height = Math.round(width/refWidth*refHeight);
+
+		playerObj.width = width;
+		playerObj.height = height;
+	  }
+	  window.addEventListener('resize', onResize);
+	  window.addEventListener("load", onResize); 
     </script>
 
 

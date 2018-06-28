@@ -36,6 +36,7 @@ div#rightColumn
 	width: 100%;
 	margin: 0px;
 	padding:0px 15px 0px 15px;
+	visibility: hidden;
 }
 
 div#leftColumn a 
@@ -125,6 +126,7 @@ div.rightBoxMain hr
 	{
 		width: 20%;
 		padding: 20px 5px 0px 0px;
+		visibility: visible;
 	}
 	
 	div#leftColumn a 
