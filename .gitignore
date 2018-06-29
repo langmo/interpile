@@ -1,3 +1,6 @@
 _site/
 create.bat
 preview.bat
+mcc/
+*.asv
+*/null_piles/
