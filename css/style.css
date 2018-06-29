@@ -36,7 +36,15 @@ div#rightColumn
 	width: 100%;
 	margin: 0px;
 	padding:0px 15px 0px 15px;
-	visibility: hidden;
+	display: none;
+}
+
+div.figure
+{
+	float:left;
+	margin:0px 10px 0px 0px;
+	width: 100%;
+	padding:0px;
 }
 
 div#leftColumn a 
@@ -126,7 +134,7 @@ div.rightBoxMain hr
 	{
 		width: 20%;
 		padding: 20px 5px 0px 0px;
-		visibility: visible;
+		display: block;
 	}
 	
 	div#leftColumn a 
@@ -190,6 +198,10 @@ div.rightBoxMain hr
 	div.rightBoxMain hr
 	{
 		display:block;
+	}
+	div.figure
+	{
+		width: auto;
 	}
 }
 
@@ -345,12 +357,6 @@ div.post p
 	margin: 5px 0 5px 0;
 }
 
-div.figure
-{
-	float:left;
-	margin:0px 10px 0px 0px;
-	width:204px;
-}
 img.figure
 {
 	border:2px solid #000000;
