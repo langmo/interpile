@@ -71,12 +71,13 @@ div#leftColumn a:hover
 }
 div#header
 {
-	margin: 0;
+	margin: 0px;
 	padding: 0px;
+	height: auto;
 }
 div#headerLogo
 {
-	margin: 0;
+	margin: 0px;
 	padding: 0px 0px 0px 13px;
 	height: auto;
 }
@@ -157,11 +158,13 @@ div.rightBoxMain hr
 	div#header
 	{
 		border-bottom: 1px solid #777777;
+		height:53px;
 	}
 	div#headerLogo
 	{
-		margin: 0;
-		padding: 10px 0 0 0;
+		height:52px;
+		margin: 0px;
+		padding: 0px 0 0 0;
 		text-align:left;
 		vertical-align:bottom;
 	}
