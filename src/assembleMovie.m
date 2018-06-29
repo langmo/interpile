@@ -1,6 +1,7 @@
 function assembleMovie(filePath, configPath, timePerRound, smallMovie, scaling, deltaT)
 load(configPath);
 [~,~,ext] = fileparts(filePath);
+[folder, ~, ~] = fileparts(configPath);
 %% Generate movie
 if ~exist('deltaT', 'var') || isempty(deltaT)
     deltaT = 1;
