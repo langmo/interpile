@@ -1,10 +1,13 @@
-function assembleMovie(filePath, configPath, timePerRound, smallMovie, scaling, deltaT)
+function assembleMovie(filePath, configPath, timePerRound, smallMovie, scaling, deltaT, showTime)
 load(configPath);
 [~,~,ext] = fileparts(filePath);
 [folder, ~, ~] = fileparts(configPath);
 %% Generate movie
 if ~exist('deltaT', 'var') || isempty(deltaT)
     deltaT = 1;
+end
+if ~exist('showTime', 'var') || isempty(showTime)
+    showTime = true;
 end
 frameRate = stepsPerRound/timePerRound/deltaT;
 if smallMovie
@@ -47,18 +50,22 @@ while true
             firstRound = false;
             fgh = printPile(S, [], [], true, 0);
             drawnow();
-            pos = get(gca(), 'Position');
-            txt = uicontrol('Style','text',...
-                'Units', 'centimeters',...
-                    'Position',[pos(1), 0.1, 4, 1.4],...
-                    'String',sprintf('time: %3.3f', 0),...
-                    'BackgroundColor', ones(1,3),...
-                    'HorizontalAlignment', 'left',...
-                    'FontSize', 20);
+            if showTime
+                pos = get(gca(), 'Position');
+                txt = uicontrol('Style','text',...
+                    'Units', 'centimeters',...
+                        'Position',[pos(1), 0.1, 4, 1.4],...
+                        'String',sprintf('time: %3.3f', 0),...
+                        'BackgroundColor', ones(1,3),...
+                        'HorizontalAlignment', 'left',...
+                        'FontSize', 20);
+            end
         else
             fgh = printPile(S, fgh, [], true, 0);
         end
-        txt.String = sprintf('Time=%3.3f', imgId/stepsPerRound);
+        if showTime
+            txt.String = sprintf('Time=%3.3f', imgId/stepsPerRound);
+        end
         drawnow();
         writeVideo(v,getframe(fgh));
     end
