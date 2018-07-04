@@ -25,7 +25,7 @@ harmonics = harmonicDropZones();
 colors = pileColors();
 
 %% Create figure
-figH = figure('Color', ones(1,3), 'NumberTitle', 'off', 'Units', 'pixels', 'MenuBar', 'none');
+figH = figure('Color', ones(1,3), 'NumberTitle', 'off', 'units','normalized','outerposition',[0.2 0.2 0.6 0.6], 'Units', 'pixels', 'MenuBar', 'none');
 figH.Name = sprintf('InterPile - %gx%g board', size(data.S, 1), size(data.S, 2));
 figH.KeyPressFcn = {@keyDown};
 figH.UserData=data;
@@ -40,13 +40,10 @@ end
 fileMenu = uimenu(figH, 'Label', 'File'); 
 uimenu(fileMenu, 'Label',...
         'New Window', ...
-        'Callback', @(figH, ~)interPile());
-uimenu(fileMenu, 'Label',...
-        'Clone Window', ...
         'Callback', @(figH, ~)interPile(getData(figH)));
 uimenu(fileMenu, 'Label',...
     'Movie Viewer', ...
-    'Callback', @(figH, ~)interViewer());
+    'Callback', @(figH, ~)openMovie(figH));
 uimenu(fileMenu, 'Label',...
     'Display Pile as Image', ...
     'Callback', @(figH, ~)printPile(getPile(figH)), 'Separator','on');
@@ -63,15 +60,15 @@ uimenu(fileMenu, 'Label',...
     'Save Pile as Dropzone', ...
     'Callback', @(figH, ~)savePileAsDropZone(figH));
 
-
 uimenu(fileMenu, 'Label',...
-    'Stochastic Movie', ...
+    'Generate Movie', ...
     'Callback', @(figH, ~)generateMovie(getPile(figH)), 'Separator','on');
 
 uimenu(fileMenu, 'Label',...
-    'Deterministic Movie', ...
-    'Callback', @(figH, ~)generateDetMovie(getPile(figH)));
-    
+    'Continue Movie', ...
+    'Callback', @(figH, ~)continueMovie());
+
+
 % Edit
 editMenu = uimenu(figH, 'Label', 'Edit');
 if ~isdeployed()
@@ -86,7 +83,11 @@ end
 uimenu(editMenu, 'Label',...
         'Set Mask', ...
         'Callback', @setMask, 'Separator','on');
-
+uimenu(editMenu, 'Label',...
+        'Clear Mask', ...
+        'Callback', @clearMask);
+    
+    
 uimenu(editMenu, 'Label',...
         'Undo', ...
         'Callback', @undo, 'Separator','on');
@@ -396,6 +397,20 @@ set(figH, 'ResizeFcn', @onResize);
 set(figH, 'WindowButtonMotionFcn', {@mouseMove});
 
 end
+function openMovie(figH)
+    data = getData(figH);
+    if isfield(data, 'movieFolder')
+        [~, movieFolder] = interViewer(data.movieFolder);
+    else
+        [~, movieFolder] = interViewer();
+    end
+    if ~isempty(movieFolder)
+        [movieFolder, ~, ~] = fileparts(movieFolder);
+        [movieFolder, ~, ~] = fileparts(movieFolder);
+        data.movieFolder = movieFolder;
+        set(ancestor(figH,'figure'), 'UserData', data);
+    end
+end
 function savePileAsImage(figH)
     [filename,ext,user_canceled] = imputfile();
     if user_canceled
@@ -604,6 +619,15 @@ function setMask(figH, ~)
     set(ancestor(figH,'figure'), 'UserData', data);
     S(isinf(S))=0;
     S(~mask) = -inf;
+    plotPile(S, figH);
+end
+function clearMask(figH, ~)
+    data = getData(figH);
+    S = getPile(figH);
+    
+    data.currentMaskName = 'none';
+    set(ancestor(figH,'figure'), 'UserData', data);
+    S(isinf(S))=0;
     plotPile(S, figH);
 end
 

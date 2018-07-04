@@ -1,17 +1,35 @@
 function configPath = generateStochFrames(S, excitation, folder, numRounds, stepsPerRound, callback)
 % S... sandpile to start from
 % F...dropzone
-if ~exist('stepsPerRound', 'var') || isempty(stepsPerRound)
-    stepsPerRound = 60;
-end
-if ~exist('numRounds', 'var') || isempty(numRounds)
-    numRounds = 1;
-end
+
 if ~exist('callback', 'var') || isempty(callback)
     callback = @(x)1;
 end
-fileTemplate = 'step%g.mat';
-configPath = fullfile(folder, 'config.mat');
+
+if ischar(S)
+    % Continue frame generation.
+    configPath = S;
+    clear S;
+   
+    if exist('numRounds', 'var') && ~isempty(numRounds)
+        load(configPath, 'S', 'excitation', 'stepsPerRound', 'fileTemplate', 'numSteps');
+    else
+        load(configPath, 'S', 'excitation', 'stepsPerRound', 'fileTemplate', 'numSteps', 'numRounds');
+    end
+    if ~exist('folder', 'var') || isempty(folder)
+        [folder, ~, ~] = fileparts(configPath);
+    end
+else
+    if ~exist('stepsPerRound', 'var') || isempty(stepsPerRound)
+        stepsPerRound = 600;
+    end
+    if ~exist('numRounds', 'var') || isempty(numRounds)
+        numRounds = 1;
+    end
+    
+    fileTemplate = 'step%g.mat';
+    configPath = fullfile(folder, 'config.mat');
+end
 
 % For the stochastic approach, we do not have to distinguish from where we
 % drop particles...
@@ -41,10 +59,15 @@ if ~exist(folder, 'dir')
     mkdir(folder);
     emptyFolder = true;
 end
+mode = 'stoch'; %#ok<NASGU>
 if emptyFolder || ~exist(configPath, 'file')
-    save(configPath, 'S', 'excitation', 'stepsPerRound', 'fileTemplate', 'numSteps', 'numRounds', 'folder');
+    save(configPath, 'S', 'excitation', 'stepsPerRound', 'fileTemplate', 'numSteps', 'numRounds', 'mode');
 else
-    load(configPath);
+    numRoundsTemp = numRounds;
+    load(configPath, 'S', 'excitation', 'stepsPerRound', 'fileTemplate', 'numSteps', 'numRounds');
+    numRounds = max(numRoundsTemp, numRounds);
+    numSteps = ceil(numRounds*stepsPerRound);
+    save(configPath, 'S', 'excitation', 'stepsPerRound', 'fileTemplate', 'numSteps', 'numRounds', 'mode');
 end
 
 SFile = fullfile(folder, sprintf(fileTemplate, 0));

@@ -1,9 +1,8 @@
-function generateMovie(S, filePath, excitation, numRounds, stepsPerRound, timePerRound, smallMovie, stochMovie)
+function generateMovie(S, filePath, dropZone, numRounds, stepsPerRound, timePerRound, smallMovie, stochMovie)
 
 if nargin < 1
     S = nullPile(64, 64);
 end
-
 if nargin < 3
     detMovieDialog(S);
     return;
@@ -12,12 +11,12 @@ end
 height = size(S, 1);
 width = size(S, 2);
 
-if ~exist('excitation', 'var') || isempty(excitation)
-    excitation = @(y,x) x.*(x.^2-3.*y.^2);
+if ~exist('dropZone', 'var') || isempty(dropZone)
+    dropZone = @(y,x) x.*(x.^2-3.*y.^2);
 end
 
 if ~exist('stepsPerRound', 'var') || isempty(stepsPerRound)
-    stepsPerRound = 60;
+    stepsPerRound = 600;
 end
 
 if ~exist('filePath', 'var') || isempty(filePath)
@@ -29,7 +28,7 @@ if ~exist('numRounds', 'var') || isempty(numRounds)
 end
 
 if ~exist('timePerRound', 'var') || isempty(timePerRound)
-    timePerRound = 6;
+    timePerRound = 60;
 end
 if ~exist('smallMovie', 'var') || isempty(smallMovie)
     smallMovie = true;
@@ -46,17 +45,20 @@ folder = fullfile(pathstr, [name, '_frames']);
 wbh = waitbar(0, 'Preparing movie...');
 % Either dropZone is already the drop zone, or a function corresponding
 % to the intended toppling function. If the latter, generate the drop zone.
-if isa(excitation, 'function_handle')
-    excitation = computeExcitation(excitation, height, width);
+if isa(dropZone, 'function_handle')
+    F = generateDropZone(dropZone, height, width, ~isinf(S));
+else
+    F = dropZone;
 end
 
 %% generate frames
-callback = @(x) waitbar(0.05+x*0.85, wbh, 'Generating frames...');
+callback = @(x) waitbar(0.05+x*0.85, wbh, sprintf('Generating frames: %g%%', x*100));
 if stochMovie
-    configPath = generateStochFrames(S, excitation, folder, numRounds, stepsPerRound, callback);
+    configPath = generateStochFrames(S, F, folder, numRounds, stepsPerRound, callback);
 else
-    configPath = generateDeterministicFrames(S, excitation, folder, numRounds, stepsPerRound, callback);
+    configPath = generateDetFrames(S, F, folder, numRounds, stepsPerRound, callback);
 end
+
 
 
 %% Generate movie

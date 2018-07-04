@@ -1,13 +1,23 @@
-function figH = interViewer(varargin)
+function varargout = interViewer(varargin)
 %% Pre-process input
-if nargin <1 || isempty(varargin{1})
-    [filename, pathname, ~] = uigetfile({'config.mat'}, 'Select movie configuration file', fullfile(cd(), 'config.mat'));
+if nargin>=1 && ~isempty(varargin{1})
+    configFile = varargin{1};
+else
+    configFile = cd();
+end
+
+if ischar(configFile) && exist(configFile, 'dir')
+    [filename, pathname, ~] = uigetfile({'config.mat'}, 'Select movie configuration file', fullfile(configFile, 'config.mat'));
     if isempty(filename) || (isnumeric(filename) && numel(filename) == 1 && filename == 0)
+        if nargout >= 1
+            varargout{1} = [];
+        end
+        if nargout >= 2
+            varargout{2} = [];
+        end
         return;
     end
     configFile = fullfile(pathname, filename);
-else
-    configFile = varargin{1};
 end
 
 
@@ -17,12 +27,14 @@ if isstruct(configFile)
 else
     load(configFile);
     [folder, ~, ~] = fileparts(configFile);
+    [parentFolder, ~, ~] = fileparts(folder);
     data = struct();
     data.configFile = configFile;
     data.fileTemplate = fileTemplate;
     data.numRounds = numRounds;
     data.numSteps = numSteps;
     data.folder = folder;
+    data.parentFolder = parentFolder;
     data.stepsPerRound = stepsPerRound;
     data.currentIndex = 0;
 end
@@ -30,6 +42,7 @@ colors = pileColors();
 
 %% Create figure
 figH = figure('Color', ones(1,3), 'NumberTitle', 'off', 'Units', 'pixels', 'MenuBar', 'none');
+
 figH.Name = sprintf('InterPile Viewer - %s', data.configFile);
 figH.KeyPressFcn = {@keyDown};
 figH.UserData=data;
@@ -44,7 +57,7 @@ end
 fileMenu = uimenu(figH, 'Label', 'File'); 
 uimenu(fileMenu, 'Label',...
         'Open Movie', ...
-        'Callback', @(figH, ~)interViewer());
+        'Callback', @(figH, ~)openMovie(figH));
 uimenu(fileMenu, 'Label',...
         'Clone Window', ...
         'Callback', @(figH, ~)interViewer(getData(figH)));
@@ -95,6 +108,13 @@ box on;
 onResize(figH);
 set(figH, 'ResizeFcn', @onResize); 
 set(figH, 'WindowButtonMotionFcn', {@mouseMove});
+
+if nargout >= 1
+    varargout{1} = figH;
+end
+if nargout >= 2
+    varargout{2} = data.configFile;
+end
 
 end
 function savePileAsImage(figH)
@@ -228,6 +248,10 @@ function setPile(figH, S)
 end
 function data = getData(figH)
     data = get(ancestor(figH,'figure'), 'UserData');
+end
+function openMovie(figH)
+    data = getData(figH);
+    interViewer(data.parentFolder)
 end
 function S = getPile(figH)
     data = getData(figH);

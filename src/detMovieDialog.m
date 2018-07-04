@@ -328,7 +328,7 @@ end
 
 
 close(figH);
-generateDetMovie(S, filePath, polynomial, numIter, stepsPerIter, timePerIter, true, stochMovie);
+generateMovie(S, filePath, polynomial, numIter, stepsPerIter, timePerIter, true, stochMovie);
 
 
 % --- Executes during object creation, after setting all properties.

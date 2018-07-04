@@ -1,38 +1,53 @@
 function configPath = generateDetFrames(S, F, folder, numRounds, stepsPerRound, callback)
 % S... sandpile to start from
 % F...dropzone
-if ~exist('stepsPerRound', 'var') || isempty(stepsPerRound)
-    stepsPerRound = 60;
-end
-if ~exist('numRounds', 'var') || isempty(numRounds)
-    numRounds = 1;
-end
 if ~exist('callback', 'var') || isempty(callback)
     callback = @(x)1;
 end
-fileTemplate = 'step%g.mat';
-configPath = fullfile(folder, 'config.mat');
-
+if ischar(S)
+    % Continue frame generation.
+    configPath = S;
+    clear S;
+   
+    if exist('numRounds', 'var') && ~isempty(numRounds)
+        load(configPath, 'S', 'F', 'stepsPerRound', 'fileTemplate', 'numSteps');
+    else
+        load(configPath, 'S', 'F', 'stepsPerRound', 'fileTemplate', 'numSteps', 'numRounds');
+    end
+    if ~exist('folder', 'var') || isempty(folder)
+        [folder, ~, ~] = fileparts(configPath);
+    end
+else
+    if ~exist('stepsPerRound', 'var') || isempty(stepsPerRound)
+        stepsPerRound = 600;
+    end
+    if ~exist('numRounds', 'var') || isempty(numRounds)
+        numRounds = 1;
+    end
+    
+    fileTemplate = 'step%g.mat';
+    configPath = fullfile(folder, 'config.mat');
+    numSteps = ceil(numRounds*stepsPerRound);
+end
     
 %% The number of elements we have already dropped in the last rounds
 D = zeros(size(S));
 
 %% start iteration
-numSteps = ceil(numRounds*stepsPerRound);
-
 emptyFolder = false;
 if ~exist(folder, 'dir')
     mkdir(folder);
     emptyFolder = true;
 end
+mode = 'det'; %#ok<NASGU>
 if emptyFolder || ~exist(configPath, 'file')
-    save(configPath, 'S', 'F', 'stepsPerRound', 'fileTemplate', 'numSteps', 'numRounds', 'folder');
+    save(configPath, 'S', 'F', 'stepsPerRound', 'fileTemplate', 'numSteps', 'numRounds', 'mode');
 else
     numRoundsTemp = numRounds;
-    load(configPath);
+    load(configPath, 'S', 'F', 'stepsPerRound', 'fileTemplate', 'numSteps', 'numRounds');
     numRounds = max(numRoundsTemp, numRounds);
     numSteps = ceil(numRounds*stepsPerRound);
-    save(configPath, 'S', 'F', 'stepsPerRound', 'fileTemplate', 'numSteps', 'numRounds', 'folder');
+    save(configPath, 'S', 'F', 'stepsPerRound', 'fileTemplate', 'numSteps', 'numRounds', 'mode');
 end
 
 SFile = fullfile(folder, sprintf(fileTemplate, 0));
