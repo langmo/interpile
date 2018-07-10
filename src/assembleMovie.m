@@ -9,14 +9,21 @@ end
 if ~exist('showTime', 'var') || isempty(showTime)
     showTime = true;
 end
+colors = pileColors();
+colors = colors(1:4, :);
 frameRate = stepsPerRound/timePerRound/deltaT;
 if smallMovie
-    v = VideoWriter(filePath, 'Indexed AVI');
-    v.Colormap = pileColors();
+    if strcmpi(ext, '.mp4')
+         v = VideoWriter(filePath, 'MPEG-4');
+        v.Quality = 100;
+    else
+        v = VideoWriter(filePath, 'Indexed AVI');
+        v.Colormap = colors;
+    end
 else
     if strcmpi(ext, '.mp4')
         v = VideoWriter(filePath, 'MPEG-4');
-        v.Quality = 100;
+        v.Quality = 50;
     else
         v = VideoWriter(filePath, 'Uncompressed AVI');
     end
@@ -40,11 +47,21 @@ while true
     end
     load(imgPath, 'S');
     if smallMovie
-        if scaling == 1
-            writeVideo(v, uint8(S));
-        else
-            writeVideo(v, uint8(repelem(S, scaling, scaling)));
+        if scaling ~= 1
+            S = repelem(S, scaling, scaling);
         end
+        if strcmpi(ext, '.mp4')
+            St = zeros([size(S)+[1,1], 3]);
+            for i=1:size(S, 1)
+                for j=1:size(S, 2)
+                    St(i, j, :) = colors(S(i, j)+1, :);
+                end
+            end
+            writeVideo(v, uint8(round(St*255)));
+        else
+            writeVideo(v, uint8(S));
+        end
+        
     else
         if firstRound
             firstRound = false;

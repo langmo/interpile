@@ -10,9 +10,13 @@ end
 
 if ~exist('filePath', 'var') || isempty(filePath)
     [folder, ~, ~] = fileparts(configPath);
-    [folder, baseName, ~] = fileparts(folder);
-    filePath = fullfile(folder, [baseName(1:strfind(baseName, '_frames')), '.avi']);
-    smallMovie = true;
+    [folder, baseName, ext] = fileparts(folder);
+    baseName = [baseName, ext];
+    idx = strfind(baseName, '_frames');
+    if ~isempty(idx)
+        baseName = baseName(1:idx(end)-1);
+    end
+    filePath = fullfile(folder, [baseName, '.avi']);
 end
 if ~exist('numRounds', 'var') || isempty(numRounds)
     numRounds = [];
@@ -51,7 +55,7 @@ end
 
 % Continue movie
 wbh = waitbar(0, 'Continuing movie...');
-callback = @(x) waitbar(0.05+x*0.85, wbh, sprintf('Generating frames: %g%%', x*100));
+callback = @(x) movieWaitbar(wbh, x);
 
 if stochMovie
     configPath = generateStochFrames(configPath, [], [], numRounds, [], callback);
@@ -67,3 +71,21 @@ close(wbh)
 
 end
 
+function movieWaitbar(wbh, progress)
+    data = wbh.UserData;
+    if isempty(data) || ~isstruct(data) || ~isfield(data, 'lastTick') || ~isfield(data, 'lastProgress')
+        data = struct();
+        waitbar(0.05+progress*0.85, wbh, sprintf('Generating frames: %2.2f%%', progress*100));
+    else
+        time = toc(data.lastTick);
+        lastProgress = data.lastProgress;
+        periodS = round(time / (progress-lastProgress) * (1-progress));
+        periodM = mod(floor(periodS/60), 60);
+        periodH = floor(periodS/60/60);
+        periodS = mod(periodS, 60);
+        waitbar(0.05+progress*0.85, wbh, sprintf('Generating frames: %2.2f%% (%02gh %02gmin %02gs remaining)', progress*100, periodH, periodM, periodS));
+    end
+    data.lastProgress = progress;
+    data.lastTick = tic();
+    wbh.UserData = data;
+end

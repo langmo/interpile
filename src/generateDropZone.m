@@ -34,14 +34,10 @@ table = zeros(height+2, width+2);
 table(2:end-1, 2:end-1) = mask;
 extended = (filter2(addFilter, table) > 0)-table;
 
-%DeltaH = filter2([0,1,0;1,-4,1;0,1,0], H, 'valid');
-%assert(all(all(abs(DeltaH)<0.01)));
-
 %% Separate values which correspond to drop zone, and the ones which correspond to the board
 F = H;
 F(~extended) = 0;
 
-H = H;
 H(~table) =0;
 
 minVal = min(min(min(H)), min(min(F)));
@@ -67,6 +63,14 @@ for i=2:length(values)
 end
 H = H ./divisor;
 F = F ./ divisor;
+
+%% Check validity
+DeltaH = filter2([0,1,0;1,-4,1;0,1,0], H, 'valid');
+if ~all(all(abs(DeltaH)==0))
+    warning('InterPile:NotHarmonic', 'Function to generate potential is not harmonic.');
+end
+assert(all(all(H>=0)), 'InterPile:HarmonicFunctionNegative', 'Harmonic function takes negative values.');
+assert(all(all(F>=0)), 'InterPile:PotentialNegative', 'Potential takes negative values');
 
 %% Return values
 if nargout > 1
