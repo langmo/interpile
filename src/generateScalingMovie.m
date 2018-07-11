@@ -1,29 +1,40 @@
-function generateDomainSizeMovie(filePath, domainSizes, harmonicFct, timeFct, movieTime)
-if ~exist('domainSizes', 'var') || isempty(domainSizes)
-    domainSizes = 1:2:127;
+function generateScalingMovie(filePath, domainSizes, harmonicFct, referenceSize, referenceTime, scalingLaw, movieTime)
+if nargin < 2
+    scalingMovieDialog();
+    return;
 end
-if ~exist('filePath', 'var') || isempty(filePath)
-    filePath = fullfile(cd(), sprintf('domainResizing_%gx%g_to_%gx%g_%s.avi', domainSizes(1), domainSizes(1), domainSizes(end),domainSizes(end)));
-end
-
-if ~exist('harmonicFct', 'var')
-    harmonicFct = [];
-end
-if ~exist('timeFct', 'var')
-    timeFct = @(N,M)0;
-end
-if ~isa(timeFct, 'function_handle')
-    fixedTime = timeFct;
-    timeFct = @(N,M)fixedTime;
-end
-
 if ~exist('movieTime', 'var') || isempty(movieTime)
     movieTime = length(domainSizes)/10;
 end
+if min(size(domainSizes))==1 
+    if size(domainSizes, 2) > 1
+        domainSizes = domainSizes';
+    end
+    domainSizes = repmat(domainSizes, 1, 2);
+end
+if ~exist('referenceSize', 'var') || isempty(referenceSize)
+    referenceSize = domainSizes(1, :);
+end
+if ~exist('referenceTime', 'var') || isempty(referenceTime)
+    referenceTime = 0;
+end
+if ~exist('scalingLaw', 'var') || isempty(scalingLaw)
+    scalingLaw = 0;
+end
+if numel(referenceSize)==1 
+    referenceSize = [referenceSize, referenceSize];
+end
+if ~exist('harmonicFct', 'var') || isempty(harmonicFct) || referenceTime == 0
+    harmonicFct = [];
+    referenceTime = 0;
+end
+
+domainTimes = referenceTime * arrayfun(@(i)(referenceSize(1)/domainSizes(i, 1))^scalingLaw, (1:size(domainSizes, 1))');
 
 [pathstr,name,~] = fileparts(filePath);
 folder = fullfile(pathstr, [name, '_frames']);
 configPath = fullfile(folder, 'config.mat');
+
 %% generate frames
 wbh = waitbar(0, 'Preparing movie...');
 callback = @(x) movieWaitbar(wbh, x);
@@ -36,25 +47,19 @@ end
 if emptyFolder || ~exist(configPath, 'file')
     fileTemplate = 'step%g.mat';
     stepsPerRound = length(domainSizes);
-    numSteps = stepsPerRound;
-    save(configPath, 'domainSizes', 'fileTemplate', 'stepsPerRound', 'numSteps');
+    numSteps = stepsPerRound; %#ok<NASGU>
+    mode = 'scaling'; %#ok<NASGU>
+    save(configPath, 'domainSizes', 'domainTimes', 'fileTemplate', 'stepsPerRound', 'numSteps', 'referenceSize', 'referenceTime', 'scalingLaw', 'movieTime', 'mode');
 else
-    domainSizesTemp = domainSizes;
-    load(configPath, 'domainSizes', 'fileTemplate', 'stepsPerRound', 'numSteps');
-    
-    if isempty(setdiff(domainSizes,domainSizesTemp))
-        domainSizes = domainSizesTemp;
-        stepsPerRound = length(domainSizes);
-        numSteps = stepsPerRound;
-    end
-    clear domainSizesTemp;
-    save(configPath, 'domainSizes', 'fileTemplate', 'stepsPerRound', 'numSteps');
+    load(configPath, 'domainSizes', 'domainTimes', 'fileTemplate', 'stepsPerRound', 'numSteps', 'referenceSize', 'referenceTime', 'scalingLaw');
+    mode = 'scaling'; %#ok<NASGU>
+    save(configPath, 'domainSizes', 'domainTimes', 'fileTemplate', 'stepsPerRound', 'numSteps', 'referenceSize', 'referenceTime', 'scalingLaw', 'movieTime', 'mode');
 end
 
 ticVal = uint64(0);
-for s=1:length(domainSizes)
+for s=1:size(domainSizes, 1)
     if toc(ticVal) > 5
-        callback((s-1)/(length(domainSizes)));
+        callback((s-1)/(size(domainSizes, 1)));
         ticVal = tic();
     end
     
@@ -63,12 +68,12 @@ for s=1:length(domainSizes)
     if ~emptyFolder && exist(SFile, 'file')
         continue;
     end
-    S = nullPile(domainSizes(s));
+    S = nullPile(domainSizes(s, 1), domainSizes(s, 2));
     
     if ~isempty(harmonicFct)
         X = generateDropZone(harmonicFct, size(S, 1), size(S, 2));
         
-        Xt = floor(timeFct(size(S, 1), size(S, 2)).*X);
+        Xt = floor(domainTimes(s).*X);
         S = relaxPile(S+Xt); %#ok<NASGU>
     end
     

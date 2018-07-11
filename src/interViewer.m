@@ -51,13 +51,8 @@ else
         data.mode = 'det';
     end
     if strcmpi(data.mode, 'scaling')
-        if min(size(domainSizes))==1 %#ok<NODEF>
-            if size(domainSizes, 2) > 1
-                domainSizes = domainSizes';
-            end
-            domainSizes = repmat(domainSizes, 1, 2);
-        end
         data.domainSizes = domainSizes;
+        data.domainTimes = domainTimes;
         data.currentIndex = 1;
     else
         data.currentIndex = 0;
@@ -167,7 +162,9 @@ function savePileAsMat(figH)
 end
 function setIndex(figH, index)
     figH = ancestor(figH,'figure');
-    if index < 0
+    if index < 1 && strcmpi(figH.UserData.mode, 'scaling')
+            index = 1;
+    elseif index < 0
         index = 0;
     elseif index > figH.UserData.numSteps
         index = figH.UserData.numSteps;
@@ -244,10 +241,11 @@ function plotPile(figH)
     timeTextH = findall(figH, 'Tag', 'timeText');
     if strcmpi(figH.UserData.mode, 'scaling')
         domainSize = figH.UserData.domainSizes(figH.UserData.currentIndex, :);
-        timeTextH.String = sprintf('Size %gx%g (Image %g of %g)', domainSize(1), domainSize(2),...
+        domainTime = figH.UserData.domainTimes(figH.UserData.currentIndex, :);
+        timeTextH.String = sprintf('Size=%gx%g, time=%g (Frame %g of %g)', domainSize(1), domainSize(2), domainTime,...
             figH.UserData.currentIndex,figH.UserData.numSteps);
     else
-        timeTextH.String = sprintf('Time %1.7f (Image %g of %g)', (figH.UserData.currentIndex)/(figH.UserData.stepsPerRound),...
+        timeTextH.String = sprintf('Time %1.7f (Frame %g of %g)', (figH.UserData.currentIndex)/(figH.UserData.stepsPerRound),...
             figH.UserData.currentIndex,figH.UserData.numSteps);
     end
 end

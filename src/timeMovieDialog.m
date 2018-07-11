@@ -1,15 +1,15 @@
-function varargout = detMovieDialog(varargin)
-% DETMOVIEDIALOG MATLAB code for detMovieDialog.fig
-%      DETMOVIEDIALOG, by itself, creates a new DETMOVIEDIALOG or raises the existing
+function varargout = timeMovieDialog(varargin)
+% TIMEMOVIEDIALOG MATLAB code for timeMovieDialog.fig
+%      TIMEMOVIEDIALOG, by itself, creates a new TIMEMOVIEDIALOG or raises the existing
 %      singleton*.
 %
-%      H = DETMOVIEDIALOG returns the handle to a new DETMOVIEDIALOG or the handle to
+%      H = TIMEMOVIEDIALOG returns the handle to a new TIMEMOVIEDIALOG or the handle to
 %      the existing singleton*.
 %
-%      DETMOVIEDIALOG('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in DETMOVIEDIALOG.M with the given input arguments.
+%      TIMEMOVIEDIALOG('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in TIMEMOVIEDIALOG.M with the given input arguments.
 %
-%      DETMOVIEDIALOG('Property','Value',...) creates a new DETMOVIEDIALOG or raises the
+%      TIMEMOVIEDIALOG('Property','Value',...) creates a new TIMEMOVIEDIALOG or raises the
 %      existing singleton*.  Starting from the left, property value pairs are
 %      applied to the GUI before detMovieDialog_OpeningFcn gets called.  An
 %      unrecognized property name or invalid value makes property application
@@ -20,7 +20,7 @@ function varargout = detMovieDialog(varargin)
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Edit the above text to modify the response to help detMovieDialog
+% Edit the above text to modify the response to help timeMovieDialog
 
 % Last Modified by GUIDE v2.5 04-Jun-2018 17:11:13
 
@@ -28,8 +28,8 @@ function varargout = detMovieDialog(varargin)
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @detMovieDialog_OpeningFcn, ...
-                   'gui_OutputFcn',  @detMovieDialog_OutputFcn, ...
+                   'gui_OpeningFcn', @timeMovieDialog_OpeningFcn, ...
+                   'gui_OutputFcn',  @timeMovieDialog_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
@@ -44,15 +44,15 @@ end
 % End initialization code - DO NOT EDIT
 
 
-% --- Executes just before detMovieDialog is made visible.
-function detMovieDialog_OpeningFcn(figH, eventdata, handles, varargin)
+% --- Executes just before timeMovieDialog is made visible.
+function timeMovieDialog_OpeningFcn(figH, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to detMovieDialog (see VARARGIN)
+% varargin   command line arguments to timeMovieDialog (see VARARGIN)
 
-% Choose default command line output for detMovieDialog
+% Choose default command line output for timeMovieDialog
 handles.output = figH;
 
 % Update handles structure
@@ -68,6 +68,11 @@ fieldStart_Callback(figH, eventdata, handles);
 fieldMode_Callback(figH, eventdata, handles);
 autoSetPath(figH);
 
+try
+    setWindowIcon();
+catch
+    % Do nothing, default Matlab icon is OK, too.
+end
 
 function autoSetPath(figH)
 figH = ancestor(figH,'figure');
@@ -128,7 +133,7 @@ fieldPath.String = fullfile(path, [fileName, ext]);
 figH.UserData.lastAutoPath = fileName;
 
 % --- Outputs from this function are returned to the command line.
-function varargout = detMovieDialog_OutputFcn(hObject, eventdata, handles) 
+function varargout = timeMovieDialog_OutputFcn(hObject, eventdata, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -328,7 +333,7 @@ end
 
 
 close(figH);
-generateMovie(S, filePath, polynomial, numIter, stepsPerIter, timePerIter, true, stochMovie);
+generateTimeMovie(S, filePath, polynomial, numIter, stepsPerIter, timePerIter, true, stochMovie);
 
 
 % --- Executes during object creation, after setting all properties.

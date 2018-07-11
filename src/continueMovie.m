@@ -33,7 +33,9 @@ oldWarn = warning('off','MATLAB:load:variableNotFound');
 load(configPath, 'mode')
 warning(oldWarn);
 if exist('mode', 'var')
-    if strcmpi(mode, 'det');
+    if strcmpi(mode, 'scaling');
+         error('InterPile:NotYetImplemented', 'Continuation of domain scaling movies currently not possible.');
+    elseif strcmpi(mode, 'det');
         stochMovie = false;
     elseif strcmpi(mode, 'stoch');
         stochMovie = true;

@@ -54,15 +54,19 @@ F(~mask) = 0;
 
 %% divide by greatest common divisor
 values = setdiff(union(unique(H), unique(F)), 0);
-divisor = values(1);
-for i=2:length(values)
-    divisor = gcd(divisor, values(i));
-    if divisor == 1
-        break;
+if isempty(values)
+    divisor = 1;
+else
+    divisor = values(1);
+    for i=2:length(values)
+        divisor = gcd(divisor, values(i));
+        if divisor == 1
+            break;
+        end
     end
+    H = H ./divisor;
+    F = F ./ divisor;
 end
-H = H ./divisor;
-F = F ./ divisor;
 
 %% Check validity
 DeltaH = filter2([0,1,0;1,-4,1;0,1,0], H, 'valid');

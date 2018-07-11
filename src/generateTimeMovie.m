@@ -1,10 +1,10 @@
-function generateMovie(S, filePath, harmonicFct, numRounds, stepsPerRound, timePerRound, smallMovie, stochMovie)
+function generateTimeMovie(S, filePath, harmonicFct, numRounds, stepsPerRound, timePerRound, smallMovie, stochMovie)
 
 if nargin < 1
     S = nullPile(64, 64);
 end
 if nargin < 3
-    detMovieDialog(S);
+    timeMovieDialog(S);
     return;
 end
 
