@@ -25,18 +25,43 @@ end
 if isstruct(configFile)
     data = configFile;
 else
+    mode = []; % forward declaration to avoid bug in Matlab where Matlab thinks mode is a function and not a variable.
     load(configFile);
     [folder, ~, ~] = fileparts(configFile);
     [parentFolder, ~, ~] = fileparts(folder);
     data = struct();
     data.configFile = configFile;
     data.fileTemplate = fileTemplate;
-    data.numRounds = numRounds;
+    if exist('numRounds', 'var') && ~isempty(numRounds)
+        data.numRounds = numRounds;
+    else
+        data.numRounds = 1;
+    end
     data.numSteps = numSteps;
     data.folder = folder;
     data.parentFolder = parentFolder;
     data.stepsPerRound = stepsPerRound;
-    data.currentIndex = 0;
+    if exist('mode', 'var') && ~isempty(mode)
+        data.mode = mode;
+    elseif exist('excitation', 'var')
+        data.mode = 'stoch';
+    elseif exist('domainSizes', 'var')
+        data.mode = 'scaling';
+    else
+        data.mode = 'det';
+    end
+    if strcmpi(data.mode, 'scaling')
+        if min(size(domainSizes))==1 %#ok<NODEF>
+            if size(domainSizes, 2) > 1
+                domainSizes = domainSizes';
+            end
+            domainSizes = repmat(domainSizes, 1, 2);
+        end
+        data.domainSizes = domainSizes;
+        data.currentIndex = 1;
+    else
+        data.currentIndex = 0;
+    end
 end
 colors = pileColors();
 
@@ -80,7 +105,11 @@ timeField = uicontrol('Style', 'slider', ...
     'Tag', 'timeField',...
     'Units', 'centimeters');
 timeField.Max = 1;
-timeField.Min = 0;
+if strcmpi(data.mode, 'scaling')
+    timeField.Min = 1/data.numSteps;
+else
+    timeField.Min = 0;
+end
 timeField.Value = data.currentIndex/data.numSteps;
 timeField.SliderStep = [1,1]./data.numSteps;
 timeField.Callback = @(figH, ~)timeChanged(figH);
@@ -92,7 +121,7 @@ uicontrol('Style', 'text', 'String', 'Time X.XX (XXX of XXX)',...
 %% Main plot
 axH = axes('Tag', 'Splot', 'Units', 'pixels');
 colormap(colors)
-cbh = colorbar('north', 'Ticks', (1:size(colors, 1))+0.5, 'TickLabels', arrayfun(@(x)int2str(x), 0:size(colors, 1)-1, 'UniformOutput', false), 'Units', 'centimeters', 'Tag', 'colorbar');
+colorbar('north', 'Ticks', (1:size(colors, 1))+0.5, 'TickLabels', arrayfun(@(x)int2str(x), 0:size(colors, 1)-1, 'UniformOutput', false), 'Units', 'centimeters', 'Tag', 'colorbar');
 hold on;
 plotPile(figH);
 data = getData(figH);
@@ -207,12 +236,20 @@ function plotPile(figH)
     Stemp = S;
     Stemp(isinf(Stemp)) = 10;
     image(Stemp+1);
+    xlim([0.5, size(S, 2)+0.5]);
+    ylim([0.5, size(S, 1)+0.5]);
 
     setPile(figH, S);
     
-    timeText = findall(figH, 'Tag', 'timeText');
-    timeText.String = sprintf('Time %1.7f (Image %g of %g)', (figH.UserData.currentIndex)/(figH.UserData.stepsPerRound),...
-        figH.UserData.currentIndex,figH.UserData.numSteps);
+    timeTextH = findall(figH, 'Tag', 'timeText');
+    if strcmpi(figH.UserData.mode, 'scaling')
+        domainSize = figH.UserData.domainSizes(figH.UserData.currentIndex, :);
+        timeTextH.String = sprintf('Size %gx%g (Image %g of %g)', domainSize(1), domainSize(2),...
+            figH.UserData.currentIndex,figH.UserData.numSteps);
+    else
+        timeTextH.String = sprintf('Time %1.7f (Image %g of %g)', (figH.UserData.currentIndex)/(figH.UserData.stepsPerRound),...
+            figH.UserData.currentIndex,figH.UserData.numSteps);
+    end
 end
 function onResize(figH, ~)
     topHeight = 1.5; %cm

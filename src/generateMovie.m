@@ -1,4 +1,4 @@
-function generateMovie(S, filePath, dropZone, numRounds, stepsPerRound, timePerRound, smallMovie, stochMovie)
+function generateMovie(S, filePath, harmonicFct, numRounds, stepsPerRound, timePerRound, smallMovie, stochMovie)
 
 if nargin < 1
     S = nullPile(64, 64);
@@ -11,8 +11,8 @@ end
 height = size(S, 1);
 width = size(S, 2);
 
-if ~exist('dropZone', 'var') || isempty(dropZone)
-    dropZone = @(y,x) x.*(x.^2-3.*y.^2);
+if ~exist('harmonicFct', 'var') || isempty(harmonicFct)
+    harmonicFct = @(y,x) x.*(x.^2-3.*y.^2);
 end
 
 if ~exist('stepsPerRound', 'var') || isempty(stepsPerRound)
@@ -43,12 +43,12 @@ end
 folder = fullfile(pathstr, [name, '_frames']);
 
 wbh = waitbar(0, 'Preparing movie...');
-% Either dropZone is already the drop zone, or a function corresponding
+% Either harmonicFct is already the drop zone, or a function corresponding
 % to the intended toppling function. If the latter, generate the drop zone.
-if isa(dropZone, 'function_handle')
-    F = generateDropZone(dropZone, height, width, ~isinf(S));
+if isa(harmonicFct, 'function_handle')
+    F = generateDropZone(harmonicFct, height, width, ~isinf(S));
 else
-    F = dropZone;
+    F = harmonicFct;
 end
 
 %% generate frames

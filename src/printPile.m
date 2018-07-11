@@ -11,10 +11,37 @@ end
 if nargin < 5 || isempty(borderWidth)
     borderWidth = 0.5;
 end
+colors = pileColors();
 if nargin >= 2 && ~isempty(fgh) && ishandle(fgh)
-    set(get(gca(), 'Children'), 'CData', S+1);
+    figure(fgh);
+    plotH = get(fgh.CurrentAxes, 'Children');
+    if all(size(get(plotH, 'CData'))==size(S))
+        set(plotH, 'CData', S+1);
+    else
+        delete (plotH);
+        if rawPlot
+            image(S+1);
+            colormap(colors)
+            xlim([0.5, size(S, 2)+0.5]);
+            ylim([0.5, size(S, 1)+0.5]);
+            axH = gca();
+            axH.YDir = 'reverse';
+            axis off;
+            fgh.CurrentAxes.Position = [1,1,size(S, 2), size(S, 1)];
+        else
+            image(S+1);
+            colormap(colors)
+
+            xlim([0.5, size(S, 2)+0.5]);
+            ylim([0.5, size(S, 1)+0.5]);
+            
+            fgh.CurrentAxes.YDir = 'reverse';
+            fgh.CurrentAxes.XTick = [];
+            fgh.CurrentAxes.YTick = [];
+        end
+    end
 else
-    colors = pileColors();
+    
     if lessColors
        colors(5:end, :) = []; 
     end
@@ -25,8 +52,6 @@ else
         catch
             % do nothing, default icon is fine, too.
         end
-        %fgh.PaperSize = [size(S, 2), size(S, 1)];
-        %fgh.PaperPosition = [1,1,size(S, 2), size(S, 1)];
         image(S+1);
         colormap(colors)
         xlim([0.5, size(S, 2)+0.5]);
