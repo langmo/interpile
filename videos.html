@@ -14,31 +14,56 @@ If player is not loading or an error occurred, you can visit our YouTube channel
 <div style="width:100%;">
 	<div style="float:left;padding: 0px 10px 5px 10px;border: 1px solid black;margin:0px 0px 10px 0px;width:220px;">
 		<p style="margin: 0px 0 0px 0;">
+			Mode:<br />
+			<select name="mode" id="mode" size="1" onchange="setMode()">
+				<option value="dynanmics">Harmonic Dynamics</option>
+				<option value="scaling">Domain Scaling</option>
+			</select>
+		</p>
+	</div>
+	<div id="domainDiv" style="float:left;padding: 0px 10px 5px 10px;border: 1px solid black;margin:0px 0px 10px 0px;width:220px;">
+		<p style="margin: 0px 0 0px 0;">
 			Domain:<br />
 			<select name="domains" id="domains" size="1" onchange="initConfiguration()"> 
 			</select>
 		</p>
 	</div>
-	<div style="float:left;padding: 0px 10px 5px 10px;border: 1px solid black;margin:0px 0px 10px 0px;width:220px;">
+	<div id="configurationDiv" style="float:left;padding: 0px 10px 5px 10px;border: 1px solid black;margin:0px 0px 10px 0px;width:220px;">
 		<p style="margin: 0px 0 0px 0;">
 			Start Configuration:<br />
 			<select name="configuration" id="configuration" size="1" onchange="initHarmonic()"> 
 			</select>
 		</p>
 	</div>
-	<div style="float:left;padding: 0px 10px 5px 10px;border: 1px solid black;margin:0px 0px 10px 0px;width:220px;">
+	<div id="harmonicDiv" style="float:left;padding: 0px 10px 5px 10px;border: 1px solid black;margin:0px 0px 10px 0px;width:220px;">
 		<p style="margin: 0px 0 0px 0;">
 			Harmonic Field:<br />
 			<select name="harmonic" id="harmonic" size="1"> 
 			</select>
 			</p>
 	</div>
-</div><br clear ="all" />
+	
+	<div id="scalingHarmonicsDiv" style="display:none;float:left;padding: 0px 10px 5px 10px;border: 1px solid black;margin:0px 0px 10px 0px;width:220px;">
+		<p style="margin: 0px 0 0px 0;">
+			Harmonic:<br />
+			<select name="scalingHarmonics" id="scalingHarmonics" size="1" onchange="initScalingTime(true)"> 
+			</select>
+		</p>
+	</div>
+	<div id="scalingTimeDiv" style="display:none;float:left;padding: 0px 10px 5px 10px;border: 1px solid black;margin:0px 0px 10px 0px;width:220px;">
+		<p style="margin: 0px 0 0px 0;">
+			Time:<br />
+			<select name="scalingTime" id="scalingTime" size="1"> 
+			</select>
+			</p>
+	</div>
+</div>
+<br clear ="all" />
 <div id="playerBox" style="width: 100%;padding: 0px;margin:0px"><div id="player"></div></div>
 <p>White pixels represent vertices carrying zero particles, while green, blue and black pixels represent vertices carrying one, two or three particles, respectively.</p>
     <script>
 	var videos = [
-		// NAME					Configuration 		Harmonic 			VideoID
+		// Domain				Configuration 		Harmonic 			VideoID
 		["255 x 255 Square", 	"Identity", 		"Roundtrip", 		"4EETd94ud1o"],
 		
 		["255 x 255 Square", 	"Identity", 		"H1a=i", 			"h4yStj7Oh2M"],
@@ -78,8 +103,6 @@ If player is not loading or an error occurred, you can visit our YouTube channel
 		["255 x 255 Square", 	"H4a(H4b(I, t=0.5), t=0.125)", 	"H2b=i^2-j^2", 		"MP7Ugap2SeU"],
 		["255 x 255 Square", 	"H4a(H4b(I, t=0.5), t=0.125)", 	"H3a=i^3-3ij^2", 	"WH-1TcIOkN0"],
 		
-		
-		
 		["255 x 255 Square", 	"IST Austria",	"H3a=i^3-3ij^2", 	"APgHZaQgdYg"],
 		["255 x 255 Square", 	"IST Austria",	"H3a=i^3-3ij^2 (stoch.)", 	"TRPb2o7ybMw"],
 		
@@ -106,7 +129,21 @@ If player is not loading or an error occurred, you can visit our YouTube channel
 		
 		["255^2 Square with 63^2 Hole", 	"Identity", 		"H2a=ij", 			"t4rmSxxeZeU"]
 	  ];
+	  
+	  scalingVideos = [
+		// Harmonic 			Time				VideoID
+		["None", 				"0.0", 				"UpLOn3X0KsA"],
+		["H1a=i", 				"0.25",				"soIFnW2zJoU"],
+		["H2a=ij", 				"0.5",				"Z01uiD7LJUU"],
+		["H2a=ij", 				"1/30*(255/N)",		"cU8m0pA8GRE"],
+		["H3a=i^3-3ij^2", 		"0.25",				"0ohrG9uCNZs"],
+		["H3a=i^3-3ij^2", 		"0.02*(63/N)",		"t6BIFhcvBO4"],
+		["H4a=i^4-6i^2j^2+j^4-i^2-j^2", "0.00283333*(255/N)",		"05YuuomVtO4"],
+		["H4a=i^4-6i^2j^2+j^4-i^2-j^2", "0.000104167*(255/N)^2",		"JnDjfbafag4"],
+		["H4b=i^3j-ij^3", "0.5",		"33OEAtzd3Iw"],
+	  ];
 	  initDomains();
+	  initScalingHarmonics(false);
 	
       // load IFrame Player API code asynchronously.
       var tag = document.createElement('script');
@@ -136,12 +173,56 @@ If player is not loading or an error occurred, you can visit our YouTube channel
           }
         });
       }
+	  function onResize()
+	  {
+		var refHeight = 813;
+        var refWidth = 757;
+	  
+		var playerObj = document.getElementById("player");
+		var playerBoxObj = document.getElementById("playerBox");
+		if(!playerObj || !playerBoxObj)
+			return;
+		var width = Math.min(playerBox.offsetWidth, refWidth);
+		var height = Math.round(width/refWidth*refHeight);
+
+		playerObj.width = width;
+		playerObj.height = height;
+	  }
+	  window.addEventListener('resize', onResize);
+	  window.addEventListener("load", onResize); 
+	  
 	  function onPlayerReady(evt) 
 	  {
 		document.getElementById("harmonic").onchange = playVideo;
+		document.getElementById("scalingTime").onchange = playScalingVideo;
+	  }
+	  
+	  function setMode()
+	  {
+		if(document.getElementById("mode").value == "scaling")
+		{
+			document.getElementById("domainDiv").style.display = "none";
+			document.getElementById("configurationDiv").style.display = "none";
+			document.getElementById("harmonicDiv").style.display = "none";
+			document.getElementById("scalingHarmonicsDiv").style.display = "block";
+			document.getElementById("scalingTimeDiv").style.display = "block";
+			playScalingVideo();
+		}
+		else
+		{
+			document.getElementById("domainDiv").style.display = "block";
+			document.getElementById("configurationDiv").style.display = "block";
+			document.getElementById("harmonicDiv").style.display = "block";
+			document.getElementById("scalingHarmonicsDiv").style.display = "none";
+			document.getElementById("scalingTimeDiv").style.display = "none";
+			playVideo();
+		}
+		
 	  }
 
-	  
+	  ////////////////////////////////////////////
+	  // Harmonic Dynamics
+	  ////////////////////////////////////////////
 	  function domainFilter(value, index, self) 
 	  {
 		for(var i=0; i<self.length; i++)
@@ -169,6 +250,7 @@ If player is not loading or an error occurred, you can visit our YouTube channel
 		else
 			return true;
 	  }
+	  
       function initDomains()
 	  {
 		var domainObject = document.getElementById("domains");
@@ -179,7 +261,7 @@ If player is not loading or an error occurred, you can visit our YouTube channel
 			newOption.text = uniqueDomains[i][0];
 			domainObject.add(newOption); 
 		}
-		initConfiguration()
+		initConfiguration();
 	  }
 	  function initConfiguration()
 	  {
@@ -253,9 +335,6 @@ If player is not loading or an error occurred, you can visit our YouTube channel
 	  }
 	  function playVideo()
 	  {
-		var domain = document.getElementById("domains").value;
-		var configuration = document.getElementById("configuration").value;
-		var harmonic = document.getElementById("harmonic").value;
 		if(player)
 		{
 			//player.loadVideoById({videoId:url});
@@ -275,23 +354,100 @@ If player is not loading or an error occurred, you can visit our YouTube channel
 		}
 	  }
 	  
-	  function onResize()
+	  ////////////////////////////////////////////
+	  // Domain scaling
+	  ////////////////////////////////////////////
+	  function scalingHarmonicFilter(value, index, self) 
 	  {
-		var refHeight = 813;
-        var refWidth = 757;
-	  
-		var playerObj = document.getElementById("player");
-		var playerBoxObj = document.getElementById("playerBox");
-		if(!playerObj || !playerBoxObj)
-			return;
-		var width = Math.min(playerBox.offsetWidth, refWidth);
-		var height = Math.round(width/refWidth*refHeight);
-
-		playerObj.width = width;
-		playerObj.height = height;
+		for(var i=0; i<self.length; i++)
+		{
+			if(self[i][0] === value[0])
+				return i===index;
+		}
+		return true;
 	  }
-	  window.addEventListener('resize', onResize);
-	  window.addEventListener("load", onResize); 
+	  function scalingTimeFilter(value, index, self) 
+	  {
+		if(value[0] != this)
+			return false;
+		else
+			return true;
+	  }
+	  
+      function initScalingHarmonics(shouldPlay)
+	  {
+		var scalingHarmonicsObject = document.getElementById("scalingHarmonics");
+		var uniqueHarmonics = scalingVideos.filter(scalingHarmonicFilter);
+		for(var i=0; i<uniqueHarmonics.length; i++)
+		{
+			var newOption = document.createElement("option");
+			newOption.text = uniqueHarmonics[i][0];
+			scalingHarmonicsObject.add(newOption); 
+		}
+		initScalingTime(shouldPlay);
+	  }
+	  
+	  function initScalingTime(shouldPlay)
+	  {
+		var harmonic = document.getElementById("scalingHarmonics").value;
+		var scalingTimeObject = document.getElementById("scalingTime");
+		var lastTime = scalingTimeObject.value;
+		while(scalingTimeObject.length > 0)
+		{
+			scalingTimeObject.remove(0);
+		}
+		
+		var uniqueTimes = scalingVideos.filter(scalingTimeFilter, harmonic);
+		for(var i=0; i<uniqueTimes.length; i++)
+		{
+			var newOption = document.createElement("option");
+			newOption.text = uniqueTimes[i][1];
+			scalingTimeObject.add(newOption); 
+		}
+		for(var i=0; i<scalingTimeObject.length; i++)
+		{
+			if(scalingTimeObject.options.item(i).text == lastTime)
+			{
+				scalingTimeObject.selectedIndex = i;
+				break;
+			}
+		}
+		if(shouldPlay)
+			playScalingVideo();
+	  }
+	  function getScalingCurrentVideoUrl()
+	  {
+		var harmonic = document.getElementById("scalingHarmonics").value;
+		var time = document.getElementById("scalingTime").value;
+		for(var i=0; i<scalingVideos.length; i++)
+		{
+			if(scalingVideos[i][0] == harmonic && scalingVideos[i][1]==time)
+			{
+				return scalingVideos[i][2];
+			}
+		}
+		return scalingVideos[0][2];
+	  }
+	  function playScalingVideo()
+	  {
+		if(player)
+		{
+			//player.loadVideoById({videoId:url});
+			player.cueVideoById(
+			{
+				'videoId': getScalingCurrentVideoUrl(),
+				'playerVars': {
+					'autoplay': 0,
+					'enablejsapi': 1,
+					'iv_load_policy': 3,
+					'modestbranding': 0,
+					'rel': 0,
+					'showinfo': 0
+				  }
+			});
+				
+		}
+	  }
     </script>
 
 
