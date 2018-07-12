@@ -12,6 +12,9 @@ if nargin < 5 || isempty(borderWidth)
     borderWidth = 0.5;
 end
 colors = pileColors();
+if lessColors
+   colors(5:end, :) = []; 
+end
 if nargin >= 2 && ~isempty(fgh) && ishandle(fgh)
     figure(fgh);
     plotH = get(fgh.CurrentAxes, 'Children');
@@ -29,22 +32,23 @@ if nargin >= 2 && ~isempty(fgh) && ishandle(fgh)
             axis off;
             fgh.CurrentAxes.Position = [1,1,size(S, 2), size(S, 1)];
         else
+            width = 20;
+            height = width/size(S, 2)*size(S, 1);
+        
             image(S+1);
             colormap(colors)
 
+            cbh = colorbar('southoutside', 'Ticks', (1:size(colors, 1))+0.5, 'TickLabels', arrayfun(@(x)int2str(x), 0:size(colors, 1)-1, 'UniformOutput', false), 'Units', 'centimeters', 'Tag', 'colorbar');
             xlim([0.5, size(S, 2)+0.5]);
             ylim([0.5, size(S, 1)+0.5]);
             
             fgh.CurrentAxes.YDir = 'reverse';
             fgh.CurrentAxes.XTick = [];
             fgh.CurrentAxes.YTick = [];
+            cbh.Position = [borderWidth+width-min(width, size(colors, 1)*6/10),0.7,min(width, size(colors, 1)*6/10), 0.5];
         end
     end
 else
-    
-    if lessColors
-       colors(5:end, :) = []; 
-    end
     if rawPlot
         fgh = figure('Units', 'pixels', 'Position', [3,100, size(S, 2), size(S, 1)], 'Color', ones(1,3));
         try

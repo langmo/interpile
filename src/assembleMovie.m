@@ -1,4 +1,5 @@
 function assembleMovie(filePath, configPath, timePerRound, smallMovie, scaling, deltaT, showTime)
+mode = []; % forward declaration to circumvent error in Matlab.
 load(configPath);
 [~,~,ext] = fileparts(filePath);
 [folder, ~, ~] = fileparts(configPath);
@@ -71,7 +72,7 @@ while true
                 pos = get(gca(), 'Position');
                 txt = uicontrol('Style','text',...
                     'Units', 'centimeters',...
-                        'Position',[pos(1), 0.1, 4, 1.4],...
+                        'Position',[pos(1), 0.1, 12, 1.4],...
                         'String',sprintf('time: %3.3f', 0),...
                         'BackgroundColor', ones(1,3),...
                         'HorizontalAlignment', 'left',...
@@ -81,7 +82,15 @@ while true
             fgh = printPile(S, fgh, [], true, 0);
         end
         if showTime
-            txt.String = sprintf('Time=%3.3f', imgId/stepsPerRound);
+            if exist('mode', 'var') && strcmpi(mode, 'scaling')
+                if referenceTime == 0
+                    txt.String = sprintf('Domain=%gx%g', size(S, 1), size(S, 2));
+                else
+                    txt.String = sprintf('Domain=%gx%g, Time=%3.6f', size(S, 1), size(S, 2), domainTimes(imgId));
+                end
+            else
+                txt.String = sprintf('Time=%3.6f', imgId/stepsPerRound);
+            end
         end
         drawnow();
         writeVideo(v,getframe(fgh));
