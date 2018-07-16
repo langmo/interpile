@@ -1,28 +1,31 @@
 function varargout = movieDialog(varargin)
-% MOVIEDIALOG MATLAB code for movieDialog.fig
-%      MOVIEDIALOG, by itself, creates a new MOVIEDIALOG or raises the existing
-%      singleton*.
-%
-%      H = MOVIEDIALOG returns the handle to a new MOVIEDIALOG or the handle to
-%      the existing singleton*.
-%
-%      MOVIEDIALOG('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in MOVIEDIALOG.M with the given input arguments.
-%
-%      MOVIEDIALOG('Property','Value',...) creates a new MOVIEDIALOG or raises the
-%      existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before movieDialog_OpeningFcn gets called.  An
-%      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to movieDialog_OpeningFcn via varargin.
-%
-%      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
-%      instance to run (singleton)".
-%
-% See also: GUIDE, GUIDATA, GUIHANDLES
-
-% Edit the above text to modify the response to help movieDialog
+% movieDialog - opens a dialog window to configure a movie showing the
+% sandpile identity dynamics under a selectable harmonic field.
+% Usage:
+%   movieDialog()
+%       Opens an harmonic sandpile movie configuration dialog.
+%   fgh = movieDialog(...)
+%       Returns a handle to the opened dialog figure.
 
 % Last Modified by GUIDE v2.5 07-May-2018 17:21:21
+
+% Copyright (C) 2018 Moritz Lang
+% 
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with this program.  If not, see <http://www.gnu.org/licenses/>.
+%
+% For more information, visit the project's website at 
+% https://langmo.github.io/interpile/
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;

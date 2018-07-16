@@ -1,4 +1,34 @@
 function varargout = interViewer(varargin)
+% interViewer - The InterPile movie viewer.
+%
+% Usage:
+%   interViewer()
+%       Opens file chooser dialoge box to select the config file of the
+%       InterPile movie to open.
+%   interViewer(configPath)
+%       Opens the InterPile movie with the respective movie configuration
+%       pile located at the specified path.
+%   figH = interViewer(...)
+%       Returns the handle to the movie viewer figure.
+
+% Copyright (C) 2018 Moritz Lang
+% 
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with this program.  If not, see <http://www.gnu.org/licenses/>.
+%
+% For more information, visit the project's website at 
+% https://langmo.github.io/interpile/
+    
 %% Pre-process input
 if nargin>=1 && ~isempty(varargin{1})
     configFile = varargin{1};
@@ -7,7 +37,7 @@ else
 end
 
 if ischar(configFile) && exist(configFile, 'dir')
-    [filename, pathname, ~] = uigetfile({'config.mat'}, 'Select movie configuration file', fullfile(configFile, 'config.mat'));
+    [filename, pathname, ~] = uigetfile({'config.mat', 'InterPile Movies (*.mat)'}, 'Select movie configuration file', fullfile(configFile, 'config.mat'));
     if isempty(filename) || (isnumeric(filename) && numel(filename) == 1 && filename == 0)
         if nargout >= 1
             varargout{1} = [];
@@ -61,7 +91,8 @@ end
 colors = pileColors();
 
 %% Create figure
-figH = figure('Color', ones(1,3), 'NumberTitle', 'off', 'Units', 'pixels', 'MenuBar', 'none');
+figH = figure('Color', ones(1,3), 'NumberTitle', 'off', 'Units', 'pixels', 'MenuBar', 'none',...
+    'BusyAction', 'cancel');
 
 figH.Name = sprintf('InterPile Viewer - %s', data.configFile);
 figH.KeyPressFcn = {@keyDown};
@@ -116,7 +147,7 @@ uicontrol('Style', 'text', 'String', 'Time X.XX (XXX of XXX)',...
 %% Main plot
 axH = axes('Tag', 'Splot', 'Units', 'pixels');
 colormap(colors)
-colorbar('north', 'Ticks', (1:size(colors, 1))+0.5, 'TickLabels', arrayfun(@(x)int2str(x), 0:size(colors, 1)-1, 'UniformOutput', false), 'Units', 'centimeters', 'Tag', 'colorbar');
+colorbar('north', 'Ticks', (1:size(colors, 1))+0.5, 'TickLabels', [arrayfun(@(x)int2str(x), 0:size(colors, 1)-2, 'UniformOutput', false), {'-'}], 'Units', 'centimeters', 'Tag', 'colorbar');
 hold on;
 plotPile(figH);
 data = getData(figH);
@@ -210,7 +241,14 @@ function mouseMove(figH, ~)
     if xData > 0 && xData <= width && yData > 0 && yData <= height
         figH.Name = sprintf('InterPile Viewer - (%g, %g) -> %g', yData, xData, S(yData, xData));
     else
-        figH.Name = sprintf('InterPile Viewer - %s', figH.UserData.configFile);
+        [folder, ~, ~] = fileparts(figH.UserData.configFile);
+        [~, folder, ext] = fileparts(folder);
+        folder = [folder, ext];
+        idx = strfind(folder, '_frames');
+        if ~isempty(idx)
+            folder = folder(1:idx(end)-1);
+        end
+        figH.Name = sprintf('InterPile Viewer - %s', folder);
     end
 end
 
@@ -242,10 +280,10 @@ function plotPile(figH)
     if strcmpi(figH.UserData.mode, 'scaling')
         domainSize = figH.UserData.domainSizes(figH.UserData.currentIndex, :);
         domainTime = figH.UserData.domainTimes(figH.UserData.currentIndex, :);
-        timeTextH.String = sprintf('Size=%gx%g, time=%g (Frame %g of %g)', domainSize(1), domainSize(2), domainTime,...
+        timeTextH.String = sprintf('Size: %gx%g, Time: %g (Frame: %g/%g)', domainSize(1), domainSize(2), domainTime,...
             figH.UserData.currentIndex,figH.UserData.numSteps);
     else
-        timeTextH.String = sprintf('Time %1.7f (Frame %g of %g)', (figH.UserData.currentIndex)/(figH.UserData.stepsPerRound),...
+        timeTextH.String = sprintf('Time: %1.7f (Frame: %g/%g)', (figH.UserData.currentIndex)/(figH.UserData.stepsPerRound),...
             figH.UserData.currentIndex,figH.UserData.numSteps);
     end
 end
