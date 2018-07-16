@@ -1,4 +1,17 @@
 function varargout = interPile(varargin)
+% interPile - Graphical user interface for interactively manipulating
+% sandpiles and generating movies of their harmonic dynamics.
+% Usage:
+%   interPile()
+%       Opens the graphical user interface with a 63x63 empty starting
+%       sandpile.
+%   interPile(S)
+%       Opens the graphical user interface initialized to the sandpile S.
+%   interPile(S, figH)
+%       Displays the sandpile S in the already opened InterPile graphical
+%       user interface having the provided figure handle figH.
+%   figH = interPile(...)
+%       Returns the figure handle of the InterPile user interface.
 
 % Copyright (C) 2018 Moritz Lang
 % 
@@ -20,7 +33,7 @@ function varargout = interPile(varargin)
 
 %% Pre-process input
 if nargin <1 || isempty(varargin{1})
-    var1 = zeros(64, 64);
+    var1 = zeros(63, 63);
 else
     var1 = varargin{1};
 end

@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="2082610651" file="C:\interpile\interpile\InterPile.prj" location="C:\interpile\interpile" name="InterPile" preferred-package-location="C:\interpile\interpile\mcc\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="1146319250" file="C:\interpile\interpile\InterPile.prj" location="C:\interpile\interpile" name="InterPile" preferred-package-location="C:\interpile\interpile\mcc\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>InterPile</param.appname>
     <param.icon>${PROJECT_ROOT}\InterPile_resources\icon.ico</param.icon>
     <param.icons>
@@ -66,6 +66,7 @@
       <file>${PROJECT_ROOT}\src\interPile.m</file>
     </fileset.main>
     <fileset.resources>
+      <file>${PROJECT_ROOT}\null_piles</file>
       <file>${PROJECT_ROOT}\src</file>
     </fileset.resources>
     <fileset.package />

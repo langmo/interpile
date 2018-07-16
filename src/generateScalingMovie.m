@@ -68,11 +68,14 @@ if emptyFolder || ~exist(configPath, 'file')
     stepsPerRound = length(domainSizes);
     numSteps = stepsPerRound; %#ok<NASGU>
     mode = 'scaling'; %#ok<NASGU>
-    save(configPath, 'domainSizes', 'domainTimes', 'fileTemplate', 'stepsPerRound', 'numSteps', 'referenceSize', 'referenceTime', 'scalingLaw', 'movieTime', 'mode');
+    harmonicFctStr = func2str(harmonicFct); %#ok<NASGU>
+    save(configPath, 'harmonicFctStr', 'domainSizes', 'domainTimes', 'fileTemplate', 'stepsPerRound', 'numSteps', 'referenceSize', 'referenceTime', 'scalingLaw', 'movieTime', 'mode');
 else
-    load(configPath, 'domainSizes', 'domainTimes', 'fileTemplate', 'stepsPerRound', 'numSteps', 'referenceSize', 'referenceTime', 'scalingLaw');
+    harmonicFctStr = []; % pre-define to avoid error.
+    load(configPath, 'harmonicFctStr', 'domainSizes', 'domainTimes', 'fileTemplate', 'stepsPerRound', 'numSteps', 'referenceSize', 'referenceTime', 'scalingLaw');
     mode = 'scaling'; %#ok<NASGU>
-    save(configPath, 'domainSizes', 'domainTimes', 'fileTemplate', 'stepsPerRound', 'numSteps', 'referenceSize', 'referenceTime', 'scalingLaw', 'movieTime', 'mode');
+    harmonicFct = str2func(harmonicFctStr);
+    save(configPath, 'harmonicFctStr', 'domainSizes', 'domainTimes', 'fileTemplate', 'stepsPerRound', 'numSteps', 'referenceSize', 'referenceTime', 'scalingLaw', 'movieTime', 'mode');
 end
 
 ticVal = uint64(0);
@@ -81,7 +84,6 @@ for s=1:size(domainSizes, 1)
         callback((s-1)/(size(domainSizes, 1)));
         ticVal = tic();
     end
-    
     
     SFile = fullfile(folder, sprintf(fileTemplate, s));
     if ~emptyFolder && exist(SFile, 'file')
