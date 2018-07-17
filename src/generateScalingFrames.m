@@ -32,14 +32,13 @@ end
 %% start iteration
 ticVal = uint64(0);
 for s=1:size(domainSizes, 1)
-    if toc(ticVal) > 5
-        callback((s-1)/(size(domainSizes, 1)));
-        ticVal = tic();
-    end
-
     SFile = fullfile(folder, sprintf(fileTemplate, s));
     if exist(SFile, 'file')
         continue;
+    end
+    if toc(ticVal) > 5
+        callback((s-1)/(size(domainSizes, 1)));
+        ticVal = tic();
     end
     S = nullPile(domainSizes(s, 1), domainSizes(s, 2));
 

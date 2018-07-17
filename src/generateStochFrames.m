@@ -95,13 +95,12 @@ end
 
 ticVal = uint64(0);
 for s=1:numSteps
-    if toc(ticVal) > 5
-        callback((s-1)/(numSteps));
-        ticVal = tic();
-    end
-
     SFile = fullfile(folder, sprintf(fileTemplate, s));
     if emptyFolder || ~exist(SFile, 'file')
+        if toc(ticVal) > 5
+            callback((s-1)/(numSteps));
+            ticVal = tic();
+        end
         if directMethod
             for k=1:coinsPerStep
                 idx = randi(distriN);

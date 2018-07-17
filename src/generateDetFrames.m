@@ -76,11 +76,6 @@ end
 
 ticVal = uint64(0);
 for s=1:numSteps
-    if toc(ticVal) > 5
-        callback((s-1)/(numSteps));
-        ticVal = tic();
-    end
-    
     n = s/stepsPerRound;
 
     Dnew = floor(n.*F);
@@ -90,6 +85,10 @@ for s=1:numSteps
 
     SFile = fullfile(folder, sprintf(fileTemplate, s));
     if emptyFolder || ~exist(SFile, 'file')
+        if toc(ticVal) > 5
+            callback((s-1)/(numSteps));
+            ticVal = tic();
+        end
         S = relaxPile(S+X);
         save(SFile, 'S');
     else

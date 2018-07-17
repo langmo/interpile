@@ -53,7 +53,8 @@ if nargin >=2 && ~isempty(varargin{2}) && ishandle(varargin{2})
 end
 
 %% Configuration
-harmonics = harmonicDropZones();
+otherPotentials = harmonicDropZones();
+harmonicFcts = harmonicFunctions();
 colors = pileColors();
 
 %% Create figure
@@ -258,20 +259,28 @@ for mySize = sizes
         'Callback', @(figH, ~)dropRandomPerfectCircle(figH, mySize));
 end
 
-subMenu = uimenu(dropRandomMenu, 'Label', 'Half Square');
+potentialMenu = uimenu(dropRandomMenu, 'Label', 'Standard Potentials', 'Separator','on');
 sizes = 2.^(-5:5);
-for mySize = sizes
-    if mySize >=1
-        name = sprintf('%g*width^2 Particles', mySize);
-    else
-        name = sprintf('1/%g*width^2 Particles', 1/mySize);
-    end
+for h=1:length(harmonicFcts)
+    harmonicFctName = harmonicFcts{h}{1};
+    harmonicFct = harmonicFcts{h}{2};
+    subMenu = uimenu(potentialMenu, 'Label', sprintf('Potential of %s', harmonicFctName));
     uimenu(subMenu, 'Label',...
-        name, ...
-        'Callback', @(figH, ~)dropRandomPerfectSquare(figH, 1/2, mySize));
+            'User defined', ...
+            'Callback', @(figH, ~)dropRandomPotential(figH, round(askForInput(figH, sprintf('Number of times to add potential of harmonic %s:',harmonicFctName))), harmonicFct));
+    for mySize = sizes
+        if mySize >=1
+            name = sprintf('<%g x potential of %s>', mySize, harmonicFctName);
+        else
+            name = sprintf('<1/%g x potential of %s>', 1/mySize, harmonicFctName);
+        end
+        uimenu(subMenu, 'Label',...
+            name, ...
+            'Callback', @(figH, ~)dropRandomPotential(figH, mySize, harmonicFct));
+    end
 end
 
-potentialMenu = uimenu(dropRandomMenu, 'Label', 'Potentials', 'Separator','on');
+potentialMenu = uimenu(dropRandomMenu, 'Label', 'Other Potentials');
 subMenu = uimenu(potentialMenu, 'Label', 'Square 45°-shaped potential');
 uimenu(subMenu, 'Label',...
         'User defined', ...
@@ -287,12 +296,12 @@ for mySize = sizes
         name, ...
         'Callback', @(figH, ~)dropRandomSquare45(figH, mySize));
 end
-for h=1:length(harmonics)
-    harmonic = harmonics{h};
+for h=1:length(otherPotentials)
+    harmonic = otherPotentials{h};
     subMenu = uimenu(potentialMenu, 'Label', sprintf('%s-shaped potential', harmonic{1}));
     uimenu(subMenu, 'Label',...
             'User defined', ...
-            'Callback', @(figH, ~)dropRandomHarmonic(figH, askForInput(figH, sprintf('Fraction of potential %s:', harmonic{1})), harmonic{2}));
+            'Callback', @(figH, ~)dropRandomOtherPotential(figH, askForInput(figH, sprintf('Fraction of potential %s:', harmonic{1})), harmonic{2}));
     sizes = 2.^(-5:5);
     for mySize = sizes
         if mySize >=1
@@ -302,35 +311,31 @@ for h=1:length(harmonics)
         end
         uimenu(subMenu, 'Label',...
             name, ...
-            'Callback', @(figH, ~)dropRandomHarmonic(figH, mySize, harmonic{2}));
+            'Callback', @(figH, ~)dropRandomOtherPotential(figH, mySize, harmonic{2}));
     end
 end
 
 % Drop deterministic
 dropDeterministicMenu = uimenu(figH, 'Label', 'Drop Deterministic'); 
-subMenu = uimenu(dropDeterministicMenu, 'Label', 'Cross');
-uimenu(subMenu, 'Label',...
-        'User defined', ...
-        'Callback', @(figH, ~)dropCross(figH, round(askForInput(figH, 'Number of particles in cross fields:'))));
-sizes = 1:1:10;
-for mySize = sizes
-    name = sprintf('%g Particles/field', mySize);
+
+potentialMenu = uimenu(dropDeterministicMenu, 'Label', 'Standard Potentials');
+for h=1:length(harmonicFcts)
+    harmonicFctName = harmonicFcts{h}{1};
+    harmonicFct = harmonicFcts{h}{2};
+    subMenu = uimenu(potentialMenu, 'Label', sprintf('Potential of %s', harmonicFctName));
     uimenu(subMenu, 'Label',...
-        name, ...
-        'Callback', @(figH, ~)dropCross(figH, mySize));
+            'User defined', ...
+            'Callback', @(figH, ~)dropPotential(figH, round(askForInput(figH, sprintf('Number of times to add potential of harmonic %s:',harmonicFctName))), harmonicFct));
+    sizes = 2.^(0:8);
+    for mySize = sizes
+        name = sprintf('%g x potential of %s', mySize, harmonicFctName);
+        uimenu(subMenu, 'Label',...
+            name, ...
+            'Callback', @(figH, ~)dropPotential(figH, mySize, harmonicFct));
+    end
 end
-subMenu = uimenu(dropDeterministicMenu, 'Label', 'Circle');
-uimenu(subMenu, 'Label',...
-        'User defined', ...
-        'Callback', @(figH, ~)dropCircle(figH, round(askForInput(figH, 'Number of particles in circle fields:'))));
-sizes = 1:1:10;
-for mySize = sizes
-    name = sprintf('%g Particles/field', mySize);
-    uimenu(subMenu, 'Label',...
-        name, ...
-        'Callback', @(figH, ~)dropCircle(figH, mySize));
-end
-potentialMenu = uimenu(dropDeterministicMenu, 'Label', 'Potentials', 'Separator','on');
+
+potentialMenu = uimenu(dropDeterministicMenu, 'Label', 'Other Potentials');
 subMenu = uimenu(potentialMenu, 'Label', 'Square 45°-shaped potential');
 uimenu(subMenu, 'Label',...
         'User defined', ...
@@ -343,20 +348,45 @@ for mySize = sizes
         'Callback', @(figH, ~)dropSquare45(figH, mySize));
 end
 
-for h=1:length(harmonics)
-    harmonic = harmonics{h};
+for h=1:length(otherPotentials)
+    harmonic = otherPotentials{h};
     subMenu = uimenu(potentialMenu, 'Label', sprintf('%s-shaped potential', harmonic{1}));
     uimenu(subMenu, 'Label',...
             'User defined', ...
-            'Callback', @(figH, ~)dropHarmonic(figH, round(askForInput(figH, sprintf('Number of times to add potential %s:', harmonic{1}))), harmonic{2}));
+            'Callback', @(figH, ~)dropOtherPotential(figH, round(askForInput(figH, sprintf('Number of times to add potential %s:', harmonic{1}))), harmonic{2}));
     sizes = 2.^(0:8);
     for mySize = sizes
         name = sprintf('%g x potential %s', mySize, harmonic{1});
         uimenu(subMenu, 'Label',...
             name, ...
-            'Callback', @(figH, ~)dropHarmonic(figH, mySize, harmonic{2}));
+            'Callback', @(figH, ~)dropOtherPotential(figH, mySize, harmonic{2}));
     end
 end
+
+othersMenu = uimenu(dropDeterministicMenu, 'Label', 'Others');
+subMenu = uimenu(othersMenu, 'Label', 'Cross');
+uimenu(subMenu, 'Label',...
+        'User defined', ...
+        'Callback', @(figH, ~)dropCross(figH, round(askForInput(figH, 'Number of particles in cross fields:'))));
+sizes = 1:1:10;
+for mySize = sizes
+    name = sprintf('%g Particles/field', mySize);
+    uimenu(subMenu, 'Label',...
+        name, ...
+        'Callback', @(figH, ~)dropCross(figH, mySize));
+end
+subMenu = uimenu(othersMenu, 'Label', 'Circle');
+uimenu(subMenu, 'Label',...
+        'User defined', ...
+        'Callback', @(figH, ~)dropCircle(figH, round(askForInput(figH, 'Number of particles in circle fields:'))));
+sizes = 1:1:10;
+for mySize = sizes
+    name = sprintf('%g Particles/field', mySize);
+    uimenu(subMenu, 'Label',...
+        name, ...
+        'Callback', @(figH, ~)dropCircle(figH, mySize));
+end
+
 
 %% recurrent field
 uicontrol('Style', 'text', 'String', 'valid',...
@@ -771,18 +801,6 @@ function dropRandomCircle(figH, N)
     plotPileRelax(S, figH);
 end
 
-function dropRandomSquare(figH, relRad, N)
-    S = getPile(figH);
-    width = size(S, 1);
-    radius = relRad*width;
-    for i=1:N
-        x = 1+round((width-1)/2+(rand()-0.5)*radius);
-        y = 1+round((width-1)/2+(rand()-0.5)*radius);
-        S(y,x) = S(y,x) + 1;
-    end
-    plotPileRelax(S, figH);
-end
-
 function dropRandomSquare45(figH, k)
     S = getPile(figH);
     width = size(S, 2);
@@ -815,16 +833,23 @@ function dropSquare45(figH, k)
     plotPileRelax(S, figH);
 end
 
-function dropHarmonic(figH, k, harmonicFct)
+function dropOtherPotential(figH, k, harmonicFct)
     S = getPile(figH);
     height = size(S, 1);
     width = size(S, 2);
     S = S + k*harmonicFct(height, width);
     plotPileRelax(S, figH);
 end
+function dropPotential(figH, k, harmonicFct)
+    S = getPile(figH);
+    height = size(S, 1);
+    width = size(S, 2);
+    mask = ~isinf(S);
+    S = S + k*generateDropZone(harmonicFct, height, width, mask);
+    plotPileRelax(S, figH);
+end
 
-
-function dropRandomHarmonic(figH, k, harmonic)
+function dropRandomOtherPotential(figH, k, harmonic)
     S = getPile(figH);
     height = size(S, 1);
     width = size(S, 2);
@@ -836,6 +861,55 @@ function dropRandomHarmonic(figH, k, harmonic)
         S(distri(idx, 1), distri(idx, 2)) = S(distri(idx, 1), distri(idx, 2)) + 1;
     end
     plotPileRelax(S, figH);
+end
+function dropRandomPotential(figH, k, harmonicFct)
+    S = getPile(figH);
+    height = size(S, 1);
+    width = size(S, 2);
+    mask = ~isinf(S);
+    
+    potential = generateDropZone(harmonicFct, height, width, mask);
+    if sum(sum(potential))<=1e8
+        distri = toDistribution(potential);
+        distriN = size(distri, 1);
+        N = distriN*k;
+
+        for i=1:N
+            idx = randi(distriN);
+            S(distri(idx, 1), distri(idx, 2)) = S(distri(idx, 1), distri(idx, 2)) + 1;
+        end
+    else
+        [distri, distriN] = toDistributionReal(potential);
+        ps = distri(:, 3);
+        xs = distri(:, 2);
+        ys = distri(:, 1);
+        N = distriN*k;
+        for i=1:N
+            idx = find_halfspace(ps, rand());
+            S(ys(idx), xs(idx)) = S(ys(idx), xs(idx)) + 1;
+        end
+    end
+    plotPileRelax(S, figH);
+end
+function X = find_halfspace(Y,T)
+    % returns the index of the first element in the ascending array Y which
+    % is greater or equal to T, i.e. a value of X s.t. Y(X)>=T, Y(X-1)<T
+    % in the ASCENDING array data that is
+    % <x using a simple half space search
+    L = 1;
+    R = length(Y);
+    while L < R
+        M = floor((L + R)/2);
+        if T < Y(M)
+            R = M;
+        elseif T > Y(M)
+            L = M + 1;
+        else
+            X = M;
+            return;
+        end
+    end
+    X = L;
 end
 function dropCross(figH, k)
     S = getPile(figH);
@@ -913,14 +987,6 @@ function boardSizeCustom(figH)
     end
 end
 
-
-
-function dropRandomPerfectSquare(figH, relRad, k)
-    S = getPile(figH);
-    width = size(S, 1);
-    N = round(k*width^2);
-    dropRandomSquare(figH, relRad, N)
-end
 
 function dropRandomPerfectCircle(figH, k)
     S = getPile(figH);
