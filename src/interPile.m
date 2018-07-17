@@ -58,7 +58,7 @@ colors = pileColors();
 
 %% Create figure
 figH = figure('Color', ones(1,3), 'NumberTitle', 'off', 'units','normalized','outerposition',[0.2 0.2 0.6 0.6], 'Units', 'pixels', 'MenuBar', 'none');
-figH.Name = sprintf('InterPile - %gx%g board', size(data.S, 1), size(data.S, 2));
+figH.Name = sprintf('InterPile - %gx%g domain', size(data.S, 1), size(data.S, 2));
 figH.KeyPressFcn = {@keyDown};
 figH.UserData=data;
 try
@@ -474,7 +474,7 @@ function loadPileAsMat(figH)
     axH = findall(figH, 'Tag', 'Splot');
     xlim(axH, [0.5, size(S, 2)+0.5]);
     ylim(axH, [0.5, size(S, 1)+0.5]);
-    figH.Name = sprintf('InterPile - %gx%g board', height, width);
+    figH.Name = sprintf('InterPile - %gx%g domain', size(S,1), size(S,2));
     onResize(figH);
 end
 function savePileAsDropZone(figH)
@@ -518,7 +518,7 @@ function mouseMove(figH, ~)
     if xData > 0 && xData <= width && yData > 0 && yData <= height
         figH.Name = sprintf('InterPile - (%g, %g) -> %g', yData, xData, S(yData, xData));
     else
-        figH.Name = sprintf('InterPile - %gx%g board', size(S, 1), size(S, 2));
+        figH.Name = sprintf('InterPile - %gx%g domain', size(S, 1), size(S, 2));
     end
 end
 function plotPileRelax(S, figH)
@@ -788,7 +788,7 @@ function dropRandomSquare45(figH, k)
     width = size(S, 2);
     height = size(S, 1);
     if width ~= height
-        errordlg('Only available for square boards.', 'Function not available');
+        errordlg('Only available for square domains.', 'Function not available');
         return;
     end
     radius = width/sqrt(2);
@@ -808,7 +808,7 @@ function dropSquare45(figH, k)
     height = size(S, 1);
     width = size(S, 2);
     if width ~= height
-        errordlg('Only available for square boards.', 'Function not available');
+        errordlg('Only available for square domains.', 'Function not available');
         return;
     end
     S = S + round(2*k)*double(repmat(abs((1:width)-width/2-0.5), width, 1)+repmat(abs((1:width)'-width/2-0.5), 1, width)<=width/2);
@@ -940,7 +940,7 @@ function boardSize(width, height, figH)
     plotPile(S, figH);
     xlim(axH, [0.5, size(S, 2)+0.5]);
     ylim(axH, [0.5, size(S, 1)+0.5]);
-    figH.Name = sprintf('InterPile - %gx%g board', height, width);
+    figH.Name = sprintf('InterPile - %gx%g domain', height, width);
     onResize(figH);
 end
 function invert(figH, ~)

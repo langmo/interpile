@@ -55,12 +55,9 @@ if ~exist('stochMovie', 'var') || isempty(stochMovie)
     stochMovie = false;
 end
 
-
-
 [pathstr,name,~] = fileparts(filePath);
 folder = fullfile(pathstr, [name, '_frames']);
 
-wbh = waitbar(0, 'Preparing movie...');
 % Either harmonicFct is already the drop zone, or a function corresponding
 % to the intended toppling function. If the latter, generate the drop zone.
 if isa(harmonicFct, 'function_handle')
@@ -69,28 +66,43 @@ else
     F = harmonicFct;
 end
 
-%% generate frames
-callback = @(x) movieWaitbar(wbh, x);
-if stochMovie
-    configPath = generateStochFrames(S, F, folder, numRounds, stepsPerRound, callback);
-else
-    configPath = generateDetFrames(S, F, folder, numRounds, stepsPerRound, callback);
+%% Generate Movie
+wbh = movieWaitbar(0, 'Preparing movie...');
+callback = @(x) movieWaitbarUpdate(wbh, x);
+try
+    if stochMovie
+        configPath = generateStochFrames(S, F, folder, numRounds, stepsPerRound, callback);
+    else
+        configPath = generateDetFrames(S, F, folder, numRounds, stepsPerRound, callback);
+    end
+
+    wbh = movieWaitbar(1, wbh, 'Generating movie...');
+    assembleMovie(filePath, configPath, timePerRound, smallMovie)
+catch ME
+    close(wbh);
+    switch ME.identifier
+        case 'InterPile:UserStop'
+            msgH = msgbox({'Movie generation interrupted.','To resume movie generation, select "Continue Movie" in InterPile.'},'Movie generation interrupted','modal');
+            try
+                setWindowIcon(msgH);
+            catch
+                % Do nothing, default Matlab icon is OK, too.
+            end
+            uiwait(msgH);
+            return;
+        otherwise
+            rethrow(ME)
+    end
+end
+close(wbh);
+
 end
 
-
-
-%% Generate movie
-wbh = waitbar(0.9, wbh, 'Generating movie...');
-assembleMovie(filePath, configPath, timePerRound, smallMovie)
-close(wbh)
-
-end
-
-function movieWaitbar(wbh, progress)
+function movieWaitbarUpdate(wbh, progress)
     data = wbh.UserData;
     if isempty(data) || ~isstruct(data) || ~isfield(data, 'lastTick') || ~isfield(data, 'lastProgress')
         data = struct();
-        waitbar(0.05+progress*0.85, wbh, sprintf('Generating frames: %2.2f%%', progress*100));
+        movieWaitbar(progress, wbh, sprintf('Generating frames: %2.2f%%', progress*100));
     else
         time = toc(data.lastTick);
         lastProgress = data.lastProgress;
@@ -98,7 +110,7 @@ function movieWaitbar(wbh, progress)
         periodM = mod(floor(periodS/60), 60);
         periodH = floor(periodS/60/60);
         periodS = mod(periodS, 60);
-        waitbar(0.05+progress*0.85, wbh, sprintf('Generating frames: %2.2f%% (%02gh %02gmin %02gs remaining)', progress*100, periodH, periodM, periodS));
+        movieWaitbar(progress, wbh, sprintf('Generating frames: %2.2f%% (%02gh %02gmin %02gs remaining)', progress*100, periodH, periodM, periodS));
     end
     data.lastProgress = progress;
     data.lastTick = tic();

@@ -9,24 +9,23 @@ function [S, varargout] = relaxPile(S)
 %   S ... relaxed sandpile
 %   H ... toppling matrix
 
+
+N = size(S, 1);
+M = size(S, 2);
+
+%left = diag(-4*ones(1, N)) + diag(ones(1, N-1), 1) + diag(ones(1, N-1), -1);
+left = spdiags([ones(N,1),-4*ones(N,1), ones(N,1)], [-1,0,1], N, N);
+right = spdiags(ones(M,2), [-1,1], M, M);
+%diag(ones(1, M-1), 1) + diag(ones(1, M-1), -1);
+
 % how often do we topple in the current step?
 topplings = floor(max(S, 0)/4);
 % how often do we topple in total?
 H = topplings;
 while any(any(topplings))
-    S = S - 4*topplings;
-    % increase right
-    S(:, 2:end) = S(:, 2:end)+topplings(:, 1:end-1);
-    % increase left
-    S(:, 1:end-1) = S(:, 1:end-1)+topplings(:, 2:end);
-    % increase bottom
-    S(2:end, :) = S(2:end, :)+topplings(1:end-1, :);
-    % increase top
-    S(1:end-1, :) = S(1:end-1, :)+topplings(2:end, :);
-    
-    
-    topplings = floor(max(S, 0)/4);
     H = H + topplings;
+    S = S + left * topplings + topplings * right;
+    topplings = floor(max(S, 0)/4);
 end
 
 if nargout == 0
@@ -34,6 +33,5 @@ if nargout == 0
 elseif nargout > 1
     varargout{1} = H;
 end
-
 
 end

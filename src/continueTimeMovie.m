@@ -1,4 +1,4 @@
-function generateScalingMovie(filePath, domainSizes, harmonicFct, referenceSize, referenceTime, scalingLaw, movieTime)
+function continueTimeMovie(configPath, filePath, numRounds, timePerRound, smallMovie)
 
 % Copyright (C) 2018 Moritz Lang
 % 
@@ -18,72 +18,73 @@ function generateScalingMovie(filePath, domainSizes, harmonicFct, referenceSize,
 % For more information, visit the project's website at 
 % https://langmo.github.io/interpile/
 
-if nargin < 2
-    scalingMovieDialog();
-    return;
-end
-if ~exist('movieTime', 'var') || isempty(movieTime)
-    movieTime = length(domainSizes)/10;
-end
-if min(size(domainSizes))==1 
-    if size(domainSizes, 2) > 1
-        domainSizes = domainSizes';
+if nargin() < 1
+    [filename, pathname, ~] = uigetfile({'config.mat', 'InterPile Movies (*.mat)'}, 'Select movie configuration file', fullfile(cd(), 'config.mat'));
+    if isempty(filename) || (isnumeric(filename) && numel(filename) == 1 && filename == 0)
+        return;
     end
-    domainSizes = repmat(domainSizes, 1, 2);
-end
-if ~exist('referenceSize', 'var') || isempty(referenceSize)
-    referenceSize = domainSizes(1, :);
-end
-if ~exist('referenceTime', 'var') || isempty(referenceTime)
-    referenceTime = 0;
-end
-if ~exist('scalingLaw', 'var') || isempty(scalingLaw)
-    scalingLaw = 0;
-end
-if numel(referenceSize)==1 
-    referenceSize = [referenceSize, referenceSize];
-end
-if ~exist('harmonicFct', 'var') || isempty(harmonicFct) || referenceTime == 0
-    harmonicFct = [];
-    referenceTime = 0;
+    configPath = fullfile(pathname, filename);
 end
 
-domainTimes = referenceTime * arrayfun(@(i)(referenceSize(1)/domainSizes(i, 1))^scalingLaw, (1:size(domainSizes, 1))'); %#ok<NASGU>
-
-[pathstr,name,~] = fileparts(filePath);
-folder = fullfile(pathstr, [name, '_frames']);
-configPath = fullfile(folder, 'config.mat');
-
-%% Save configuration settings
-emptyFolder = false;
-if ~exist(folder, 'dir')
-    mkdir(folder);
-    emptyFolder = true;
+if ~exist('filePath', 'var') || isempty(filePath)
+    [folder, ~, ~] = fileparts(configPath);
+    [folder, baseName, ext] = fileparts(folder);
+    baseName = [baseName, ext];
+    idx = strfind(baseName, '_frames');
+    if ~isempty(idx)
+        baseName = baseName(1:idx(end)-1);
+    end
+    filePath = fullfile(folder, [baseName, '.avi']);
 end
-if emptyFolder || ~exist(configPath, 'file')
-    fileTemplate = 'step%g.mat'; %#ok<NASGU>
-    stepsPerRound = length(domainSizes);
-    numSteps = stepsPerRound; %#ok<NASGU>
-    mode = 'scaling'; %#ok<NASGU>
-    if isempty(harmonicFct)
-        harmonicFctStr = []; %#ok<NASGU>
+if ~exist('numRounds', 'var') || isempty(numRounds)
+    numRounds = [];
+end
+
+if ~exist('timePerRound', 'var') || isempty(timePerRound)
+    timePerRound = 60;
+end
+if ~exist('smallMovie', 'var') || isempty(smallMovie)
+    smallMovie = true;
+end
+
+oldWarn = warning('off','MATLAB:load:variableNotFound');
+load(configPath, 'mode')
+warning(oldWarn);
+if exist('mode', 'var')
+    if strcmpi(mode, 'scaling');
+         error('InterPile:WrongFunction', 'Movie is a domain scaling movie. Use continueScalingMovie instead.');
+    elseif strcmpi(mode, 'det');
+        stochMovie = false;
+    elseif strcmpi(mode, 'stoch');
+        stochMovie = true;
     else
-        harmonicFctStr = func2str(harmonicFct); %#ok<NASGU>
+        error('InterPile:UnknownMovieType', 'Movie type %s is unknown', mode);
     end
-    save(configPath, 'harmonicFctStr', 'domainSizes', 'domainTimes', 'fileTemplate', 'stepsPerRound', 'numSteps', 'referenceSize', 'referenceTime', 'scalingLaw', 'movieTime', 'mode');
 else
-    load(configPath, 'harmonicFctStr', 'domainSizes', 'domainTimes', 'fileTemplate', 'stepsPerRound', 'numSteps', 'referenceSize', 'referenceTime', 'scalingLaw', 'movieTime', 'mode');
+    % Compatibility mode for old movies not saving what kind of movie they
+    % are. Simply assume deterministic except if variable excitation is there...
+    oldWarn = warning('off','MATLAB:load:variableNotFound');
+    load(configPath, 'excitation')
+    warning(oldWarn);
+    if exist('excitation', 'var')
+        stochMovie = false;
+    else
+        stochMovie = false;
+    end
 end
 
-%% Generate movie
+%% Continue movie
 wbh = movieWaitbar(0, 'Preparing movie...');
 callback = @(x) movieWaitbarUpdate(wbh, x);
 try
-    configPath = generateScalingFrames(configPath, callback);
+    if stochMovie
+        configPath = generateStochFrames(configPath, [], [], numRounds, [], callback);
+    else
+        configPath = generateDetFrames(configPath, [], [], numRounds, [], callback);
+    end
 
     wbh = movieWaitbar(1, wbh, 'Generating movie...');
-    timePerRound = movieTime;
-    assembleMovie(filePath, configPath, timePerRound, false, 1, 1, true)
+    assembleMovie(filePath, configPath, timePerRound, smallMovie)
 catch ME
     close(wbh);
     switch ME.identifier
@@ -101,6 +102,7 @@ catch ME
     end
 end
 close(wbh);
+
 end
 
 function movieWaitbarUpdate(wbh, progress)
