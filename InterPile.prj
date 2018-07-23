@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="1146319250" file="C:\interpile\interpile\InterPile.prj" location="C:\interpile\interpile" name="InterPile" preferred-package-location="C:\interpile\interpile\mcc\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="620553560" file="C:\interpile\interpile\InterPile.prj" location="C:\interpile\interpile" name="InterPile" preferred-package-location="C:\interpile\interpile\mcc\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>InterPile</param.appname>
     <param.icon>${PROJECT_ROOT}\InterPile_resources\icon.ico</param.icon>
     <param.icons>
@@ -20,7 +20,8 @@
     <param.installpath.string>\InterPile\</param.installpath.string>
     <param.installpath.combo>option.installpath.programfiles</param.installpath.combo>
     <param.logo>${PROJECT_ROOT}\resources\logo.png</param.logo>
-    <param.install.notes>Interactive user interface for the Abelian sandpile model.</param.install.notes>
+    <param.install.notes>Thank you for installing InterPile.
+For more information on InterPile and the Abelian sandpile, visit https://langmo.github.io/interpile/</param.install.notes>
     <param.intermediate>${PROJECT_ROOT}\mcc\for_testing</param.intermediate>
     <param.files.only>${PROJECT_ROOT}\mcc\for_redistribution_files_only</param.files.only>
     <param.output>${PROJECT_ROOT}\mcc\for_redistribution</param.output>

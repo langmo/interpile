@@ -147,7 +147,7 @@ uicontrol('Style', 'text', 'String', 'Time X.XX (XXX of XXX)',...
 %% Main plot
 axH = axes('Tag', 'Splot', 'Units', 'pixels');
 colormap(colors)
-colorbar('north', 'Ticks', (1:size(colors, 1))+0.5, 'TickLabels', [arrayfun(@(x)int2str(x), 0:size(colors, 1)-2, 'UniformOutput', false), {'-'}], 'Units', 'centimeters', 'Tag', 'colorbar');
+colorbar('north', 'Ticks', (1:size(colors, 1))+0.5, 'TickLabels', [arrayfun(@(x)int2str(x), 0:size(colors, 1)-3, 'UniformOutput', false), {sprintf('%g+', size(colors, 1)-2), 'X'}], 'Units', 'centimeters', 'Tag', 'colorbar');
 hold on;
 plotPile(figH);
 data = getData(figH);
@@ -269,6 +269,7 @@ function plotPile(figH)
         end
     end
     Stemp = S;
+    Stemp(~isinf(Stemp) & Stemp>9) = 9;
     Stemp(isinf(Stemp)) = 10;
     image(Stemp+1);
     xlim([0.5, size(S, 2)+0.5]);

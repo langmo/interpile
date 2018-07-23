@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.toolbox" plugin-version="1.0">
-  <configuration build-checksum="142847214" file="C:\interpile\interpile\InterPileToolbox.prj" location="C:\interpile\interpile" name="InterPileToolbox" target="target.toolbox" target-name="Package Toolbox">
+  <configuration build-checksum="641958607" file="C:\interpile\interpile\InterPileToolbox.prj" location="C:\interpile\interpile" name="InterPileToolbox" target="target.toolbox" target-name="Package Toolbox">
     <param.appname>InterPileToolbox</param.appname>
     <param.authnamewatermark>Moritz Lang</param.authnamewatermark>
     <param.email />
@@ -67,8 +67,9 @@
       <file>${PROJECT_ROOT}\src\assembleMovie.m</file>
       <file>${PROJECT_ROOT}\src\assembleMovieYouTube.m</file>
       <file>${PROJECT_ROOT}\src\avalancheDistributionStoch.m</file>
-      <file>${PROJECT_ROOT}\src\computeExcitation.m</file>
       <file>${PROJECT_ROOT}\src\continueMovie.m</file>
+      <file>${PROJECT_ROOT}\src\continueScalingMovie.m</file>
+      <file>${PROJECT_ROOT}\src\continueTimeMovie.m</file>
       <file>${PROJECT_ROOT}\src\determineAvalancheDistributionStoch.m</file>
       <file>${PROJECT_ROOT}\src\dropZoneC.m</file>
       <file>${PROJECT_ROOT}\src\dropZoneCross.m</file>
@@ -81,11 +82,9 @@
       <file>${PROJECT_ROOT}\src\dropZones.m</file>
       <file>${PROJECT_ROOT}\src\dropZoneT.m</file>
       <file>${PROJECT_ROOT}\src\dropZoneVertical.m</file>
-      <file>${PROJECT_ROOT}\src\excitationIrregular.m</file>
-      <file>${PROJECT_ROOT}\src\generateDeterministicFrames.m</file>
       <file>${PROJECT_ROOT}\src\generateDetFrames.m</file>
       <file>${PROJECT_ROOT}\src\generateDropZone.m</file>
-      <file>${PROJECT_ROOT}\src\generateDropZoneOld.m</file>
+      <file>${PROJECT_ROOT}\src\generateScalingFrames.m</file>
       <file>${PROJECT_ROOT}\src\generateScalingMovie.m</file>
       <file>${PROJECT_ROOT}\src\generateStochFrames.m</file>
       <file>${PROJECT_ROOT}\src\generateTimeMovie.m</file>
@@ -97,13 +96,13 @@
       <file>${PROJECT_ROOT}\src\inversePile.m</file>
       <file>${PROJECT_ROOT}\src\isRecurrentPile.m</file>
       <file>${PROJECT_ROOT}\src\movieDialog.m</file>
+      <file>${PROJECT_ROOT}\src\movieWaitbar.m</file>
       <file>${PROJECT_ROOT}\src\nullPile.m</file>
       <file>${PROJECT_ROOT}\src\pileColors.m</file>
       <file>${PROJECT_ROOT}\src\printPile.m</file>
       <file>${PROJECT_ROOT}\src\randomSandPile.m</file>
       <file>${PROJECT_ROOT}\src\randomSquare45.m</file>
       <file>${PROJECT_ROOT}\src\relaxPile.m</file>
-      <file>${PROJECT_ROOT}\src\relaxPileOld.m</file>
       <file>${PROJECT_ROOT}\src\scalingMovieDialog.fig</file>
       <file>${PROJECT_ROOT}\src\scalingMovieDialog.m</file>
       <file>${PROJECT_ROOT}\src\setWindowIcon.m</file>

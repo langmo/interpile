@@ -1,4 +1,10 @@
-function S = dropZoneO(height, width )
+function masks = domainMasks()
+% Returns a cell array of domain masks.
+% Usage:
+%   masks = domainMasks()
+% Notes:
+%   The first element of every element of the cell array is the name of the
+%   mask, the second is a function handle to generate the mask.
 
 % Copyright (C) 2018 Moritz Lang
 % 
@@ -18,18 +24,12 @@ function S = dropZoneO(height, width )
 % For more information, visit the project's website at 
 % https://langmo.github.io/interpile/
 
-if nargin < 1
-    width = 7;
-    height = 6;
-end
-if nargin < 2
-    width=height;
-end
-S = zeros(height, width);
-S(1:height, 1)      = S(1:height, 1) + 1;
-S(1:height, width)  = S(1:height, width) + 1;
-S(1, 1:width)       = S(1, 1:width) + 1;
-S(height, 1:width)  = S(height, 1:width) + 1;
+masks = {...
+    {'Ellipsoid', @(y,x,height,width) x.^2/((width+1)/2).^2+y.^2/((height+1)/2).^2<1},...
+    {'Punctured', @(y,x,height,width) floor(y) ~= 0 | floor(x) ~= 0},...
+    {'Rotated Ellipse', @(y,x,height,width) (x./(width/2)+0.2*y./(height/2)).^2+(y./(height/2)).^2 <= 1},...
+    {'Square Hole', @(y,x,height,width) abs(x)>width/4 | abs(y)>height/4}
+    };
 
 end
 

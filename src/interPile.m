@@ -62,14 +62,8 @@ figH = figure('Color', ones(1,3), 'NumberTitle', 'off', 'units','normalized','ou
 figH.Name = sprintf('InterPile - %gx%g domain', size(data.S, 1), size(data.S, 2));
 figH.KeyPressFcn = {@keyDown};
 figH.UserData=data;
-try
-    setWindowIcon();
-catch
-    % Do nothing, default Matlab icon is OK, too.
-end
-%% Menus
-
-% File
+setWindowIcon();
+%% Menu: File
 fileMenu = uimenu(figH, 'Label', 'File'); 
 uimenu(fileMenu, 'Label',...
         'New Window', ...
@@ -106,7 +100,7 @@ uimenu(fileMenu, 'Label',...
     'Callback', @(figH, ~)continueMovie());
 
 
-% Edit
+%% Menu: Edit
 editMenu = uimenu(figH, 'Label', 'Edit');
 if ~isdeployed()
     uimenu(editMenu, 'Label',...
@@ -114,16 +108,8 @@ if ~isdeployed()
             'Callback', @(figH, ~)assignin('base', 'S', getPile(figH)));
     uimenu(editMenu, 'Label',...
             'Add Pile from Workspace', ...
-            'Callback', @(figH, ~)plotPile(getPile(figH)+evalin('base', 'S'), figH));
-end
-
-uimenu(editMenu, 'Label',...
-        'Set Mask', ...
-        'Callback', @setMask, 'Separator','on');
-uimenu(editMenu, 'Label',...
-        'Clear Mask', ...
-        'Callback', @clearMask);
-    
+            'Callback', @(figH, ~)plotPileRelax(getPile(figH)+evalin('base', 'S'), figH));
+end 
     
 uimenu(editMenu, 'Label',...
         'Undo', ...
@@ -132,29 +118,11 @@ uimenu(editMenu, 'Label',...
         'Redo', ...
         'Callback', @redo);
 
-
-% Transform
-transformMenu = uimenu(figH, 'Label', 'Transform'); 
-uimenu(transformMenu, 'Label',...
-        'Invert Pile', ...
-        'Callback', @invert);
-uimenu(transformMenu, 'Label',...
-        '3 - Pile', ...
-        'Callback', @threeMinusPile, 'Separator','on');
-uimenu(transformMenu, 'Label',...
-        '3 + Pile', ...
-        'Callback', @threePlusPile);
-uimenu(transformMenu, 'Label',...
-        '6 - Pile', ...
-        'Callback', @sixMinusPile);    
-uimenu(transformMenu, 'Label',...
-        '2 * Pile', ...
-        'Callback', @twoTimesPile);
-    
-% Size
+   
+%% Menu: Size
 sizeMenu = uimenu(figH, 'Label', 'Size'); 
 uimenu(sizeMenu, 'Label',...
-        'Custom Size', ...
+        'Custom Domain Size', ...
         'Callback', @(figH, ~)boardSizeCustom(figH));
 evenSizeMenu = uimenu(sizeMenu, 'Label', '2^N x 2^N', 'Separator','on'); 
 sizes = 2.^(0:1:9);
@@ -195,7 +163,25 @@ for mySize = sizes
         'Callback', @(figH, ~)boardSize(mySize,mySize,figH));
 end
 
-% Fill
+%% Menu: Mask
+maskMenu = uimenu(figH, 'Label', 'Mask'); 
+uimenu(maskMenu, 'Label',...
+        'Custom Domain Mask', ...
+        'Callback', @customMask);
+masks = domainMasks();
+for i=1:length(masks)
+    menuH = uimenu(maskMenu, 'Label',...
+        masks{i}{1}, ...
+        'Callback', @(figH, ~)setMask(figH, masks{i}{1}, masks{i}{2}));
+    if i==1
+        menuH.Separator = 'on';
+    end
+end
+uimenu(maskMenu, 'Label',...
+        'Clear Mask', ...
+        'Callback', @clearMask, 'Separator','on');
+
+%% Menu:  Fill
 fillMenu = uimenu(figH, 'Label', 'Fill'); 
 uimenu(fillMenu, 'Label',...
     'All 0', ...
@@ -210,22 +196,149 @@ uimenu(fillMenu, 'Label',...
     'All 3', ...
     'Callback', @(figH, ~)fillAll(figH, 3));
 uimenu(fillMenu, 'Label',...
+    'Custom #particles/field', ...
+    'Callback', @(figH, ~)fillAll(figH, round(askForInput(figH, 'Number of particles carried by each vertex:', 4))));
+uimenu(fillMenu, 'Label',...
     'Identity', ...
     'Callback', @fillNullPile,'Separator','on');
 uimenu(fillMenu, 'Label',...
     'Random', ...
     'Callback', @fillRandom);
 
-% Drop random
-dropRandomMenu = uimenu(figH, 'Label', 'Drop Random'); 
+%% Menu: Transform
+transformMenu = uimenu(figH, 'Label', 'Transform'); 
+uimenu(transformMenu, 'Label',...
+        'Invert Pile', ...
+        'Callback', @invert);
+uimenu(transformMenu, 'Label',...
+        '3 - Pile', ...
+        'Callback', @threeMinusPile, 'Separator','on');
+uimenu(transformMenu, 'Label',...
+        '3 + Pile', ...
+        'Callback', @threePlusPile);
+uimenu(transformMenu, 'Label',...
+        '6 - Pile', ...
+        'Callback', @sixMinusPile);    
+uimenu(transformMenu, 'Label',...
+        '2 * Pile', ...
+        'Callback', @twoTimesPile);
+
+%% Menu: Drop deterministic
+dropDeterministicMenu = uimenu(figH, 'Label', 'Drop Deterministic'); 
+
+centerMenu = uimenu(dropDeterministicMenu, 'Label', 'Central vertex');
+uimenu(centerMenu, 'Label',...
+        'Custom amount', ...
+        'Callback', @(figH, ~)dropCenter(figH, round(askForInput(figH, 'Number of particles to drop onto central vertex:'))));
+sizes = 2.^(0:15);
+for mySize = sizes
+    name = sprintf('%g particles', mySize);
+    menuH = uimenu(centerMenu, 'Label',...
+        name, ...
+        'Callback', @(figH, ~)dropCenter(figH, mySize));
+    if mySize == sizes(1)
+        menuH.Separator = 'on';
+    end
+end
+
+potentialMenu = uimenu(dropDeterministicMenu, 'Label', 'Standard Potentials', 'Separator', 'on');
+for h=1:length(harmonicFcts)
+    harmonicFctName = harmonicFcts{h}{1};
+    harmonicFctIdentifier = harmonicFcts{h}{3};
+    harmonicFct = harmonicFcts{h}{2};
+    subMenu = uimenu(potentialMenu, 'Label', sprintf('Potential of %s = %s', harmonicFctIdentifier, harmonicFctName));
+    uimenu(subMenu, 'Label',...
+            'Custom amount', ...
+            'Callback', @(figH, ~)dropPotential(figH, round(askForInput(figH, sprintf('Number of times to add potential of harmonic %s:',harmonicFctName))), harmonicFct));
+    sizes = 2.^(0:8);
+    for mySize = sizes
+        name = sprintf('%g x potential of %s = %s', mySize, harmonicFctIdentifier, harmonicFctName);
+        menuH = uimenu(subMenu, 'Label',...
+            name, ...
+            'Callback', @(figH, ~)dropPotential(figH, mySize, harmonicFct));
+        if mySize == sizes(1)
+            menuH.Separator = 'on';
+        end
+    end
+end
+
+potentialMenu = uimenu(dropDeterministicMenu, 'Label', 'Other Potentials');
+subMenu = uimenu(potentialMenu, 'Label', 'Square 45°-shaped potential');
+uimenu(subMenu, 'Label',...
+        'Custom amount', ...
+        'Callback', @(figH, ~)dropSquare45(figH, 0.5*round(2*askForInput(figH, 'Number of times to add harmonic square 45°:'))));
+sizes = 0.5:0.5:10;
+for mySize = sizes
+    name = sprintf('%g x Square 45°-shaped potential', mySize);
+    menuH = uimenu(subMenu, 'Label',...
+        name, ...
+        'Callback', @(figH, ~)dropSquare45(figH, mySize));
+    if mySize == sizes(1)
+        menuH.Separator = 'on';
+    end
+end
+
+for h=1:length(otherPotentials)
+    harmonic = otherPotentials{h};
+    subMenu = uimenu(potentialMenu, 'Label', sprintf('%s-shaped potential', harmonic{1}));
+    uimenu(subMenu, 'Label',...
+            'Custom amount', ...
+            'Callback', @(figH, ~)dropOtherPotential(figH, round(askForInput(figH, sprintf('Number of times to add potential %s:', harmonic{1}))), harmonic{2}));
+    sizes = 2.^(0:8);
+    for mySize = sizes
+        name = sprintf('%g x %s-shaped potential', mySize, harmonic{1});
+        menuH = uimenu(subMenu, 'Label',...
+            name, ...
+            'Callback', @(figH, ~)dropOtherPotential(figH, mySize, harmonic{2}));
+        if mySize == sizes(1)
+            menuH.Separator = 'on';
+        end
+    end
+end
+
+othersMenu = uimenu(dropDeterministicMenu, 'Label', 'Others');
+subMenu = uimenu(othersMenu, 'Label', 'Cross');
+uimenu(subMenu, 'Label',...
+        'Custom amount', ...
+        'Callback', @(figH, ~)dropCross(figH, round(askForInput(figH, 'Number of particles in cross fields:'))));
+sizes = 1:1:10;
+for mySize = sizes
+    name = sprintf('%g x cross', mySize);
+    menuH = uimenu(subMenu, 'Label',...
+        name, ...
+        'Callback', @(figH, ~)dropCross(figH, mySize));
+    if mySize == sizes(1)
+        menuH.Separator = 'on';
+    end
+end
+subMenu = uimenu(othersMenu, 'Label', 'Circle');
+uimenu(subMenu, 'Label',...
+        'Custom amount', ...
+        'Callback', @(figH, ~)dropCircle(figH, round(askForInput(figH, 'Number of particles in circle fields:'))));
+sizes = 1:1:10;
+for mySize = sizes
+    name = sprintf('%g x circle', mySize);
+    menuH = uimenu(subMenu, 'Label',...
+        name, ...
+        'Callback', @(figH, ~)dropCircle(figH, mySize));
+    if mySize == sizes(1)
+        menuH.Separator = 'on';
+    end
+end
+
+%% Menu: Drop stochastic
+dropRandomMenu = uimenu(figH, 'Label', 'Drop Stochastic'); 
 subMenu = uimenu(dropRandomMenu, 'Label', 'Uniform');
-uimenu(subMenu, 'Label', 'User defined', ...
+uimenu(subMenu, 'Label', 'Custom number', ...
         'Callback', @(figH, ~)dropRandom(figH, askForInput(figH, 'Number of particles:')));
 sizes = 2.^(0:1:6);
 for mySize = sizes
-    uimenu(subMenu, 'Label',...
+    menuH = uimenu(subMenu, 'Label',...
         sprintf('%g Particles', mySize), ...
         'Callback', @(figH, ~)dropRandom(figH, mySize));
+    if mySize == sizes(1)
+        menuH.Separator = 'on';
+    end
 end
 sizes = 2.^(-5:5);
 for mySize = sizes
@@ -234,12 +347,15 @@ for mySize = sizes
     else
         name = sprintf('<1/%g Particles/Field>', 1/mySize);
     end
-    uimenu(subMenu, 'Label', name, ...
+    menuH = uimenu(subMenu, 'Label', name, ...
         'Callback', @(figH, ~)dropRandom(figH, [], mySize));
+    if mySize == sizes(1)
+        menuH.Separator = 'on';
+    end
 end
     
 subMenu = uimenu(dropRandomMenu, 'Label', 'Radial Uniform');
-uimenu(subMenu, 'Label', 'User defined', ...
+uimenu(subMenu, 'Label', 'Custom number', ...
         'Callback', @(figH, ~)dropRandomCircle(figH, askForInput(figH, 'Number of particles:')));
 sizes = 2.^(0:1:6);
 for mySize = sizes
@@ -254,139 +370,79 @@ for mySize = sizes
     else
         name = sprintf('1/%g*width^2 Particles', 1/mySize);
     end
-    uimenu(subMenu, 'Label',...
+    menuH = uimenu(subMenu, 'Label',...
         name, ...
-        'Callback', @(figH, ~)dropRandomPerfectCircle(figH, mySize));
+        'Callback', @(figH, ~)dropRandomCircle(figH, [], mySize));
+    if mySize == sizes(1)
+        menuH.Separator = 'on';
+    end
 end
 
 potentialMenu = uimenu(dropRandomMenu, 'Label', 'Standard Potentials', 'Separator','on');
 sizes = 2.^(-5:5);
 for h=1:length(harmonicFcts)
     harmonicFctName = harmonicFcts{h}{1};
+    harmonicFctIdentifier = harmonicFcts{h}{3};
     harmonicFct = harmonicFcts{h}{2};
-    subMenu = uimenu(potentialMenu, 'Label', sprintf('Potential of %s', harmonicFctName));
+    subMenu = uimenu(potentialMenu, 'Label', sprintf('Potential of %s = %s', harmonicFctIdentifier, harmonicFctName));
     uimenu(subMenu, 'Label',...
-            'User defined', ...
+            'Custom amount', ...
             'Callback', @(figH, ~)dropRandomPotential(figH, round(askForInput(figH, sprintf('Number of times to add potential of harmonic %s:',harmonicFctName))), harmonicFct));
     for mySize = sizes
         if mySize >=1
-            name = sprintf('<%g x potential of %s>', mySize, harmonicFctName);
+            name = sprintf('<%g x potential of %s = %s>', mySize, harmonicFctIdentifier, harmonicFctName);
         else
-            name = sprintf('<1/%g x potential of %s>', 1/mySize, harmonicFctName);
+            name = sprintf('<1/%g x potential of %s = %s>', 1/mySize, harmonicFctIdentifier, harmonicFctName);
         end
-        uimenu(subMenu, 'Label',...
+        menuH = uimenu(subMenu, 'Label',...
             name, ...
             'Callback', @(figH, ~)dropRandomPotential(figH, mySize, harmonicFct));
+        if mySize == sizes(1)
+            menuH.Separator = 'on';
+        end
     end
 end
 
 potentialMenu = uimenu(dropRandomMenu, 'Label', 'Other Potentials');
 subMenu = uimenu(potentialMenu, 'Label', 'Square 45°-shaped potential');
 uimenu(subMenu, 'Label',...
-        'User defined', ...
+        'Custom amount', ...
         'Callback', @(figH, ~)dropRandomSquare45(figH, askForInput(figH, 'Average fraction of element:')));
 sizes = 2.^(-5:5);
 for mySize = sizes
     if mySize >=1
-        name = sprintf('<%g x potential>', mySize);
+        name = sprintf('<%g x Square 45°-shaped potential>', mySize);
     else
-        name = sprintf('<1/%g x potential>', 1/mySize);
+        name = sprintf('<1/%g x Square 45°-shaped potential>', 1/mySize);
     end
-    uimenu(subMenu, 'Label',...
+    menuH = uimenu(subMenu, 'Label',...
         name, ...
         'Callback', @(figH, ~)dropRandomSquare45(figH, mySize));
+    if mySize == sizes(1)
+        menuH.Separator = 'on';
+    end
 end
 for h=1:length(otherPotentials)
     harmonic = otherPotentials{h};
     subMenu = uimenu(potentialMenu, 'Label', sprintf('%s-shaped potential', harmonic{1}));
     uimenu(subMenu, 'Label',...
-            'User defined', ...
+            'Custom amount', ...
             'Callback', @(figH, ~)dropRandomOtherPotential(figH, askForInput(figH, sprintf('Fraction of potential %s:', harmonic{1})), harmonic{2}));
     sizes = 2.^(-5:5);
     for mySize = sizes
         if mySize >=1
-            name = sprintf('<%g x potential>', mySize);
+            name = sprintf('<%g x %s-shaped potential>', mySize, harmonic{1});
         else
-            name = sprintf('<1/%g x potential>', 1/mySize);
+            name = sprintf('<1/%g x %s-shaped potential>', 1/mySize, harmonic{1});
         end
-        uimenu(subMenu, 'Label',...
+        menuH = uimenu(subMenu, 'Label',...
             name, ...
             'Callback', @(figH, ~)dropRandomOtherPotential(figH, mySize, harmonic{2}));
+        if mySize == sizes(1)
+            menuH.Separator = 'on';
+        end
     end
 end
-
-% Drop deterministic
-dropDeterministicMenu = uimenu(figH, 'Label', 'Drop Deterministic'); 
-
-potentialMenu = uimenu(dropDeterministicMenu, 'Label', 'Standard Potentials');
-for h=1:length(harmonicFcts)
-    harmonicFctName = harmonicFcts{h}{1};
-    harmonicFct = harmonicFcts{h}{2};
-    subMenu = uimenu(potentialMenu, 'Label', sprintf('Potential of %s', harmonicFctName));
-    uimenu(subMenu, 'Label',...
-            'User defined', ...
-            'Callback', @(figH, ~)dropPotential(figH, round(askForInput(figH, sprintf('Number of times to add potential of harmonic %s:',harmonicFctName))), harmonicFct));
-    sizes = 2.^(0:8);
-    for mySize = sizes
-        name = sprintf('%g x potential of %s', mySize, harmonicFctName);
-        uimenu(subMenu, 'Label',...
-            name, ...
-            'Callback', @(figH, ~)dropPotential(figH, mySize, harmonicFct));
-    end
-end
-
-potentialMenu = uimenu(dropDeterministicMenu, 'Label', 'Other Potentials');
-subMenu = uimenu(potentialMenu, 'Label', 'Square 45°-shaped potential');
-uimenu(subMenu, 'Label',...
-        'User defined', ...
-        'Callback', @(figH, ~)dropSquare45(figH, 0.5*round(2*askForInput(figH, 'Number of times to add harmonic square 45°:'))));
-sizes = 0.5:0.5:10;
-for mySize = sizes
-    name = sprintf('%g x Square 45°', mySize);
-    uimenu(subMenu, 'Label',...
-        name, ...
-        'Callback', @(figH, ~)dropSquare45(figH, mySize));
-end
-
-for h=1:length(otherPotentials)
-    harmonic = otherPotentials{h};
-    subMenu = uimenu(potentialMenu, 'Label', sprintf('%s-shaped potential', harmonic{1}));
-    uimenu(subMenu, 'Label',...
-            'User defined', ...
-            'Callback', @(figH, ~)dropOtherPotential(figH, round(askForInput(figH, sprintf('Number of times to add potential %s:', harmonic{1}))), harmonic{2}));
-    sizes = 2.^(0:8);
-    for mySize = sizes
-        name = sprintf('%g x potential %s', mySize, harmonic{1});
-        uimenu(subMenu, 'Label',...
-            name, ...
-            'Callback', @(figH, ~)dropOtherPotential(figH, mySize, harmonic{2}));
-    end
-end
-
-othersMenu = uimenu(dropDeterministicMenu, 'Label', 'Others');
-subMenu = uimenu(othersMenu, 'Label', 'Cross');
-uimenu(subMenu, 'Label',...
-        'User defined', ...
-        'Callback', @(figH, ~)dropCross(figH, round(askForInput(figH, 'Number of particles in cross fields:'))));
-sizes = 1:1:10;
-for mySize = sizes
-    name = sprintf('%g Particles/field', mySize);
-    uimenu(subMenu, 'Label',...
-        name, ...
-        'Callback', @(figH, ~)dropCross(figH, mySize));
-end
-subMenu = uimenu(othersMenu, 'Label', 'Circle');
-uimenu(subMenu, 'Label',...
-        'User defined', ...
-        'Callback', @(figH, ~)dropCircle(figH, round(askForInput(figH, 'Number of particles in circle fields:'))));
-sizes = 1:1:10;
-for mySize = sizes
-    name = sprintf('%g Particles/field', mySize);
-    uimenu(subMenu, 'Label',...
-        name, ...
-        'Callback', @(figH, ~)dropCircle(figH, mySize));
-end
-
 
 %% recurrent field
 uicontrol('Style', 'text', 'String', 'valid',...
@@ -399,7 +455,7 @@ uicontrol('Style', 'text', 'String', 'valid',...
 %% Main plot
 axH = axes('Tag', 'Splot', 'Units', 'pixels');
 colormap(colors)
-colorbar('south', 'Ticks', (1:size(colors, 1))+0.5, 'TickLabels', [arrayfun(@(x)int2str(x), 0:size(colors, 1)-2, 'UniformOutput', false), {'-'}], 'Units', 'centimeters', 'Tag', 'colorbar');
+colorbar('south', 'Ticks', (1:size(colors, 1))+0.5, 'TickLabels', [arrayfun(@(x)int2str(x), 0:size(colors, 1)-3, 'UniformOutput', false), {sprintf('%g+', size(colors, 1)-2), 'X'}], 'Units', 'centimeters', 'Tag', 'colorbar');
 hold on;
 plotPile(data.S, figH, true, false);
 %axis off;
@@ -408,42 +464,37 @@ ylim([0.5, size(data.S, 1)+0.5]);
 axH.YDir = 'reverse';
 axH.XTick = [];
 axH.YTick = [];
-% grid(axH, 'on');
-% grid(axH, 'minor');
 axH.Layer = 'top';
 box on;
 
-%% initialize options
-% optionsPanel = uipanel('Title', 'Options', 'BackgroundColor', [1, 1, 1],...
-%     'Units', 'centimeters', 'Tag', 'options');
-
+%% initialize actions
 modeH = uibuttongroup('visible','off', 'Units', 'centimeters',...
-    'Position', [0.25, 0.25, 5, 5], 'Title', 'Options',...
+    'Position', [0.25, 0.25, 5, 5], 'Title', 'Actions',...
     'Tag', 'modeGroup',...
     'BackgroundColor', [1,1,1]);
-addToppleH = uicontrol('Style','Radio','String','Add',...
-    'Units', 'centimeters','pos',[0.25,3.75,2,0.5],'parent', modeH,'HandleVisibility','off',...
+addToppleH = uicontrol('Style','Radio','String','Drop particle',...
+    'Units', 'centimeters','pos',[0.25,3.75,3,0.5],'parent', modeH,'HandleVisibility','off',...
     'Tag', 'modeAdd',...
     'BackgroundColor', [1,1,1]);
-uicontrol('Style','Radio','String','Decrease',...
-    'Units', 'centimeters','pos',[0.25,3,2,0.5],'parent', modeH,'HandleVisibility','off',...
+uicontrol('Style','Radio','String','Remove particle',...
+    'Units', 'centimeters','pos',[0.25,3,3,0.5],'parent', modeH,'HandleVisibility','off',...
     'Tag', 'modeDecrease',...
     'BackgroundColor', [1,1,1]);
 uicontrol('Style','Radio','String','Wave',...
-    'Units', 'centimeters','pos',[0.25,2.25,2,0.5],'parent', modeH,'HandleVisibility','off',...
+    'Units', 'centimeters','pos',[0.25,2.25,3,0.5],'parent', modeH,'HandleVisibility','off',...
     'Tag', 'modeWave',...
     'BackgroundColor', [1,1,1]);
 set(modeH,'SelectedObject',addToppleH);
 set(modeH,'Visible','on');
 
-uicontrol('Style','checkbox','String','Auto-Topple',...
-    'Units', 'centimeters','pos',[0.25,1.25,2.5,0.5],'parent', modeH,'HandleVisibility','off',...
+uicontrol('Style','checkbox','String','Auto-topple',...
+    'Units', 'centimeters','pos',[0.25,1.25,3,0.5],'parent', modeH,'HandleVisibility','off',...
     'Tag', 'modeAutoTopple',...
     'BackgroundColor', [1,1,1], 'Value', 1);
 
 uicontrol('Style', 'pushbutton', ...
     'String', 'Topple', 'Units', 'centimeters','parent', modeH, ...
-    'Position', [0.25,0.25,2.5,0.75], ...
+    'Position', [0.25,0.25,3,0.75], ...
     'Callback', {@onToppleButton},...
     'Tag', 'toppleButton');
 
@@ -546,7 +597,11 @@ function mouseMove(figH, ~)
     xData = ceil(width * x);
     yData = ceil(height * y);
     if xData > 0 && xData <= width && yData > 0 && yData <= height
-        figH.Name = sprintf('InterPile - (%g, %g) -> %g', yData, xData, S(yData, xData));
+        if isinf(S(yData, xData))
+            figH.Name = sprintf('InterPile - (%g, %g) -> outside domain', yData, xData);
+        else
+            figH.Name = sprintf('InterPile - (%g, %g) -> %g', yData, xData, S(yData, xData));
+        end
     else
         figH.Name = sprintf('InterPile - %gx%g domain', size(S, 1), size(S, 2));
     end
@@ -588,6 +643,7 @@ function plotPile(S, figH, allowEdits, saveUndo)
     cla();
     
     Stemp = S;
+    Stemp(~isinf(Stemp) & Stemp>9) = 9;
     Stemp(isinf(Stemp)) = 10;
     imageH = image(Stemp+1);
     
@@ -612,7 +668,7 @@ function plotPile(S, figH, allowEdits, saveUndo)
     
 end
 function onResize(figH, ~)
-    optionsWidth = 3.5; %cm
+    optionsWidth = 4; %cm
     figH = ancestor(figH, 'figure');
     S = getPile(figH);
     % main plot
@@ -652,30 +708,35 @@ function setPile(figH, S, saveUndo)
     set(ancestor(figH,'figure'), 'UserData', data);
 end
 
-function setMask(figH, ~)
+function customMask(figH, ~)
+    prompt = {'Mask name:', 'Mask formula (variables y and x measure distance from center, N and M height and width of the domain):'};
+    title = 'Size of sandpile';
+    dims = [1 35];
+    definput = {'ellipsoid', 'x.^2/((M+1)/2).^2+y.^2/((N+1)/2).^2<1'};
+    answer = inputdlg(prompt,title,dims,definput);
+    if isempty(answer)
+        return;
+    end
+    maskFct = @(y,x,N,M)eval(answer{2});
+    maskName = answer{1};
+    setMask(figH, maskName, maskFct)
+end
+function setMask(figH, maskName, maskFct)
+    maskName = strrep(lower(maskName), ' ', '_');
     data = getData(figH);
     S = getPile(figH);
     width = size(S, 2);
     height = size(S, 1);
     
-    prompt = {'Mask name:', 'Mask formula (variables x and y measure distance from center):'};
-    title = 'Size of sandpile';
-    dims = [1 35];
-    definput = {'ellipsoid', sprintf('x.^2/%g.^2+y.^2/%g.^2<1', (width+1)/2, (height+1)/2)};
-    answer = inputdlg(prompt,title,dims,definput);
-    if isempty(answer)
-        return;
-    end
     try
         X=repmat((0:width-1) - (width-1)/2, height, 1);
         Y=repmat(((0:height-1) - (height-1)/2)', 1, width);
-        maskFct = @(y,x)eval(answer{2});
-        mask = maskFct(Y,X);
+        mask = maskFct(Y,X, height, width);
     catch
-        errordlg(sprintf('Could not determine mask from function "%s"!', answer{2}), 'Invalid Input');
+        errordlg('Could not set mask (invalid function)!', 'Invalid Input');
         return;
     end
-    data.currentMaskName = answer{1};
+    data.currentMaskName = maskName;
     set(ancestor(figH,'figure'), 'UserData', data);
     S(isinf(S))=0;
     S(~mask) = -inf;
@@ -787,9 +848,12 @@ function dropRandom(figH, N, k)
     plotPileRelax(S, figH);
 end
 
-function dropRandomCircle(figH, N)
+function dropRandomCircle(figH, N, k)
     S = getPile(figH);
     width = size(S, 1);
+    if nargin >= 3
+         N = round(k*width^2);
+    end
     radius = width/2;
     for i=1:N
         r = rand()*radius;
@@ -834,10 +898,22 @@ function dropSquare45(figH, k)
 end
 
 function dropOtherPotential(figH, k, harmonicFct)
+    try
+        S = getPile(figH);
+        height = size(S, 1);
+        width = size(S, 2);
+        S = S + k*harmonicFct(height, width);
+        plotPileRelax(S, figH);
+    catch ex
+        dlgH = errordlg(ex.message, 'Error occured');
+        setWindowIcon(dlgH);
+    end
+end
+function dropCenter(figH, numParticles)
     S = getPile(figH);
     height = size(S, 1);
     width = size(S, 2);
-    S = S + k*harmonicFct(height, width);
+    S(floor((height+1)/2), floor((width+1)/2)) = S(floor((height+1)/2), floor((width+1)/2)) + numParticles;
     plotPileRelax(S, figH);
 end
 function dropPotential(figH, k, harmonicFct)
@@ -850,17 +926,22 @@ function dropPotential(figH, k, harmonicFct)
 end
 
 function dropRandomOtherPotential(figH, k, harmonic)
-    S = getPile(figH);
-    height = size(S, 1);
-    width = size(S, 2);
-    distri = toDistribution(harmonic(height, width));
-    distriN = size(distri, 1);
-    N = distriN*k;
-    for i=1:N
-        idx = randi(distriN);
-        S(distri(idx, 1), distri(idx, 2)) = S(distri(idx, 1), distri(idx, 2)) + 1;
+    try
+        S = getPile(figH);
+        height = size(S, 1);
+        width = size(S, 2);
+        distri = toDistribution(harmonic(height, width));
+        distriN = size(distri, 1);
+        N = distriN*k;
+        for i=1:N
+            idx = randi(distriN);
+            S(distri(idx, 1), distri(idx, 2)) = S(distri(idx, 1), distri(idx, 2)) + 1;
+        end
+        plotPileRelax(S, figH);
+    catch ex
+        dlgH = errordlg(ex.message, 'Error occured');
+        setWindowIcon(dlgH);
     end
-    plotPileRelax(S, figH);
 end
 function dropRandomPotential(figH, k, harmonicFct)
     S = getPile(figH);
@@ -935,18 +1016,23 @@ function dropCircle(figH, k)
     S = S + k*double(repmat(abs((1:width)-width/2-0.5), width, 1).^2+repmat(abs((1:width)'-width/2-0.5), 1, width).^2<=(width/2)^2);
     plotPileRelax(S, figH);
 end
-function fraction = askForInput(figH, text)
+function fraction = askForInput(figH, text, defaultNum)
     if nargin < 2
         text = 'Number of particles to drop:';
     end
     data = getData(figH);
-    if ~isfield(data, 'UserInput')
-        data.UserInput = '1/8';
+    if nargin < 3
+        if ~isfield(data, 'UserInput')
+            data.UserInput = '1';
+        end
+        defaultNum = data.UserInput;
+    elseif ~ischar(defaultNum)
+        defaultNum = num2str(defaultNum);
     end
     prompt = {text};
     title = 'User Input';
     dims = [1 35];
-    definput = {data.UserInput};
+    definput = {defaultNum};
     answer = inputdlg(prompt,title,dims,definput);
     if isempty(answer)
         fraction = 0;
@@ -987,14 +1073,6 @@ function boardSizeCustom(figH)
     end
 end
 
-
-function dropRandomPerfectCircle(figH, k)
-    S = getPile(figH);
-    width = size(S, 1);
-    N = round(k*width^2);
-    dropRandomCircle(figH, N)
-end
-
 function boardSize(width, height, figH)
     S = getPile(figH);
     if width == size(S, 2) && height == size(S, 1)
@@ -1030,8 +1108,11 @@ function twoTimesPile(figH, ~)
     plotPileRelax(S+S, figH);
 end
 function fillAll(figH, number)
+    S = getPile(figH);
+    Sinf = isinf(S);
     S = ones(size(getPile(figH)))*number;
-    plotPile(S, figH);
+    S(Sinf) = -inf;
+    plotPileRelax(S, figH);
 end
 
 function fillNullPile(figH, ~)

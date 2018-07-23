@@ -22,7 +22,7 @@ if nargin < 1
     width = 10;
     height = 6;
 end
-assert(mod(width, 2)==0&&mod(height, 2)==0);
+assert(mod(width, 2)==0&&mod(height, 2)==0, 'Only NxM domains supported for N and M even.');
 
 S = zeros(height, width);
 
