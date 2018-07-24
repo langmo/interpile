@@ -23,7 +23,7 @@ load(configPath);
 [~,~,ext] = fileparts(filePath);
 [folder, ~, ~] = fileparts(configPath);
 %% Generate movie
-if ~exist('deltaT', 'var') || isempty(deltaFrames)
+if ~exist('deltaFrames', 'var') || isempty(deltaFrames)
     deltaFrames = 1;
 end
 if ~exist('showTime', 'var') || isempty(showText)
