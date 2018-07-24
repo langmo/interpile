@@ -1,4 +1,4 @@
-function assembleMovie(filePath, configPath, timePerRound, smallMovie, scaling, deltaT, showTime)
+function assembleMovie(filePath, configPath, timePerRound, smallMovie, scaling, deltaFrames, showText)
 
 % Copyright (C) 2018 Moritz Lang
 % 
@@ -23,15 +23,15 @@ load(configPath);
 [~,~,ext] = fileparts(filePath);
 [folder, ~, ~] = fileparts(configPath);
 %% Generate movie
-if ~exist('deltaT', 'var') || isempty(deltaT)
-    deltaT = 1;
+if ~exist('deltaT', 'var') || isempty(deltaFrames)
+    deltaFrames = 1;
 end
-if ~exist('showTime', 'var') || isempty(showTime)
-    showTime = true;
+if ~exist('showTime', 'var') || isempty(showText)
+    showText = true;
 end
 colors = pileColors();
 colors = colors(1:4, :);
-frameRate = stepsPerRound/timePerRound/deltaT;
+frameRate = stepsPerRound/timePerRound/deltaFrames;
 if smallMovie
     if strcmpi(ext, '.mp4')
          v = VideoWriter(filePath, 'MPEG-4');
@@ -87,7 +87,7 @@ while true
             firstRound = false;
             fgh = printPile(S, [], [], true, 0);
             drawnow();
-            if showTime
+            if showText
                 pos = get(gca(), 'Position');
                 txt = uicontrol('Style','text',...
                     'Units', 'centimeters',...
@@ -100,7 +100,7 @@ while true
         else
             fgh = printPile(S, fgh, [], true, 0);
         end
-        if showTime
+        if showText
             if exist('mode', 'var') && strcmpi(mode, 'scaling')
                 if referenceTime == 0
                     txt.String = sprintf('Domain=%gx%g', size(S, 1), size(S, 2));
@@ -114,7 +114,7 @@ while true
         drawnow();
         writeVideo(v,getframe(fgh));
     end
-    imgId = imgId+deltaT;
+    imgId = imgId+deltaFrames;
 end
 close(v);
 if ~smallMovie

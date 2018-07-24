@@ -51,7 +51,7 @@ if nargin <3 || isempty(timePerRound)
     timePerRound = 200/600*round(numSteps/deltaT);
 end
 
-assembleMovie(filePath, configFile, timePerRound, false, 4, deltaT, showTime)
+assembleMovie(filePath, configFile, timePerRound, false, 4, deltaT, showTime);
 
 
 end

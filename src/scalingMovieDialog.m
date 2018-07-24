@@ -1,5 +1,5 @@
 function varargout = scalingMovieDialog(varargin)
-% scalingMovieDilog - Dialog window to configure a new movie showing a
+% scalingMovieDialog - Dialog window to configure a new movie showing a
 % given sandpile configuration when scaling the domain size.
 % Usage:
 %   scalingMovieDialog()
@@ -115,11 +115,8 @@ updateReferenceSize(hObject);
 
 autoSetPath(hObject);
 
-try
-    setWindowIcon();
-catch
-    % Do nothing, default Matlab icon is OK, too.
-end
+setWindowIcon();
+
 
 
 % --- Outputs from this function are returned to the command line.

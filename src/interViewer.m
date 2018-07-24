@@ -117,14 +117,20 @@ uimenu(fileMenu, 'Label',...
     'Callback', @(figH, ~)interPile(getPile(figH)), 'Separator','on');
 uimenu(fileMenu, 'Label',...
     'Display Pile as Image', ...
-    'Callback', @(figH, ~)printPile(getPile(figH)), 'Separator','on');
-uimenu(fileMenu, 'Label',...
+    'Callback', @(figH, ~)printPile(getPile(figH)));
+
+
+% Generate movie
+generateMenu = uimenu(figH, 'Label', 'Export'); 
+uimenu(generateMenu, 'Label',...
+        'Generate Movie', ...
+        'Callback', @(figH, ~)generateMovieDlg(figH));
+uimenu(generateMenu, 'Label',...
     'Save Pile as Image', ...
-    'Callback', @(figH, ~)savePileAsImage(figH));
-uimenu(fileMenu, 'Label',...
+    'Callback', @(figH, ~)savePileAsImage(figH), 'Separator','on');
+uimenu(generateMenu, 'Label',...
     'Save Pile as Mat', ...
     'Callback', @(figH, ~)savePileAsMat(figH));
-
 
 %% Time bar
 timeField = uicontrol('Style', 'slider', ...
@@ -239,7 +245,11 @@ function mouseMove(figH, ~)
     xData = ceil(width * x);
     yData = ceil(height * y);
     if xData > 0 && xData <= width && yData > 0 && yData <= height
-        figH.Name = sprintf('InterPile Viewer - (%g, %g) -> %g', yData, xData, S(yData, xData));
+        if isinf(S(yData, xData))
+            figH.Name = sprintf('InterPile Viewer - (%g, %g) -> outside domain', yData, xData);
+        else
+            figH.Name = sprintf('InterPile Viewer - (%g, %g) -> %g', yData, xData, S(yData, xData));
+        end
     else
         [folder, ~, ~] = fileparts(figH.UserData.configFile);
         [~, folder, ext] = fileparts(folder);
@@ -326,6 +336,10 @@ end
 function openMovie(figH)
     data = getData(figH);
     interViewer(data.parentFolder)
+end
+function generateMovieDlg(figH)
+    data = getData(figH);
+    assembleMovieDialog([], data.configFile)
 end
 function S = getPile(figH)
     data = getData(figH);
