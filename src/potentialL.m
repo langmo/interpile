@@ -1,4 +1,4 @@
-function S = dropZoneCross(height, width )
+function S = potentialL(height, width )
 
 % Copyright (C) 2018 Moritz Lang
 % 
@@ -19,22 +19,13 @@ function S = dropZoneCross(height, width )
 % https://langmo.github.io/interpile/
 
 if nargin < 1
-    width = 12;
+    width = 7;
     height = 6;
 end
-assert(mod(width, 2)==0&&mod(height, 2)==0, 'Only NxM domains supported for N and M even.');
 
 S = zeros(height, width);
-S(height/2, 1:width/2) = S(height/2, 1:width/2) + (1:width/2);
-S(height/2+1, 1:width/2) = S(height/2+1, 1:width/2) + (1:width/2);
+S(1:height, width) = S(1:height, width) + (width+1) * (1:height)';
 
-S(height/2, width/2+1:end) = S(height/2, width/2+1:end) + (width/2:-1:1);
-S(height/2+1, width/2+1:end) = S(height/2+1, width/2+1:end) + (width/2:-1:1);
-
-S(1:height/2, width/2) = S(1:height/2, width/2) + (1:height/2)';
-S(1:height/2, width/2+1) = S(1:height/2, width/2+1) + (1:height/2)';
-
-S(height/2+1:end, width/2) = S(height/2+1:end, width/2) + (height/2:-1:1)';
-S(height/2+1:end, width/2+1) = S(height/2+1:end, width/2+1) + (height/2:-1:1)';
+S(height, 1:width) = S(height, 1:width) + (height+1) * (1:width);
 end
 

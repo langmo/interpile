@@ -47,7 +47,7 @@ end
 % --- Executes just before timeMovieDialog is made visible.
 function timeMovieDialog_OpeningFcn(figH, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
-% hObject    handle to figure
+% figH    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to timeMovieDialog (see VARARGIN)
@@ -64,6 +64,11 @@ if ~isempty(varargin)
 else
     figH.UserData.S = nullPile(64, 64);
 end
+fieldHeight = findall(figH, 'Tag', 'fieldHeight');
+fieldHeight.String = num2str(size(figH.UserData.S, 1));
+fieldWidth = findall(figH, 'Tag', 'fieldWidth');
+fieldWidth.String = num2str(size(figH.UserData.S, 2));
+
 fieldStart_Callback(figH, eventdata, handles);
 fieldMode_Callback(figH, eventdata, handles);
 autoSetPath(figH);
@@ -107,7 +112,7 @@ start = fieldStart.String{fieldStart.Value};
 start(start==' ')=[];
 start = lower(start);
 if fieldMode.Value == 3
-    X = fieldDropZone.UserData{fieldDropZone.Value}.dropZone();
+    X = fieldDropZone.UserData{fieldDropZone.Value}.potential(size(figH.UserData.S, 1), size(figH.UserData.S, 2));
     width = size(X, 2);
     height = size(X, 1);
 elseif fieldStart.Value == 2
@@ -271,7 +276,7 @@ if fieldMode.Value == 2
     polynomial = @(y,x)eval(polynomialString);
 elseif fieldMode.Value == 3
     fieldDropZone = findall(figH, 'Tag', 'fieldDropZone');
-    polynomial = fieldDropZone.UserData{fieldDropZone.Value}.dropZone();
+    polynomial = fieldDropZone.UserData{fieldDropZone.Value}.potential(size(figH.UserData.S, 1), size(figH.UserData.S, 2));
 else
     fieldHarmonic = findall(figH, 'Tag', 'fieldHarmonic');
     polynomial = fieldHarmonic.UserData{fieldHarmonic.Value}{2};
@@ -540,9 +545,9 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-zones = dropZones();
-hObject.String = cellfun(@(x)x.name, zones, 'UniformOutput', false);
-hObject.UserData = zones;
+otherPotentials = potentials();
+hObject.String = cellfun(@(x)x.name, otherPotentials, 'UniformOutput', false);
+hObject.UserData = otherPotentials;
 
 
 % --- Executes on selection change in fieldStochDet.

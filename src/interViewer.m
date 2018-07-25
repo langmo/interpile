@@ -220,6 +220,10 @@ function keyDown(figH, evt)
             setIndex(figH, getIndex(figH)+1);
         case 'leftarrow'
             setIndex(figH, getIndex(figH)-1);
+        case {'downarrow', 'pagedown'}
+            setIndex(figH, getIndex(figH)+10);
+        case {'uparrow', 'pageup'}
+            setIndex(figH, getIndex(figH)-10);
         otherwise  
     end
     

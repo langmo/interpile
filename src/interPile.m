@@ -33,7 +33,7 @@ function varargout = interPile(varargin)
 
 %% Pre-process input
 if nargin <1 || isempty(varargin{1})
-    var1 = zeros(63, 63);
+    var1 = zeros(255, 255);
 else
     var1 = varargin{1};
 end
@@ -53,7 +53,7 @@ if nargin >=2 && ~isempty(varargin{2}) && ishandle(varargin{2})
 end
 
 %% Configuration
-otherPotentials = harmonicDropZones();
+otherPotentials = potentials();
 harmonicFcts = harmonicFunctions();
 colors = pileColors();
 
@@ -269,7 +269,7 @@ uimenu(subMenu, 'Label',...
         'Callback', @(figH, ~)dropSquare45(figH, 0.5*round(2*askForInput(figH, 'Number of times to add harmonic square 45°:'))));
 sizes = 0.5:0.5:10;
 for mySize = sizes
-    name = sprintf('%g x Square 45°-shaped potential', mySize);
+    name = sprintf('%g x Square 45° potential', mySize);
     menuH = uimenu(subMenu, 'Label',...
         name, ...
         'Callback', @(figH, ~)dropSquare45(figH, mySize));
@@ -279,17 +279,17 @@ for mySize = sizes
 end
 
 for h=1:length(otherPotentials)
-    harmonic = otherPotentials{h};
-    subMenu = uimenu(potentialMenu, 'Label', sprintf('%s-shaped potential', harmonic{1}));
+    potential = otherPotentials{h};
+    subMenu = uimenu(potentialMenu, 'Label', sprintf('%s', potential.name));
     uimenu(subMenu, 'Label',...
             'Custom amount', ...
-            'Callback', @(figH, ~)dropOtherPotential(figH, round(askForInput(figH, sprintf('Number of times to add potential %s:', harmonic{1}))), harmonic{2}));
+            'Callback', @(figH, ~)dropOtherPotential(figH, round(askForInput(figH, sprintf('Number of times to add %s:', potential.name))), potential.potential));
     sizes = 2.^(0:8);
     for mySize = sizes
-        name = sprintf('%g x %s-shaped potential', mySize, harmonic{1});
+        name = sprintf('%g x %s', mySize, potential.name);
         menuH = uimenu(subMenu, 'Label',...
             name, ...
-            'Callback', @(figH, ~)dropOtherPotential(figH, mySize, harmonic{2}));
+            'Callback', @(figH, ~)dropOtherPotential(figH, mySize, potential.potential));
         if mySize == sizes(1)
             menuH.Separator = 'on';
         end
@@ -423,21 +423,21 @@ for mySize = sizes
     end
 end
 for h=1:length(otherPotentials)
-    harmonic = otherPotentials{h};
-    subMenu = uimenu(potentialMenu, 'Label', sprintf('%s-shaped potential', harmonic{1}));
+    potential = otherPotentials{h};
+    subMenu = uimenu(potentialMenu, 'Label', sprintf('%s', potential.name));
     uimenu(subMenu, 'Label',...
             'Custom amount', ...
-            'Callback', @(figH, ~)dropRandomOtherPotential(figH, askForInput(figH, sprintf('Fraction of potential %s:', harmonic{1})), harmonic{2}));
+            'Callback', @(figH, ~)dropRandomOtherPotential(figH, askForInput(figH, sprintf('Fraction of potential %s:', potential.name)), potential.potential));
     sizes = 2.^(-5:5);
     for mySize = sizes
         if mySize >=1
-            name = sprintf('<%g x %s-shaped potential>', mySize, harmonic{1});
+            name = sprintf('<%g x %s>', mySize, potential.name);
         else
-            name = sprintf('<1/%g x %s-shaped potential>', 1/mySize, harmonic{1});
+            name = sprintf('<1/%g x %s>', 1/mySize, potential.name);
         end
         menuH = uimenu(subMenu, 'Label',...
             name, ...
-            'Callback', @(figH, ~)dropRandomOtherPotential(figH, mySize, harmonic{2}));
+            'Callback', @(figH, ~)dropRandomOtherPotential(figH, mySize, potential.potential));
         if mySize == sizes(1)
             menuH.Separator = 'on';
         end
@@ -559,16 +559,16 @@ function loadPileAsMat(figH)
     onResize(figH);
 end
 function savePileAsDropZone(figH)
-    name = inputdlg({'Dropzone Name:'}, 'Save Sandpile as Dropzone', 1, {'drop_zone_name'});
+    name = inputdlg({'Potential Name:'}, 'Save Sandpile as Potential', 1, {'myPotential'});
     if isempty(name)
         return;
     end
     name = name{1};
     S = getPile(figH); %#ok<NASGU>
     if ~isdeployed()
-        dirName = 'drop_zones';
+        dirName = 'custom_potentials';
     else
-        dirName = fullfile(ctfroot(), 'drop_zones');
+        dirName = fullfile(ctfroot(), 'custom_potentials');
     end
     if ~exist(dirName, 'dir')
         mkdir(dirName);
@@ -897,17 +897,24 @@ function dropSquare45(figH, k)
     plotPileRelax(S, figH);
 end
 
-function dropOtherPotential(figH, k, harmonicFct)
+function dropOtherPotential(figH, k, potential)
+    S = getPile(figH);
+    height = size(S, 1);
+    width = size(S, 2);
     try
-        S = getPile(figH);
-        height = size(S, 1);
-        width = size(S, 2);
-        S = S + k*harmonicFct(height, width);
-        plotPileRelax(S, figH);
+        pot = potential(height, width);
     catch ex
-        dlgH = errordlg(ex.message, 'Error occured');
+        dlgH = errordlg(['Cannot generate potential for current domain: ',ex.message], 'Invalid potential');
         setWindowIcon(dlgH);
+        return;
     end
+    if size(pot, 1) ~= height || size(pot, 2) ~= width
+        dlgH = errordlg(sprintf('Potential is only available for %gx%g domains. Current domain size: %gx%g.', size(pot, 1), size(pot, 2), height, width), 'Invalid potential');
+        setWindowIcon(dlgH);
+        return;
+    end
+    S = S + k*pot;
+    plotPileRelax(S, figH);
 end
 function dropCenter(figH, numParticles)
     S = getPile(figH);
@@ -925,23 +932,32 @@ function dropPotential(figH, k, harmonicFct)
     plotPileRelax(S, figH);
 end
 
-function dropRandomOtherPotential(figH, k, harmonic)
+function dropRandomOtherPotential(figH, k, potential)
+    S = getPile(figH);
+    height = size(S, 1);
+    width = size(S, 2);
     try
-        S = getPile(figH);
-        height = size(S, 1);
-        width = size(S, 2);
-        distri = toDistribution(harmonic(height, width));
-        distriN = size(distri, 1);
-        N = distriN*k;
-        for i=1:N
-            idx = randi(distriN);
-            S(distri(idx, 1), distri(idx, 2)) = S(distri(idx, 1), distri(idx, 2)) + 1;
-        end
-        plotPileRelax(S, figH);
+        pot = potential(height, width);
     catch ex
-        dlgH = errordlg(ex.message, 'Error occured');
+        dlgH = errordlg(['Cannot generate potential for current domain: ',ex.message], 'Invalid potential');
         setWindowIcon(dlgH);
+        return;
     end
+    
+    if size(pot, 1) ~= height || size(pot, 2) ~= width
+        dlgH = errordlg(sprintf('Potential is only available for %gx%g domains. Current domain size: %gx%g.', size(pot, 1), size(pot, 2), height, width), 'Invalid potential');
+        setWindowIcon(dlgH);
+        return;
+    end
+    
+    distri = toDistribution(pot);
+    distriN = size(distri, 1);
+    N = distriN*k;
+    for i=1:N
+        idx = randi(distriN);
+        S(distri(idx, 1), distri(idx, 2)) = S(distri(idx, 1), distri(idx, 2)) + 1;
+    end
+    plotPileRelax(S, figH);
 end
 function dropRandomPotential(figH, k, harmonicFct)
     S = getPile(figH);

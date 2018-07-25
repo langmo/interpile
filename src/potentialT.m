@@ -1,4 +1,4 @@
-function S = dropZoneDoubleT(height, width )
+function S = potentialT(height, width )
 
 % Copyright (C) 2018 Moritz Lang
 % 
@@ -19,20 +19,16 @@ function S = dropZoneDoubleT(height, width )
 % https://langmo.github.io/interpile/
 
 if nargin < 1
-    width = 10;
-    height = 6;
+    width = 64;
+    height = 64;
 end
 assert(mod(width, 2)==0&&mod(height, 2)==0, 'Only NxM domains supported for N and M even.');
 
 S = zeros(height, width);
+S(1:height/2, width) = S(1:height/2, width) + (width+1) * (1:height/2)';
+S(height/2+1:1:end, width) = S(height/2+1:1:end, width) + (width+1) * (height/2:-1:1)';
 
-S(1, 1:width/2) = S(1, 1:width/2) + (1:width/2);
-S(end, 1:width/2) = S(end, 1:width/2) + (1:width/2);
-
-S(1, width/2+1:1:end) = S(1, width/2+1:1:end) + (width/2:-1:1);
-S(end, width/2+1:1:end) = S(end, width/2+1:1:end) + (width/2:-1:1);
-
-S(1:end, width/2) = S(1:end, width/2)+1;
-S(1:end, width/2+1) = S(1:end, width/2+1)+1;
+S(height/2, 1:width) = S(height/2, 1:width) + (1:width);
+S(height/2+1, 1:width) = S(height/2+1, 1:width) + (1:width);
 end
 

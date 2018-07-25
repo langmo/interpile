@@ -1,4 +1,4 @@
-function S = dropZoneIrregular(height, width )
+function S = potentialIrregular(height, width )
 
 % Copyright (C) 2018 Moritz Lang
 % 

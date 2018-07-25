@@ -1,4 +1,4 @@
-function dropZones = dropZones()
+function dropZones = potentials()
 
 % Copyright (C) 2018 Moritz Lang
 % 
@@ -18,12 +18,12 @@ function dropZones = dropZones()
 % For more information, visit the project's website at 
 % https://langmo.github.io/interpile/
 
-harmonicZones = harmonicDropZones();
+harmonicZones = defaultPotentials();
 
 if ~isdeployed()
-    dirName = 'drop_zones';
+    dirName = 'custom_potentials';
 else
-    dirName = fullfile(ctfroot(), 'drop_zones');
+    dirName = fullfile(ctfroot(), 'custom_potentials');
 end
 if ~exist(dirName, 'dir')
     dropZoneFiles = struct([]);
@@ -36,11 +36,11 @@ dropZones = cell(1, length(dropZoneFiles)+length(harmonicZones));
 for i=1:length(dropZoneFiles)
     [~, name, ~] = fileparts(dropZoneFiles(i).name);
     dropZonePath = fullfile(dirName, dropZoneFiles(i).name);
-    dropZones{i} = struct('name', name, 'dropZone', @()loadDropZone(dropZonePath));
+    dropZones{i} = struct('name', name, 'potential', @(height, width)loadDropZone(dropZonePath));
 end
 
 for i=1:length(harmonicZones)
-    dropZones{i+length(dropZoneFiles)} = struct('name', harmonicZones{i}{1}, 'dropZone', @()harmonicZones{i}{2}(128,128));
+    dropZones{i+length(dropZoneFiles)} = struct('name', harmonicZones{i}{1}, 'potential', harmonicZones{i}{2});
 end
 
 end
