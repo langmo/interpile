@@ -1,5 +1,5 @@
 function S = nullPile(n, m, mask, maskName)
-% nullPile - Calculates the sandpile group identity element for a given
+% nullPile - Calculates the sandpile group identity element for a NxM
 % domain.
 % Usage:
 %   S = nullPile()
@@ -57,40 +57,54 @@ end
 if nargin < 3
     mask = ones(n, m);
 end
-if nargin < 4
-    maskName = 'customMask';
+if nargin < 4 || isempty(maskName)
+    maskName = '';
+else
+    maskName = ['_', maskName];
 end
-maskName = ['_', maskName];
 if all(all(mask == ones(n, m)))
     maskName = '';
-end
-
-
-if ~isdeployed()
-    dirName = 'null_piles';
+    savePile = true;
+elseif isempty(maskName)
+    savePile = false;
 else
-    dirName = fullfile(ctfroot(), 'null_piles');
-end
-fileName = fullfile(dirName, sprintf('%gx%g%s.mat', n, m, maskName));
-if exist(fileName, 'file')
-    load(fileName, 'S');
-    return;
+    savePile = true;
 end
 
+%% Load identity if it was previously saved
+if savePile
+    if ~isdeployed()
+        dirName = 'null_piles';
+    else
+        dirName = fullfile(ctfroot(), 'null_piles');
+    end
+    fileName = fullfile(dirName, sprintf('%gx%g%s.mat', n, m, maskName));
+    if exist(fileName, 'file')
+        load(fileName, 'S');
+        return;
+    end
+end
+
+%% Calculate identity
 filled = 5*ones(n,m);
 filled(~mask) = -inf;
 
 S = filled-relaxPile(filled);
 S(~mask) = -inf;
 S = relaxPile(S);
-try
-    if ~exist(dirName, 'dir')
-        mkdir(dirName);
-        fprintf('Saving nullpiles in folder %s to speed up program.\n', dirName);
+
+%% Save mask for later use
+if savePile
+    try
+        if ~exist(dirName, 'dir')
+            mkdir(dirName);
+            fprintf('Saving nullpiles in folder %s to speed up program.\n', dirName);
+        end
+        save(fileName, 'S');
+    catch
+        % do nothing. The identity simply has to be calculated again next
+        % time.
     end
-    save(fileName, 'S');
-catch
-    errordlg(sprintf('Could not save nullpile to %s.', fileName), 'Error saving nullpile');
 end
 end
 

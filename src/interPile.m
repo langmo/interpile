@@ -85,7 +85,7 @@ uimenu(fileMenu, 'Label',...
     'Callback', @(figH, ~)loadPileAsMat(figH));
 uimenu(fileMenu, 'Label',...
     'Save Pile as Potential', ...
-    'Callback', @(figH, ~)savePileAsDropZone(figH));
+    'Callback', @(figH, ~)savePileAsPotential(figH));
 
 uimenu(fileMenu, 'Label',...
     'New Harmonic Dynamics Movie', ...
@@ -94,6 +94,10 @@ uimenu(fileMenu, 'Label',...
 uimenu(fileMenu, 'Label',...
     'New Domain Scaling Movie', ...
     'Callback', @(figH, ~)generateScalingMovie());
+
+uimenu(fileMenu, 'Label',...
+    'New Domain Transformation Movie', ...
+    'Callback', @(figH, ~)generateMaskMovie());
 
 uimenu(fileMenu, 'Label',...
     'Continue Movie', ...
@@ -166,17 +170,17 @@ end
 %% Menu: Mask
 maskMenu = uimenu(figH, 'Label', 'Mask'); 
 uimenu(maskMenu, 'Label',...
-        'Custom Domain Mask', ...
+        'Define Mask', ...
         'Callback', @customMask);
-masks = domainMasks();
-for i=1:length(masks)
-    menuH = uimenu(maskMenu, 'Label',...
-        masks{i}{1}, ...
-        'Callback', @(figH, ~)setMask(figH, masks{i}{1}, masks{i}{2}));
-    if i==1
-        menuH.Separator = 'on';
-    end
+defaultMasksMenu = uimenu(maskMenu, 'Label', 'Default Masks', 'Separator','on'); 
+defaultMasks = domainMasks();
+for i=1:length(defaultMasks)
+    uimenu(defaultMasksMenu, 'Label',...
+        defaultMasks{i}{1}, ...
+        'Callback', @(figH, ~)setMask(figH, defaultMasks{i}{1}, defaultMasks{i}{2}));
 end
+uimenu(maskMenu, 'Label', 'Custom Masks', 'Tag', 'fieldCustomMasks');
+updateCustomMasks(figH);
 uimenu(maskMenu, 'Label',...
         'Clear Mask', ...
         'Callback', @clearMask, 'Separator','on');
@@ -558,7 +562,7 @@ function loadPileAsMat(figH)
     figH.Name = sprintf('InterPile - %gx%g domain', size(S,1), size(S,2));
     onResize(figH);
 end
-function savePileAsDropZone(figH)
+function savePileAsPotential(figH)
     name = inputdlg({'Potential Name:'}, 'Save Sandpile as Potential', 1, {'myPotential'});
     if isempty(name)
         return;
@@ -709,19 +713,45 @@ function setPile(figH, S, saveUndo)
 end
 
 function customMask(figH, ~)
-    prompt = {'Mask name:', 'Mask formula (variables y and x measure distance from center, N and M height and width of the domain):'};
-    title = 'Size of sandpile';
-    dims = [1 35];
-    definput = {'ellipsoid', 'x.^2/((M+1)/2).^2+y.^2/((N+1)/2).^2<1'};
-    answer = inputdlg(prompt,title,dims,definput);
-    if isempty(answer)
-        return;
+    figH = ancestor(figH, 'figure');
+    callbackSetMask = @(maskName, maskFct)setMask(figH, maskName, maskFct);
+    callbackUpdateMasks = @()updateCustomMasks(figH);
+    defineMaskDialog(callbackSetMask, callbackUpdateMasks);
+end
+function updateCustomMasks(figH)
+    figH = ancestor(figH, 'figure');
+    fieldCustomMasks = findall(figH, 'Tag', 'fieldCustomMasks');
+    for i=length(fieldCustomMasks.Children):-1:1
+        delete(fieldCustomMasks.Children(i));
     end
-    maskFct = @(y,x,N,M)eval(answer{2});
-    maskName = answer{1};
-    setMask(figH, maskName, maskFct)
+    
+    if ~isdeployed()
+        dirName = 'custom_masks';
+    else
+        dirName = fullfile(ctfroot(), 'custom_masks');
+    end
+    if ~exist(dirName, 'dir')
+        maskFiles = struct([]);
+    else
+        maskFiles = dir(fullfile(dirName, '*.mat'));
+    end
+    if isempty(maskFiles)
+        fieldCustomMasks.Visible = 'off';
+    else
+        fieldCustomMasks.Visible = 'on';
+        for i=1:length(maskFiles)
+            maskPath = fullfile(dirName, maskFiles(i).name);
+            mask = [];
+            load(maskPath, 'mask');
+            uimenu(fieldCustomMasks, 'Label',...
+                mask.name, ...
+                'Callback', @(figH, ~)setMask(figH, mask.name, @(y,x,N,M)eval(mask.formula)));
+        end
+    end
+    drawnow();
 end
 function setMask(figH, maskName, maskFct)
+    figH = ancestor(figH, 'figure');
     maskName = strrep(lower(maskName), ' ', '_');
     data = getData(figH);
     S = getPile(figH);
@@ -732,8 +762,8 @@ function setMask(figH, maskName, maskFct)
         X=repmat((0:width-1) - (width-1)/2, height, 1);
         Y=repmat(((0:height-1) - (height-1)/2)', 1, width);
         mask = maskFct(Y,X, height, width);
-    catch
-        errordlg('Could not set mask (invalid function)!', 'Invalid Input');
+    catch ex
+        errordlg(sprintf('Could not set mask: %s',ex.message), 'Invalid Input');
         return;
     end
     data.currentMaskName = maskName;

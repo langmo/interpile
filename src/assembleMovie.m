@@ -107,6 +107,8 @@ while true
                 else
                     txt.String = sprintf('Domain=%gx%g, Time=%3.6f', size(S, 1), size(S, 2), domainTimes(imgId));
                 end
+            elseif exist('mode', 'var') && strcmpi(mode, 'mask')
+                txt.String = sprintf('Transformation progress: %05.2f%%', (imgId-1)/(length(maskVariables)-1)*100);
             else
                 txt.String = sprintf('Time=%3.6f', imgId/stepsPerRound);
             end

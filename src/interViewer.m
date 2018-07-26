@@ -80,7 +80,10 @@ else
     else
         data.mode = 'det';
     end
-    if strcmpi(data.mode, 'scaling')
+    if strcmpi(data.mode, 'mask')
+        data.currentIndex = 1;
+        data.maskVariables = maskVariables;
+    elseif strcmpi(data.mode, 'scaling')
         data.domainSizes = domainSizes;
         data.domainTimes = domainTimes;
         data.currentIndex = 1;
@@ -137,7 +140,7 @@ timeField = uicontrol('Style', 'slider', ...
     'Tag', 'timeField',...
     'Units', 'centimeters');
 timeField.Max = 1;
-if strcmpi(data.mode, 'scaling')
+if strcmpi(data.mode, 'scaling') || strcmpi(data.mode, 'mask')
     timeField.Min = 1/data.numSteps;
 else
     timeField.Min = 0;
@@ -199,7 +202,7 @@ function savePileAsMat(figH)
 end
 function setIndex(figH, index)
     figH = ancestor(figH,'figure');
-    if index < 1 && strcmpi(figH.UserData.mode, 'scaling')
+    if index < 1 && (strcmpi(figH.UserData.mode, 'scaling') || strcmpi(figH.UserData.mode, 'mask'))
             index = 1;
     elseif index < 0
         index = 0;
@@ -296,6 +299,10 @@ function plotPile(figH)
         domainSize = figH.UserData.domainSizes(figH.UserData.currentIndex, :);
         domainTime = figH.UserData.domainTimes(figH.UserData.currentIndex, :);
         timeTextH.String = sprintf('Size: %gx%g, Time: %g (Frame: %g/%g)', domainSize(1), domainSize(2), domainTime,...
+            figH.UserData.currentIndex,figH.UserData.numSteps);
+    elseif strcmpi(figH.UserData.mode, 'mask')
+        maskVariables = figH.UserData.maskVariables;
+        timeTextH.String = sprintf('Transformation progress: %05.2f%% (Frame: %g/%g)', (figH.UserData.currentIndex-1)/(length(maskVariables)-1)*100,...
             figH.UserData.currentIndex,figH.UserData.numSteps);
     else
         timeTextH.String = sprintf('Time: %1.7f (Frame: %g/%g)', (figH.UserData.currentIndex)/(figH.UserData.stepsPerRound),...

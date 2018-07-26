@@ -288,14 +288,16 @@ stochMovie = fieldStochDet.Value == 2;
 fieldStepsPerIter = findall(figH, 'Tag', 'fieldStepsPerIter');
 stepsPerIter = str2double(fieldStepsPerIter.String);
 if isnan(stepsPerIter) || stepsPerIter < 1 || mod(stepsPerIter, 1) ~= 0
-    errordlg('Steps per iteration must be an integer greater or equal to one.', 'Invalid Input');
+    dlgH = errordlg('Steps per iteration must be an integer greater or equal to one.', 'Invalid Input');
+    setWindowIcon(dlgH);
     return;
 end
 
 fieldNumIter = findall(figH, 'Tag', 'fieldNumIter');
 numIter = str2double(fieldNumIter.String);
 if isnan(numIter) || numIter <= 0
-    errordlg('Number of iterations must be an double greater than zero.', 'Invalid Input');
+    dlgH = errordlg('Number of iterations must be an double greater than zero.', 'Invalid Input');
+    setWindowIcon(dlgH);
     return;
 end
 

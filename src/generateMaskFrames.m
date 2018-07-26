@@ -1,4 +1,4 @@
-function configPath = generateScalingFrames(configPath, callback)
+function configPath = generateMaskFrames(configPath, callback)
 
 % Copyright (C) 2018 Moritz Lang
 % 
@@ -21,39 +21,51 @@ function configPath = generateScalingFrames(configPath, callback)
 if ~exist('callback', 'var') || isempty(callback)
     callback = @(x)1;
 end
-load(configPath, 'harmonicFctStr', 'domainSizes', 'domainTimes', 'fileTemplate');
+load(configPath, 'harmonicFctStr', 'harmonicTime', 'maskFctStr', 'domainSize', 'maskVariables', 'fileTemplate');
+maskFct = str2func(maskFctStr);
 if isempty(harmonicFctStr)
     harmonicFct = [];
 else
     harmonicFct = str2func(harmonicFctStr);
 end
+if harmonicTime < 0
+    harmonicFctToUse = @(y,x) - harmonicFct(y,x);
+    timeToUse = -harmonicTime;
+else
+    harmonicFctToUse = harmonicFct;
+    timeToUse = harmonicTime;
+end
     
 [folder, ~, ~] = fileparts(configPath);
 %% start iteration
+
+X=repmat((0:domainSize(2)-1) - (domainSize(2)-1)/2, domainSize(1), 1);
+Y=repmat(((0:domainSize(1)-1) - (domainSize(1)-1)/2)', 1, domainSize(2));
+
 ticVal = uint64(0);
-for s=1:size(domainSizes, 1)
+for s=1:length(maskVariables)
     SFile = fullfile(folder, sprintf(fileTemplate, s));
     if exist(SFile, 'file')
         continue;
     end
     if toc(ticVal) > 5
-        callback((s-1)/(size(domainSizes, 1)));
+        callback((s-1)/length(maskVariables));
         ticVal = tic();
     end
-    S = nullPile(domainSizes(s, 1), domainSizes(s, 2));
-
+    
+    try 
+        mask = maskFct(Y,X, domainSize(1), domainSize(2), maskVariables(s));
+    catch ex
+        error('InterPile:InvalidMask', 'Could not calculate mask: %s', ex.message);
+    end
+    
+    
+    S = nullPile(domainSize(1), domainSize(2), mask);
     if ~isempty(harmonicFct)
-        if domainTimes(s) < 0
-            harmonicFctToUse = @(y,x) - harmonicFct(y,x);
-            timeToUse = -domainTimes(s); 
-        else
-            harmonicFctToUse = harmonicFct;
-            timeToUse = domainTimes(s); 
-        end
-        X = generateDropZone(harmonicFctToUse, size(S, 1), size(S, 2));
+        potential = generateDropZone(harmonicFctToUse, size(S, 1), size(S, 2), mask);
 
-        Xt = floor(timeToUse.*X);
-        S = relaxPile(S+Xt); %#ok<NASGU>
+        potentialT = floor(timeToUse.*potential);
+        S = relaxPile(S+potentialT); %#ok<NASGU>
     end
 
     save(SFile, 'S');

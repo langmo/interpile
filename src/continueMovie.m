@@ -42,6 +42,8 @@ load(configPath, 'mode')
 warning(oldWarn);
 if exist('mode', 'var') && strcmpi(mode, 'scaling')
     continueScalingMovie(configPath, filePath);
+elseif exist('mode', 'var') && strcmpi(mode, 'mask')
+    continueMaskMovie(configPath, filePath);
 else
     continueTimeMovie(configPath, filePath);
 end
