@@ -16,8 +16,9 @@ If player is not loading or an error occurred, you can visit our YouTube channel
 		<p style="margin: 0px 0 0px 0;">
 			Mode:<br />
 			<select name="mode" id="mode" size="1" onchange="setMode()">
-				<option value="dynanmics">Harmonic Dynamics</option>
+				<option value="dynamics" selected="selected">Harmonic Dynamics</option>
 				<option value="scaling">Domain Scaling</option>
+				<option value="mask">Domain Transformation</option>
 			</select>
 		</p>
 	</div>
@@ -54,6 +55,28 @@ If player is not loading or an error occurred, you can visit our YouTube channel
 		<p style="margin: 0px 0 0px 0;">
 			Time:<br />
 			<select name="scalingTime" id="scalingTime" size="1"> 
+			</select>
+			</p>
+	</div>
+	
+	<div id="maskTrafoDiv" style="display:none;float:left;padding: 0px 10px 5px 10px;border: 1px solid black;margin:0px 0px 10px 0px;width:220px;">
+		<p style="margin: 0px 0 0px 0;">
+			Transformation:<br />
+			<select name="maskTrafo" id="maskTrafo" size="1" onchange="initMaskHarmonics()"> 
+			</select>
+		</p>
+	</div>
+	<div id="maskHarmonicsDiv" style="display:none;float:left;padding: 0px 10px 5px 10px;border: 1px solid black;margin:0px 0px 10px 0px;width:220px;">
+		<p style="margin: 0px 0 0px 0;">
+			Harmonic:<br />
+			<select name="maskHarmonics" id="maskHarmonics" size="1" onchange="initMaskTime(true)"> 
+			</select>
+		</p>
+	</div>
+	<div id="maskTimeDiv" style="display:none;float:left;padding: 0px 10px 5px 10px;border: 1px solid black;margin:0px 0px 10px 0px;width:220px;">
+		<p style="margin: 0px 0 0px 0;">
+			Time:<br />
+			<select name="maskTime" id="maskTime" size="1"> 
 			</select>
 			</p>
 	</div>
@@ -134,6 +157,8 @@ If player is not loading or an error occurred, you can visit our YouTube channel
 		["255 x 255 punctured Square", 	"Identity", "H2a=ij", 			"DsFAPYDvzLA"],
 		["255 x 255 punctured Square", 	"Identity", "H2b=i^2-j^2", 		"xFXTpTMVaoE"],
 		["255 x 255 punctured Square", 	"Identity", "H3a=i^3-3ij^2", 	"5va-y0W808M"],
+		["255 x 255 punctured Square", 	"Identity", "H4a=i^4-6i^2j^2+j^4-i^2-j^2", 	"WKibftDdgEM"],
+		["255 x 255 punctured Square", 	"Identity", "H4b=i^3j-ij^3", 	"YTWZYe5yG7s"],
 		
 		["255^2 Square with 63^2 Hole", 	"Identity", 		"H2a=ij", 			"t4rmSxxeZeU"]
 	  ];
@@ -150,10 +175,19 @@ If player is not loading or an error occurred, you can visit our YouTube channel
 		["H3a=i^3-3ij^2", 		"0.02*(63/N)",		"t6BIFhcvBO4"],
 		["H4a=i^4-6i^2j^2+j^4-i^2-j^2", "0.00283333*(255/N)",		"05YuuomVtO4"],
 		["H4a=i^4-6i^2j^2+j^4-i^2-j^2", "0.000104167*(255/N)^2",		"JnDjfbafag4"],
-		["H4b=i^3j-ij^3", "0.5",		"33OEAtzd3Iw"],
+		["H4b=i^3j-ij^3", "0.5",		"33OEAtzd3Iw"]
 	  ];
+	  
+	  maskVideos = [
+		// Transformation					Harmonic			Time 				VideoID
+		["255x255 square to circle d=255", 	"None",				"0.0", 				"9QgnoXWq01o"],
+		
+		["255x255 square to circle d=255", 	"H2a=ij",			"0.5", 				"HOWRNQ1-tYU"]
+	  ];
+	  
 	  initDomains();
 	  initScalingHarmonics(false);
+	  initMaskTrafo(false);
 	
       // load IFrame Player API code asynchronously.
       var tag = document.createElement('script');
@@ -205,6 +239,7 @@ If player is not loading or an error occurred, you can visit our YouTube channel
 	  {
 		document.getElementById("harmonic").onchange = playVideo;
 		document.getElementById("scalingTime").onchange = playScalingVideo;
+		document.getElementById("maskTime").onchange = playMaskVideo;
 	  }
 	  
 	  function setMode()
@@ -214,17 +249,44 @@ If player is not loading or an error occurred, you can visit our YouTube channel
 			document.getElementById("domainDiv").style.display = "none";
 			document.getElementById("configurationDiv").style.display = "none";
 			document.getElementById("harmonicDiv").style.display = "none";
+			
 			document.getElementById("scalingHarmonicsDiv").style.display = "block";
 			document.getElementById("scalingTimeDiv").style.display = "block";
+			
+			document.getElementById("maskTrafoDiv").style.display = "none";
+			document.getElementById("maskHarmonicsDiv").style.display = "none";
+			document.getElementById("maskTimeDiv").style.display = "none";
+			
 			playScalingVideo();
+		}
+		else if(document.getElementById("mode").value == "mask")
+		{
+			document.getElementById("domainDiv").style.display = "none";
+			document.getElementById("configurationDiv").style.display = "none";
+			document.getElementById("harmonicDiv").style.display = "none";
+			
+			document.getElementById("scalingHarmonicsDiv").style.display = "none";
+			document.getElementById("scalingTimeDiv").style.display = "none";
+			
+			document.getElementById("maskTrafoDiv").style.display = "block";
+			document.getElementById("maskHarmonicsDiv").style.display = "block";
+			document.getElementById("maskTimeDiv").style.display = "block";
+			
+			playMaskVideo();
 		}
 		else
 		{
 			document.getElementById("domainDiv").style.display = "block";
 			document.getElementById("configurationDiv").style.display = "block";
 			document.getElementById("harmonicDiv").style.display = "block";
+			
 			document.getElementById("scalingHarmonicsDiv").style.display = "none";
 			document.getElementById("scalingTimeDiv").style.display = "none";
+			
+			document.getElementById("maskTrafoDiv").style.display = "none";
+			document.getElementById("maskHarmonicsDiv").style.display = "none";
+			document.getElementById("maskTimeDiv").style.display = "none";
+			
 			playVideo();
 		}
 		
@@ -446,6 +508,142 @@ If player is not loading or an error occurred, you can visit our YouTube channel
 			player.cueVideoById(
 			{
 				'videoId': getScalingCurrentVideoUrl(),
+				'playerVars': {
+					'autoplay': 0,
+					'enablejsapi': 1,
+					'iv_load_policy': 3,
+					'modestbranding': 0,
+					'rel': 0,
+					'showinfo': 0
+				  }
+			});
+				
+		}
+	  }
+	  
+	  ////////////////////////////////////////////
+	  // Mask Transformation
+	  ////////////////////////////////////////////
+	  function maskTrafoFilter(value, index, self) 
+	  {
+		for(var i=0; i<self.length; i++)
+		{
+			if(self[i][0] === value[0])
+				return i===index;
+		}
+		return true;
+	  }
+	  function maskHarmonicFilter(value, index, self) 
+	  {
+		if(value[0] != this)
+			return false;
+		for(var i=0; i<index; i++)
+		{
+			if(self[i][0] == this && self[i][1] === value[1])
+				return false;
+		}
+		return true;
+	  }
+	  function maskTimeFilter(value, index, self) 
+	  {
+		if(value[0] != this[0] || value[1] != this[1])
+			return false;
+		else
+			return true;
+	  }
+	  
+      function initMaskTrafo(shouldPlay)
+	  {
+		var maskTrafoObject = document.getElementById("maskTrafo");
+		var uniqueTrafos = maskVideos.filter(maskTrafoFilter);
+		for(var i=0; i<uniqueTrafos.length; i++)
+		{
+			var newOption = document.createElement("option");
+			newOption.text = uniqueTrafos[i][0];
+			maskTrafoObject.add(newOption); 
+		}
+		initMaskHarmonics(shouldPlay);
+	  }
+	  
+	  function initMaskHarmonics(shouldPlay)
+	  {
+		var trafo = document.getElementById("maskTrafo").value;
+		var maskHarmonicsObject = document.getElementById("maskHarmonics");
+		var lastHarmonic = maskHarmonicsObject.value;
+		while(maskHarmonicsObject.length > 0)
+		{
+			maskHarmonicsObject.remove(0);
+		}
+		
+		var uniqueHarmonics = maskVideos.filter(maskHarmonicFilter, trafo);
+		for(var i=0; i<uniqueHarmonics.length; i++)
+		{
+			var newOption = document.createElement("option");
+			newOption.text = uniqueHarmonics[i][1];
+			maskHarmonicsObject.add(newOption); 
+		}
+		for(var i=0; i<maskHarmonicsObject.length; i++)
+		{
+			if(maskHarmonicsObject.options.item(i).text == lastHarmonic)
+			{
+				maskHarmonicsObject.selectedIndex = i;
+				break;
+			}
+		}
+		initMaskTime(shouldPlay);
+	  }
+	  function initMaskTime(shouldPlay)
+	  {
+		var trafo = document.getElementById("maskTrafo").value;
+		var harmonic = document.getElementById("maskHarmonics").value;
+		var maskTimeObject = document.getElementById("maskTime");
+		var lastTime = maskTimeObject.value;
+		while(maskTimeObject.length > 0)
+		{
+			maskTimeObject.remove(0);
+		}
+		
+		var uniqueTimes = maskVideos.filter(maskTimeFilter, [trafo, harmonic]);
+		for(var i=0; i<uniqueTimes.length; i++)
+		{
+			var newOption = document.createElement("option");
+			newOption.text = uniqueTimes[i][2];
+			maskTimeObject.add(newOption); 
+		}
+		for(var i=0; i<maskTimeObject.length; i++)
+		{
+			if(maskTimeObject.options.item(i).text == lastTime)
+			{
+				maskTimeObject.selectedIndex = i;
+				break;
+			}
+		}
+		if(shouldPlay)
+			playMaskVideo();
+	  }
+	  
+	  function getMaskCurrentVideoUrl()
+	  {
+		var trafo = document.getElementById("maskTrafo").value;
+		var harmonic = document.getElementById("maskHarmonics").value;
+		var time = document.getElementById("maskTime").value;
+		for(var i=0; i<maskVideos.length; i++)
+		{
+			if(maskVideos[i][0] == trafo && maskVideos[i][1]==harmonic && maskVideos[i][2]==time)
+			{
+				return maskVideos[i][3];
+			}
+		}
+		return maskVideos[0][3];
+	  }
+	  function playMaskVideo()
+	  {
+		if(player)
+		{
+			//player.loadVideoById({videoId:url});
+			player.cueVideoById(
+			{
+				'videoId': getMaskCurrentVideoUrl(),
 				'playerVars': {
 					'autoplay': 0,
 					'enablejsapi': 1,
