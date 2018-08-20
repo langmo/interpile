@@ -459,7 +459,10 @@ uicontrol('Style', 'text', 'String', 'valid',...
 %% Main plot
 axH = axes('Tag', 'Splot', 'Units', 'pixels');
 colormap(colors)
-colorbar('south', 'Ticks', (1:size(colors, 1))+0.5, 'TickLabels', [arrayfun(@(x)int2str(x), 0:size(colors, 1)-3, 'UniformOutput', false), {sprintf('%g+', size(colors, 1)-2), 'X'}], 'Units', 'centimeters', 'Tag', 'colorbar');
+cbh = colorbar('south', 'Ticks', (1:size(colors, 1))+0.5, 'TickLabels', [arrayfun(@(x)int2str(x), 0:size(colors, 1)-3, 'UniformOutput', false), {sprintf('%g+', size(colors, 1)-2), 'X'}], 'Units', 'centimeters', 'Tag', 'colorbar');
+if isprop(cbh, 'AxisLocation')
+    cbh.AxisLocation = 'out';
+end
 hold on;
 plotPile(data.S, figH, true, false);
 %axis off;
