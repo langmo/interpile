@@ -61,6 +61,7 @@ guidata(figH, handles);
 figH.UserData = struct();
 figH.UserData.setMask = varargin{1};
 figH.UserData.updateMasks = varargin{2};
+setWindowIcon(figH);
 
 % --- Outputs from this function are returned to the command line.
 function varargout = defineMaskDialog_OutputFcn(hObject, eventdata, handles) 

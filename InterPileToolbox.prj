@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.toolbox" plugin-version="1.0">
-  <configuration build-checksum="4108859787" file="C:\interpile\interpile\InterPileToolbox.prj" location="C:\interpile\interpile" name="InterPileToolbox" target="target.toolbox" target-name="Package Toolbox">
+  <configuration build-checksum="4108859787" file="C:\interpile\InterPileToolbox.prj" location="C:\interpile" name="InterPileToolbox" target="target.toolbox" target-name="Package Toolbox">
     <param.appname>InterPileToolbox</param.appname>
     <param.authnamewatermark>Moritz Lang</param.authnamewatermark>
     <param.email />
@@ -7,7 +7,7 @@
     <param.summary>Interactive user interface for the Abelian sandpile model</param.summary>
     <param.description>For more information on Interpile or on the harmonic Abelian sandpile identity dynamics, visit the project's website https://langmo.github.io/interpile/ .</param.description>
     <param.screenshot>${PROJECT_ROOT}\resources\splash.png</param.screenshot>
-    <param.version>1.0</param.version>
+    <param.version>1.1</param.version>
     <param.output>${PROJECT_ROOT}\InterPileToolbox.mltbx</param.output>
     <param.products.name>
       <item>MATLAB Compiler</item>
@@ -20,9 +20,9 @@
       <item>1</item>
     </param.products.id>
     <param.products.version>
-      <item>6.0</item>
-      <item>9.2</item>
-      <item>8.5</item>
+      <item>6.6</item>
+      <item>10.2</item>
+      <item>9.4</item>
     </param.products.version>
     <param.platforms />
     <param.guid>a4475dbc-baf5-42d3-8dd7-3632be4638ad</param.guid>
@@ -46,19 +46,44 @@
 % All files matching a pattern in all subfolders of the toolbox folder:
 % **/*.bak
 %</param.exclude.filters>
-    <param.examples>&lt;?xml version="1.0" encoding="utf-8"?&gt;
-&lt;examples/&gt;</param.examples>
+    <param.exclude.pcodedmfiles>true</param.exclude.pcodedmfiles>
+    <param.examples />
     <param.demosxml />
     <param.apps />
+    <param.registered.apps />
     <param.docs />
+    <param.getting.started.guide />
+    <param.matlabpath.excludes />
+    <param.javaclasspath.excludes />
+    <param.exported.on.package>false</param.exported.on.package>
+    <param.release.start />
+    <param.release.end />
+    <param.release.current.only>false</param.release.current.only>
+    <param.compatiblity.windows>true</param.compatiblity.windows>
+    <param.compatiblity.macos>true</param.compatiblity.macos>
+    <param.compatiblity.linux>true</param.compatiblity.linux>
+    <param.compatiblity.matlabonline>true</param.compatiblity.matlabonline>
     <unset>
       <param.email />
-      <param.version />
       <param.output />
       <param.platforms />
+      <param.exclude.pcodedmfiles />
+      <param.examples />
       <param.demosxml />
       <param.apps />
+      <param.registered.apps />
       <param.docs />
+      <param.getting.started.guide />
+      <param.matlabpath.excludes />
+      <param.javaclasspath.excludes />
+      <param.exported.on.package />
+      <param.release.start />
+      <param.release.end />
+      <param.release.current.only />
+      <param.compatiblity.windows />
+      <param.compatiblity.macos />
+      <param.compatiblity.linux />
+      <param.compatiblity.matlabonline />
     </unset>
     <fileset.rootdir>
       <file>${PROJECT_ROOT}\src</file>
@@ -69,7 +94,6 @@
       <file>${PROJECT_ROOT}\src\assembleMovieDialog.m</file>
       <file>${PROJECT_ROOT}\src\assembleMovieYouTube.m</file>
       <file>${PROJECT_ROOT}\src\avalancheDistributionStoch.m</file>
-      <file>${PROJECT_ROOT}\src\continueMaskMovie.asv</file>
       <file>${PROJECT_ROOT}\src\continueMaskMovie.m</file>
       <file>${PROJECT_ROOT}\src\continueMovie.m</file>
       <file>${PROJECT_ROOT}\src\continueScalingMovie.m</file>
@@ -77,6 +101,8 @@
       <file>${PROJECT_ROOT}\src\defaultPotentials.m</file>
       <file>${PROJECT_ROOT}\src\defineMaskDialog.fig</file>
       <file>${PROJECT_ROOT}\src\defineMaskDialog.m</file>
+      <file>${PROJECT_ROOT}\src\defineSandpileDialog.fig</file>
+      <file>${PROJECT_ROOT}\src\defineSandpileDialog.m</file>
       <file>${PROJECT_ROOT}\src\determineAvalancheDistributionStoch.m</file>
       <file>${PROJECT_ROOT}\src\domainMasks.m</file>
       <file>${PROJECT_ROOT}\src\generateDetFrames.m</file>
@@ -88,16 +114,18 @@
       <file>${PROJECT_ROOT}\src\generateStochFrames.m</file>
       <file>${PROJECT_ROOT}\src\generateTimeMovie.m</file>
       <file>${PROJECT_ROOT}\src\harmonicFunctions.m</file>
+      <file>${PROJECT_ROOT}\src\harmonicHalfplane.m</file>
       <file>${PROJECT_ROOT}\src\icon.tif</file>
+      <file>${PROJECT_ROOT}\src\imagHarmonicMonomial.m</file>
       <file>${PROJECT_ROOT}\src\interPile.m</file>
       <file>${PROJECT_ROOT}\src\interViewer.m</file>
       <file>${PROJECT_ROOT}\src\inversePile.m</file>
       <file>${PROJECT_ROOT}\src\isRecurrentPile.m</file>
-      <file>${PROJECT_ROOT}\src\maskMovieDialog.asv</file>
       <file>${PROJECT_ROOT}\src\maskMovieDialog.fig</file>
       <file>${PROJECT_ROOT}\src\maskMovieDialog.m</file>
       <file>${PROJECT_ROOT}\src\movieDialog.m</file>
       <file>${PROJECT_ROOT}\src\movieWaitbar.m</file>
+      <file>${PROJECT_ROOT}\src\null_piles</file>
       <file>${PROJECT_ROOT}\src\nullPile.m</file>
       <file>${PROJECT_ROOT}\src\pileColors.m</file>
       <file>${PROJECT_ROOT}\src\potentialC.m</file>
@@ -110,6 +138,7 @@
       <file>${PROJECT_ROOT}\src\printPile.m</file>
       <file>${PROJECT_ROOT}\src\randomSandPile.m</file>
       <file>${PROJECT_ROOT}\src\randomSquare45.m</file>
+      <file>${PROJECT_ROOT}\src\realHarmonicMonomial.m</file>
       <file>${PROJECT_ROOT}\src\relaxPile.m</file>
       <file>${PROJECT_ROOT}\src\scalingMovieDialog.fig</file>
       <file>${PROJECT_ROOT}\src\scalingMovieDialog.m</file>
@@ -119,16 +148,17 @@
       <file>${PROJECT_ROOT}\src\timeMovieDialog.m</file>
       <file>${PROJECT_ROOT}\src\toDistribution.m</file>
       <file>${PROJECT_ROOT}\src\toDistributionReal.m</file>
+      <file>${PROJECT_ROOT}\src\toNonRecurrent.m</file>
     </fileset.rootfiles>
     <fileset.depfun.included />
     <fileset.depfun.excluded />
     <fileset.package />
     <build-deliverables>
-      <file location="C:\interpile\interpile" name="InterPileToolbox.mltbx" optional="false">C:\interpile\interpile\InterPileToolbox.mltbx</file>
+      <file location="C:\interpile" name="InterPileToolbox.mltbx" optional="false">C:\interpile\InterPileToolbox.mltbx</file>
     </build-deliverables>
     <workflow />
     <matlab>
-      <root>C:\Program Files\MATLAB\R2015a</root>
+      <root>C:\Program Files\MATLAB\R2018a</root>
       <toolboxes />
     </matlab>
     <platform>
@@ -140,7 +170,7 @@
       <vista>false</vista>
       <linux>false</linux>
       <solaris>false</solaris>
-      <osver>6.1</osver>
+      <osver>10.0</osver>
       <os32>false</os32>
       <os64>true</os64>
       <arch>win64</arch>

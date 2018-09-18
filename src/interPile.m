@@ -106,13 +106,26 @@ uimenu(fileMenu, 'Label',...
 
 %% Menu: Edit
 editMenu = uimenu(figH, 'Label', 'Edit');
+
+storePileMenu = uimenu(editMenu, 'Label', 'Store Pile'); 
+retrievePileMenu = uimenu(editMenu, 'Label', 'Retrieve Pile');
+for slotID = 1:4
+    slot = 'A'+slotID-1;
+    uimenu(storePileMenu, 'Label',...
+        ['Slot ', slot], ...
+        'Callback', @(figH, ~)storePile(figH, slot, getPile(figH)));
+    uimenu(retrievePileMenu, 'Label',...
+        ['Slot ', slot], ...
+        'Callback', @(figH, ~)plotPileRelax(retrievePile(figH, slot), figH));
+end
+
 if ~isdeployed()
     uimenu(editMenu, 'Label',...
             'Export Pile to Workspace', ...
-            'Callback', @(figH, ~)assignin('base', 'S', getPile(figH)));
+            'Callback', @(figH, ~)assignin('base', 'S', getPile(figH)), 'Separator','on');
     uimenu(editMenu, 'Label',...
-            'Add Pile from Workspace', ...
-            'Callback', @(figH, ~)plotPileRelax(getPile(figH)+evalin('base', 'S'), figH));
+            'Import Pile from Workspace', ...
+            'Callback', @(figH, ~)plotPileRelax(evalin('base', 'S'), figH));
 end 
     
 uimenu(editMenu, 'Label',...
@@ -187,9 +200,13 @@ uimenu(maskMenu, 'Label',...
 
 %% Menu:  Fill
 fillMenu = uimenu(figH, 'Label', 'Fill'); 
+
+uimenu(fillMenu, 'Label',...
+    'Custom Sandpile', ...
+    'Callback', @(figH, ~)customFill(figH));
 uimenu(fillMenu, 'Label',...
     'All 0', ...
-    'Callback', @(figH, ~)fillAll(figH, 0));
+    'Callback', @(figH, ~)fillAll(figH, 0),'Separator','on');
 uimenu(fillMenu, 'Label',...
     'All 1', ...
     'Callback', @(figH, ~)fillAll(figH, 1));
@@ -200,7 +217,7 @@ uimenu(fillMenu, 'Label',...
     'All 3', ...
     'Callback', @(figH, ~)fillAll(figH, 3));
 uimenu(fillMenu, 'Label',...
-    'Custom #particles/field', ...
+    'All X (with X choosable)', ...
     'Callback', @(figH, ~)fillAll(figH, round(askForInput(figH, 'Number of particles carried by each vertex:', 4))));
 uimenu(fillMenu, 'Label',...
     'Identity', ...
@@ -214,6 +231,9 @@ transformMenu = uimenu(figH, 'Label', 'Transform');
 uimenu(transformMenu, 'Label',...
         'Invert Pile', ...
         'Callback', @invert);
+uimenu(transformMenu, 'Label',...
+        'To non-recurrent', ...
+        'Callback', @(figH, ~)plotPile(toNonRecurrent(getPile(figH)), figH));
 uimenu(transformMenu, 'Label',...
         '3 - Pile', ...
         'Callback', @threeMinusPile, 'Separator','on');
@@ -619,8 +639,8 @@ function plotPileRelax(S, figH)
 
     shouldRelax = (modeAutoTopple.Value == 1) && any(any(S>3));
     plotPile(S, figH, ~shouldRelax);
-    drawnow();
     if shouldRelax
+        drawnow();
         tic();
         S = relaxPile(S);
         el = toc();
@@ -751,7 +771,6 @@ function updateCustomMasks(figH)
                 'Callback', @(figH, ~)setMask(figH, mask.name, @(y,x,N,M)eval(mask.formula)));
         end
     end
-    drawnow();
 end
 function setMask(figH, maskName, maskFct)
     figH = ancestor(figH, 'figure');
@@ -804,15 +823,41 @@ function undo(figH, ~)
     data.Sredo = [data.Sredo, {data.S}];
     S = data.Sundo{end};
     data.Sundo(end) = [];
-    set(ancestor(figH,'figure'), 'UserData', data);
+    setData(figH, data);
     plotPile(S, figH, true, false);
 end
 function data = getData(figH)
     data = get(ancestor(figH,'figure'), 'UserData');
 end
+function setData(figH, data)
+    set(ancestor(figH,'figure'), 'UserData', data);
+end
 function S = getPile(figH)
-    data = getData(figH);
+    data = get(ancestor(figH,'figure'), 'UserData');
     S = data.S;
+end
+function storePile(figH, slot, S)
+    figH = ancestor(figH,'figure');
+    figH.UserData.store.(['',slot])=S;
+end
+function customFill(figH)
+    callback = @(T) plotPile(T, figH);
+    variables = struct();
+    variables.S = getPile(figH);
+    variables.A = retrievePile(figH, 'A');
+    variables.B = retrievePile(figH, 'B');
+    variables.C = retrievePile(figH, 'C');
+    variables.D = retrievePile(figH, 'D');
+    defineSandpileDialog(variables, callback);
+
+end
+function S = retrievePile(figH, slot)
+    figH = ancestor(figH,'figure');
+    if ~isfield(figH.UserData, 'store') || ~isfield(figH.UserData.store, ['',slot])
+        S = zeros(size(getPile(figH)));
+    else
+        S = figH.UserData.store.(['',slot]);
+    end
 end
 function dropParticle(figH, ~)
     figH = ancestor(figH,'figure');

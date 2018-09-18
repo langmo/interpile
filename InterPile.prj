@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="626345494" file="C:\interpile\interpile\InterPile.prj" location="C:\interpile\interpile" name="InterPile" preferred-package-location="C:\interpile\interpile\mcc\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="626345494" file="C:\interpile\InterPile.prj" location="C:\interpile" name="InterPile" preferred-package-location="C:\interpile\interpile\mcc\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>InterPile</param.appname>
     <param.icon>${PROJECT_ROOT}\InterPile_resources\icon.ico</param.icon>
     <param.icons>
@@ -8,33 +8,28 @@
       <file>${PROJECT_ROOT}\InterPile_resources\icon_24.png</file>
       <file>${PROJECT_ROOT}\InterPile_resources\icon_16.png</file>
     </param.icons>
-    <param.version>1.0</param.version>
+    <param.version>1.1</param.version>
     <param.authnamewatermark>Moritz Lang</param.authnamewatermark>
-    <param.email />
-    <param.company>IST Austria, Klosterneuburg, Austria</param.company>
+    <param.email>moritz.lang@ist.ac.at</param.email>
+    <param.company>IST Austria</param.company>
     <param.summary>Interactive user interface for the Abelian sandpile model.</param.summary>
     <param.description>For more information on Interpile or on the harmonic Abelian sandpile identity dynamics, visit the project's website https://langmo.github.io/interpile/ .</param.description>
     <param.screenshot>${PROJECT_ROOT}\resources\splash.png</param.screenshot>
     <param.guid />
-    <param.net.saved.interface />
-    <param.installpath.string>\InterPile\</param.installpath.string>
+    <param.installpath.string>\IST Austria\InterPile\</param.installpath.string>
     <param.installpath.combo>option.installpath.programfiles</param.installpath.combo>
     <param.logo>${PROJECT_ROOT}\resources\logo.png</param.logo>
     <param.install.notes>Thank you for installing InterPile.
 For more information on InterPile and the Abelian sandpile, visit https://langmo.github.io/interpile/</param.install.notes>
+    <param.target.install.notes />
     <param.intermediate>${PROJECT_ROOT}\mcc\for_testing</param.intermediate>
     <param.files.only>${PROJECT_ROOT}\mcc\for_redistribution_files_only</param.files.only>
     <param.output>${PROJECT_ROOT}\mcc\for_redistribution</param.output>
+    <param.logdir>${PROJECT_ROOT}\InterPile</param.logdir>
     <param.enable.clean.build>false</param.enable.clean.build>
     <param.user.defined.mcr.options />
-    <param.embed.ctf>true</param.embed.ctf>
     <param.target.type>subtarget.standalone</param.target.type>
     <param.support.packages />
-    <param.required.mcr.products>
-      <item>35000</item>
-      <item>35010</item>
-      <item>35001</item>
-    </param.required.mcr.products>
     <param.web.mcr>true</param.web.mcr>
     <param.package.mcr>false</param.package.mcr>
     <param.no.mcr>false</param.no.mcr>
@@ -44,16 +39,18 @@ For more information on InterPile and the Abelian sandpile, visit https://langmo
     <param.windows.command.prompt>true</param.windows.command.prompt>
     <param.create.log>true</param.create.log>
     <param.log.file>log.txt</param.log.file>
+    <param.native.matlab>false</param.native.matlab>
+    <param.checkbox>false</param.checkbox>
+    <param.example />
+    <param.help.text />
     <unset>
-      <param.version />
-      <param.authnamewatermark />
-      <param.company />
       <param.guid />
-      <param.net.saved.interface />
+      <param.installpath.string />
       <param.installpath.combo />
+      <param.target.install.notes />
+      <param.logdir />
       <param.enable.clean.build />
       <param.user.defined.mcr.options />
-      <param.embed.ctf />
       <param.target.type />
       <param.support.packages />
       <param.web.mcr />
@@ -62,6 +59,10 @@ For more information on InterPile and the Abelian sandpile, visit https://langmo
       <param.package.mcr.name />
       <param.no.mcr.name />
       <param.windows.command.prompt />
+      <param.native.matlab />
+      <param.checkbox />
+      <param.example />
+      <param.help.text />
     </unset>
     <fileset.main>
       <file>${PROJECT_ROOT}\src\interPile.m</file>
@@ -71,14 +72,15 @@ For more information on InterPile and the Abelian sandpile, visit https://langmo
       <file>${PROJECT_ROOT}\src</file>
     </fileset.resources>
     <fileset.package />
+    <fileset.depfun />
     <build-deliverables>
-      <file location="${PROJECT_ROOT}\mcc\for_testing" name="readme.txt" optional="true">C:\interpile\interpile\mcc\for_testing\readme.txt</file>
-      <file location="${PROJECT_ROOT}\mcc\for_testing" name="splash.png" optional="false">C:\interpile\interpile\mcc\for_testing\splash.png</file>
-      <file location="${PROJECT_ROOT}\mcc\for_testing" name="InterPile.exe" optional="false">C:\interpile\interpile\mcc\for_testing\InterPile.exe</file>
+      <file location="${PROJECT_ROOT}\mcc\for_testing" name="readme.txt" optional="true">C:\interpile\mcc\for_testing\readme.txt</file>
+      <file location="${PROJECT_ROOT}\mcc\for_testing" name="InterPile.exe" optional="false">C:\interpile\mcc\for_testing\InterPile.exe</file>
+      <file location="${PROJECT_ROOT}\mcc\for_testing" name="splash.png" optional="false">C:\interpile\mcc\for_testing\splash.png</file>
     </build-deliverables>
     <workflow />
     <matlab>
-      <root>C:\Program Files\MATLAB\R2015a</root>
+      <root>C:\Program Files\MATLAB\R2018a</root>
       <toolboxes />
     </matlab>
     <platform>
@@ -90,7 +92,7 @@ For more information on InterPile and the Abelian sandpile, visit https://langmo
       <vista>false</vista>
       <linux>false</linux>
       <solaris>false</solaris>
-      <osver>6.1</osver>
+      <osver>10.0</osver>
       <os32>false</os32>
       <os64>true</os64>
       <arch>win64</arch>

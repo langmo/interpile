@@ -36,7 +36,7 @@ harmonics = {...
     {'x^2 - y^2', @(y,x)x.^2 - y.^2, 'H2b'},...
     ... Order 3
     {'x^3 - 3 x y^2', @(y,x) x.*(x.^2-3.*y.^2), 'H3a'},...
-    {'x^3 - 3 x y^2', @(y,x) y.*(y.^2-3.*x.^2), 'H3b'},...
+    {'y^3 - 3 y x^2', @(y,x) y.*(y.^2-3.*x.^2), 'H3b'},...
     ... Order 4
     {'x^4-6 x^2 y^2 + y^4 - x^2 - y^2', @(y,x) (x.^4-6*x.^2.*y.^2+y.^4)-(x.^2+y.^2), 'H4a'},... % extra term
     {'x^3 y-x y^3', @(y,x) (x.^3.*y-x.*y.^3), 'H4b'},...
@@ -45,6 +45,18 @@ harmonics = {...
     {'3 y^5 - 30 y^3 x^2 + 15 y x^4 - 10 y^3', @(y,x) 3.*y.^5-30*y.^3.*x.^2+15.*y.*x.^4 - 10*y.^3, 'H5b'},... % extra term
     ... Order 6
     {'x^6 - 15 x^4 y^2 + 15 x^2 y^4 - y^6 - 5 x^4 +5 y^4', @(y,x) x.^6 - 15.*x.^4.*y.^2 + 15.*x.^2.*y.^4-y.^6 - 5*(x.^4-y.^4), 'H6a'},...  % extra term
-    {'3 x^5 y - 10 x^3 y^3 + 3 x y^5 - 10 x^3 y - 10 x y^3', @(y,x)3.*x.^5.*y-10.*x.^3.*y.^3+3.*x.*y.^5-10.*x^3.*y-10.*x.*y.^3, 'H6b'}...
+    {'3 x^5 y - 10 x^3 y^3 + 3 x y^5 - 10 x^3 y - 10 x y^3', @(y,x)3.*x.^5.*y-10.*x.^3.*y.^3+3.*x.*y.^5-10.*x^3.*y-10.*x.*y.^3, 'H6b'}
     };
+
+orders = 1:4;
+idx0 = length(harmonics);
+harmonics(end+2*length(orders)) = {[]};
+for i = 1:length(orders)
+    order = orders(i);
+    nameReal = sprintf('G%gR', order);
+    nameImag = sprintf('G%gI', order);
+    harmonics(idx0+2*(i-1)+1) = {{nameReal, realHarmonicMonomial(order), nameReal}};
+    harmonics(idx0+2*(i-1)+2) = {{nameImag, imagHarmonicMonomial(order), nameImag}};
+end
+
 end

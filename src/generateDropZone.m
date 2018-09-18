@@ -42,10 +42,12 @@ addFilter(3, 2)= 1;
 X=repmat((0:width+1) - (width+1)/2, height+2, 1);
 Y=repmat(((0:height+1) - (height+1)/2)', 1, width+2);
 
- if mod(width,2) ~= 1 || mod(height, 2) ~= 1
-     X = 2*X;
-     Y = 2*Y;
- end
+if mod(width,2) ~= 1
+    X=round(X+0.5);
+end
+if mod(height,2) ~= 1
+    Y=round(Y+0.5);
+end
 H = polynomial(Y, X);
 
 table = zeros(height+2, width+2);
