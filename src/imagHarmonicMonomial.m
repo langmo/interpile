@@ -18,11 +18,28 @@ function monomial = imagHarmonicMonomial(n)
 % For more information, visit the project's website at 
 % https://langmo.github.io/interpile/
 
-monomial = @(Y,X) round(arrayfun(@(y,x)sum(arrayfun(@(j)(-1)^j * binom(x-j+floor(n/2)-1, n-2*j-1) .* binom(y+j, 2*j+1), 0:floor((n-1)/2))), Y, X));
+%monomial = @(Y,X) round(arrayfun(@(y,x)sum(arrayfun(@(j)(-1)^j * binom(x-j+floor(n/2)-1, n-2*j-1) .* binom(y+j, 2*j+1), 0:floor((n-1)/2))), Y, X));
+
+monomial = @(Y,X) calculateMonomial(Y, X, n);
 end
 
+function value = calculateMonomial(Y, X, n)
+%value = round(arrayfun(@(y,x)sum(arrayfun(@(j)(-1)^j * binom(x-j+floor(n/2)-1, n-2*j-1) .* binom(y+j, 2*j+1), 0:floor((n-1)/2))), Y, X));
+value = round(arrayfun(@calculateSingleVertex, Y, X, n*ones(size(X))));
+end
+
+function value = calculateSingleVertex(y,x, n)
+    js = 0:floor((n-1)/2);
+    value = sum(arrayfun(@calculateSinglePart, y*ones(size(js)), x*ones(size(js)), n*ones(size(js)), js));
+end
+function value = calculateSinglePart(y,x,n,j)
+value = (-1)^j * binom(x-j+floor(n/2)-1, n-2*j-1) .* binom(y+j, 2*j+1);
+end
 function val = binom(n,k)
 % Custom implementation of binomial coefficient n over k. The Matlab
 % implementation nchoosek cannot cope with the case when n is negative...
-val = prod(arrayfun(@(e)(n-e)./(k-e), 0:k-1));
+val = prod(arrayfun(@binomPart, n*ones(1, k), k*ones(1,k), 0:k-1));
+end
+function val = binomPart(n,k,e)
+    val = (n-e)./(k-e);
 end

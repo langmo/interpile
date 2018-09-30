@@ -1,4 +1,4 @@
-function [F, varargout] = generateDropZone(polynomial, height, width, mask)
+function [F, varargout] = generateDropZone(polynomial, height, width, mask, requirePositive, divideByCommonDivisor)
 
 % Copyright (C) 2018 Moritz Lang
 % 
@@ -31,6 +31,13 @@ end
 if ~exist('mask', 'var') || isempty(mask)
     mask = ones(height, width);
 end
+if ~exist('requirePositive', 'var') || isempty(requirePositive)
+    requirePositive = true;
+end
+if ~exist('divideByCommonDivisor', 'var') || isempty(divideByCommonDivisor)
+    divideByCommonDivisor = true;
+end
+
 
 addFilter = zeros(3,3);
 addFilter(1, 2)= 1;
@@ -38,7 +45,7 @@ addFilter(2, 1)= 1;
 addFilter(2, 3)= 1;
 addFilter(3, 2)= 1;
 
-%% Get all drop numbers
+%% Generate Grid, extended by one pixel at each side
 X=repmat((0:width+1) - (width+1)/2, height+2, 1);
 Y=repmat(((0:height+1) - (height+1)/2)', 1, width+2);
 
@@ -48,53 +55,74 @@ end
 if mod(height,2) ~= 1
     Y=round(Y+0.5);
 end
-H = polynomial(Y, X);
 
+%% Find out where boundaries
 table = zeros(height+2, width+2);
 table(2:end-1, 2:end-1) = mask;
 extended = (filter2(addFilter, table) > 0)-table;
+boundary = (filter2(addFilter, ~table) > 0) & table;
+boundary = boundary(2:end-1, 2:end-1);
+
+%% Calculate values
+if nargout == 1 && ~requirePositive && ~divideByCommonDivisor
+    % Faster algorithm: we don't calculate H for the whole table, but only
+    % for the part where we need it.
+    H = zeros(size(Y));
+    IDX = logical(extended);
+    H(IDX) = polynomial(Y(IDX), X(IDX));
+else
+    H = polynomial(Y, X);
+end
+
 
 %% Separate values which correspond to drop zone, and the ones which correspond to the board
 F = H;
 F(~extended) = 0;
-
-H(~table) =0;
-
-minVal = min(min(min(H)), min(min(F)));
-H = H-minVal;
-F = F-minVal;
-H(~table) =0;
-F(~extended) = 0;
-
-H = H(2:end-1, 2:end-1);
-
-%% Shrink F to drop zone
+% Shrink F to drop zone
 F = filter2(addFilter, F, 'valid');
 F(~mask) = 0;
 
-%% divide by greatest common divisor
-values = setdiff(union(unique(H), unique(F)), 0);
-if isempty(values)
-    divisor = 1;
-else
-    divisor = values(1);
-    for i=2:length(values)
-        divisor = gcd(divisor, values(i));
-        if divisor == 1
-            break;
-        end
-    end
-    H = H ./divisor;
-    F = F ./ divisor;
-end
+H(~table) =0;
+H = H(2:end-1, 2:end-1);
 
+if requirePositive
+    minVal = min(min(min(H)), min(min(F)));
+    H = H-minVal;
+    F = F-minVal;
+    H(~mask) =0;
+    F(~boundary) = 0;
+end
+%H = H(2:end-1, 2:end-1);
+
+
+
+%% divide by greatest common divisor
+if divideByCommonDivisor
+    values = setdiff(union(unique(H), unique(F)), 0);
+    if isempty(values)
+        divisor = 1;
+    else
+        divisor = values(1);
+        for i=2:length(values)
+            divisor = gcd(divisor, values(i));
+            if divisor == 1
+                break;
+            end
+        end
+        H = H ./divisor;
+        F = F ./ divisor;
+    end
+end
 %% Check validity
-DeltaH = filter2([0,1,0;1,-4,1;0,1,0], H, 'valid');
+DeltaH = filter2([0,1,0;1,-4,1;0,1,0], H);
+DeltaH(~mask) = 0;
+DeltaH(boundary) = 0;
+%DeltaH(extended(2:end-1, 2:end-1)) = 0;
 if ~all(all(abs(DeltaH)==0))
     warning('InterPile:NotHarmonic', 'Function to generate potential is not harmonic.');
 end
-assert(all(all(H>=0)), 'InterPile:HarmonicFunctionNegative', 'Harmonic function takes negative values.');
-assert(all(all(F>=0)), 'InterPile:PotentialNegative', 'Potential takes negative values');
+%assert(all(all(H>=0)), 'InterPile:HarmonicFunctionNegative', 'Harmonic function takes negative values.');
+%assert(all(all(F>=0)), 'InterPile:PotentialNegative', 'Potential takes negative values');
 
 %% Return values
 if nargout > 1
