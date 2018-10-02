@@ -17,7 +17,9 @@ function varargout = numRecurrentStates(varargin)
 %        'potential'. The number of states is determined by the absolute
 %           value of the determinant of the matrix P, where each column of
 %           P corresponds to the potential of one (non-zero) harmonic
-%           function, restricted to the boundary of the domain.
+%           diagonal function, restricted to the boundary of the domain.
+%        'potentialPolynoms'. Same as 'potential', only with harmonics of
+%           polynomial type.
 %   nRecturrent = numRecurrentStates(...)
 %       Returns the number of recurrent states. If no return value is
 %       requested, the number is displayed in the console.
@@ -58,15 +60,17 @@ end
 
 if numel(varargin) >= i && ischar(varargin{i})
     if strcmpi(varargin{i}, 'laplacian')
-        overPotential = false;
+        method = 0;
     elseif strcmpi(varargin{i}, 'potential')
-        overPotential = true;
+        method = 1;
+    elseif strcmpi(varargin{i}, 'potentialPolynoms')
+        method = 2;
     else
         error('InterPile:UnknownAlgorithm', 'The algorithm %s for the calculation of the number of recurrent states is unknown.', varargin{i});
     end
     i = i+1;
 else
-    overPotential = false;
+    method = 0;
 end
 if numel(varargin) >= i
     error('InterPile:TooManyArguments', 'Too many arguments provided for the calculation of the number of recurrent states.');
@@ -74,8 +78,46 @@ end
 if nargout > 1
     error('InterPile:TooManyReturnValues', 'The function either returns zero or one value.');
 end
-
-if overPotential
+if method == 1
+    maskExtended = zeros(size(mask, 1)+2, size(mask, 2)+2);
+    maskExtended(2:end-1, 2:end-1) = mask;
+    boundary = filter2([0,1,0;1,0,1;0,1,0], ~maskExtended);
+    boundary = boundary(2:end-1, 2:end-1);
+    boundary = boundary ~=0 & mask;
+    boundaryIdx = find(boundary);
+    P = NaN(length(boundaryIdx));
+    H0 = diagHarmonic(0,1);
+    P0 = generateDropZone(H0, size(mask, 1), size(mask, 2), mask, false, false);
+    P(1, : ) = P0(boundaryIdx);
+    nextIdx = 2;
+    h = 1;
+    while nextIdx <= size(P, 1)
+        for sign = [-1, 1]
+            for type = 1:2
+                if type==1 && h==1 && sign== 1
+                    continue;
+                end
+                Hi = diagHarmonic(sign*h, type);
+                Pi = generateDropZone(Hi, size(mask, 1), size(mask, 2), mask, false, false);
+                Pbound = Pi(boundaryIdx);
+                if any(Pbound)
+                    P(nextIdx, :) = Pbound;
+                    nextIdx = nextIdx+1;
+                    if nextIdx > size(P, 1)
+                        break;
+                    end
+                end
+            end
+        end
+        h = h+1;
+    end
+    % Calculate determinant. Symbolic toolbox seems to be more precise...
+    nStates = abs(double(det(sym(P))));
+elseif method == 2
+    % remove invalid (empty) columns and rows.
+    %mask(:, all(mask==0)) = [];
+    %mask(all(mask'==0), :) = [];
+    
     maskExtended = zeros(size(mask, 1)+2, size(mask, 2)+2);
     maskExtended(2:end-1, 2:end-1) = mask;
     boundary = filter2([0,1,0;1,0,1;0,1,0], ~maskExtended);
@@ -91,21 +133,27 @@ if overPotential
     while nextIdx <= size(P, 1)
         HR = realHarmonicMonomial(h);
         PR = generateDropZone(HR, size(mask, 1), size(mask, 2), mask, false, false);
-        if any(any(PR))
-            P(nextIdx, :) = PR(boundaryIdx);
-            nextIdx = nextIdx+1;
-            if nextIdx > size(P, 1)
-                break;
+        PBound =  PR(boundaryIdx);
+        if any(PBound)
+            P(nextIdx, :) = PBound;
+            if rank(P(1:nextIdx, :)) == nextIdx
+                nextIdx = nextIdx+1;
+                if nextIdx > size(P, 1)
+                    break;
+                end
             end
         end
 
         HI = imagHarmonicMonomial(h);
         PI = generateDropZone(HI, size(mask, 1), size(mask, 2), mask, false, false);
-        if any(any(PI))
-            P(nextIdx, :) = PI(boundaryIdx);
-            nextIdx = nextIdx+1;
-            if nextIdx > size(P, 1)
-                break;
+        PBound =  PI(boundaryIdx);
+        if any(PBound)
+            P(nextIdx, :) = PBound;
+            if rank(P(1:nextIdx, :)) == nextIdx
+                nextIdx = nextIdx+1;
+                if nextIdx > size(P, 1)
+                    break;
+                end
             end
         end
         h = h+1;
