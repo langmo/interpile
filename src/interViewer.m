@@ -122,6 +122,18 @@ uimenu(fileMenu, 'Label',...
     'Display Pile as Image', ...
     'Callback', @(figH, ~)printPile(getPile(figH)));
 
+% Menu: View   
+viewMenu = uimenu(figH, 'Label', 'View'); 
+uimenu(viewMenu, 'Label',...
+        'Particle Numbers', ...
+        'Checked', 'on',...
+        'Callback', @(figH, ~)setViewType(figH, 'particle'),...
+        'Tag', 'viewParticle');   
+uimenu(viewMenu, 'Label',...
+        'Spanning Tree', ...
+        'Checked', 'off',...
+        'Callback', @(figH, ~)setViewType(figH, 'spanningTree'),...
+        'Tag', 'viewSpanningTree');
 
 % Generate movie
 generateMenu = uimenu(figH, 'Label', 'Export'); 
@@ -269,8 +281,23 @@ function mouseMove(figH, ~)
     end
 end
 
+function setViewType(figH, type)
+    figH = ancestor(figH,'figure');
+    fieldParticle = findall(figH, 'Tag', 'viewParticle');
+    fieldSpanningTree = findall(figH, 'Tag', 'viewSpanningTree');
+    if strcmpi(type, 'spanningTree')
+        fieldParticle.Checked = 'off';
+        fieldSpanningTree.Checked = 'on';
+    else
+        fieldParticle.Checked = 'on';
+        fieldSpanningTree.Checked = 'off';
+    end
+    plotPile(figH);
+end
+
 function plotPile(figH)
     figH = ancestor(figH, 'figure');
+    fieldSpanningTree = findall(figH, 'Tag', 'viewSpanningTree');
     axH = findall(figH, 'Tag', 'Splot');
     axes(axH);
     cla();
@@ -285,10 +312,47 @@ function plotPile(figH)
             S = zeros(100, 100);
         end
     end
-    Stemp = S;
-    Stemp(~isinf(Stemp) & Stemp>9) = 9;
-    Stemp(isinf(Stemp)) = 10;
-    image(Stemp+1);
+    if strcmpi(fieldSpanningTree.Checked, 'on')
+        [parentY, parentX, W] = toSpanningTree(S);
+        recurrent = all(all(~isnan(parentX)));
+        Y=repmat((1:size(S, 1))', 1, size(S, 2));
+        X=repmat(1:size(S, 2), size(S, 1), 1);
+        idx = parentX ~= 0 & ~isnan(parentX);
+        
+        X = X(idx)';
+        Y = Y(idx)';
+        W = W(idx)';
+        parentX = parentX(idx)';
+        parentY = parentY(idx)';
+        
+        numColors = 10;
+        minThreshold = 1;
+        maxThreshold = 1000;
+        thresholds = 10.^(log10(minThreshold):(log10(maxThreshold)-log10(minThreshold))/(numColors-1):log10(maxThreshold));
+        colors = flipud(gray(numColors+1));
+        colors(1, :)=[];
+        alreadySelected = false(size(X));
+        for c=numColors:-1:1
+            select = W>=thresholds(c) & ~alreadySelected;
+            alreadySelected = alreadySelected | select;
+            numSelect = sum(select);
+            dataX = NaN(numSelect*3, 1);
+            dataY = NaN(numSelect*3, 1);
+
+            dataX(1:3:end-2) = X(select);
+            dataX(2:3:end-1) = parentX(select);
+            dataY(1:3:end-2) = Y(select);
+            dataY(2:3:end-1) = parentY(select);
+            line(dataX, dataY, 'Color' ,colors(c,:),'LineStyle','-');
+        end
+    else
+        Stemp = S;
+        Stemp(~isinf(Stemp) & Stemp>9) = 9;
+        Stemp(isinf(Stemp)) = 10;
+        image(Stemp+1);
+    end
+    
+    
     xlim([0.5, size(S, 2)+0.5]);
     ylim([0.5, size(S, 1)+0.5]);
 
