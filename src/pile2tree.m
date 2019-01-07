@@ -1,10 +1,10 @@
-function varargout = toSpanningTree(S)
+function varargout = pile2tree(S)
 % parent - determines spanning tree of recurrent configuration. Returns
 % empty vector if non-recurrent.
 % Usage:
-%   parentIdx = toSpanningTree(S)
-%   [parentY, parentX] = toSpanningTree(S)
-%   [parentY, parentX, weights] = toSpanningTree(S)
+%   parentIdx = pile2tree(S)
+%   [parentY, parentX] = pile2tree(S)
+%   [parentY, parentX, weights] = pile2tree(S)
 % Algorithm described in: 
 %   Athreya, Siva R., and Antal A. Járai. 
 %   "Infinite volume limit for the stationary distribution of Abelian sandpile models." 

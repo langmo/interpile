@@ -728,7 +728,7 @@ function plotPile(S, figH, allowEdits, saveUndo)
     cla();
     
     if strcmpi(fieldSpanningTree.Checked, 'on')
-        [parentY, parentX, W] = toSpanningTree(S);
+        [parentY, parentX, W] = pile2tree(S);
         recurrent = all(all(~isnan(parentX)));
         Y=repmat((1:size(S, 1))', 1, size(S, 2));
         X=repmat(1:size(S, 2), size(S, 1), 1);
@@ -742,8 +742,8 @@ function plotPile(S, figH, allowEdits, saveUndo)
         
         numColors = 10;
         minThreshold = 1;
-        maxThreshold = 1000;
-        thresholds = 10.^(log10(minThreshold):(log10(maxThreshold)-log10(minThreshold))/(numColors-1):log10(maxThreshold));
+        maxThreshold = 1000*numel(S)/255^2;
+        thresholds = 10.^(log10(minThreshold):(log10(maxThreshold)-log10(minThreshold))/(numColors-1):log10(maxThreshold))
         colors = flipud(gray(numColors+1));
         colors(1, :)=[];
         alreadySelected = false(size(X));
