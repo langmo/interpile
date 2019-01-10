@@ -48,14 +48,13 @@ end
 if nargin >=2 && ~isempty(varargin{2}) && ishandle(varargin{2})
     figH = ancestor(varargin{2}, 'figure');
     figure(figH);
-    plotPile(data.S, figH);
+    plotMain(data.S, figH);
     return;
 end
 
 %% Configuration
 otherPotentials = potentials();
 harmonicFcts = harmonicFunctions();
-colors = pileColors();
 
 %% Create figure
 figH = figure('Color', ones(1,3), 'NumberTitle', 'off', 'units','normalized','outerposition',[0.2 0.2 0.6 0.6], 'Units', 'pixels', 'MenuBar', 'none');
@@ -116,7 +115,7 @@ for slotID = 1:4
         'Callback', @(figH, ~)storePile(figH, slot, getPile(figH)));
     uimenu(retrievePileMenu, 'Label',...
         ['Slot ', slot], ...
-        'Callback', @(figH, ~)plotPileRelax(retrievePile(figH, slot), figH));
+        'Callback', @(figH, ~)plotMainRelax(retrievePile(figH, slot), figH));
 end
 
 if ~isdeployed()
@@ -125,7 +124,7 @@ if ~isdeployed()
             'Callback', @(figH, ~)assignin('base', 'S', getPile(figH)), 'Separator','on');
     uimenu(editMenu, 'Label',...
             'Import Pile from Workspace', ...
-            'Callback', @(figH, ~)plotPileRelax(evalin('base', 'S'), figH));
+            'Callback', @(figH, ~)plotMainRelax(evalin('base', 'S'), figH));
 end 
     
 uimenu(editMenu, 'Label',...
@@ -152,6 +151,11 @@ uimenu(viewMenu, 'Label',...
         'Checked', 'off',...
         'Callback', @(figH, ~)setViewType(figH, 'spanningTree'),...
         'Tag', 'viewSpanningTree');
+uimenu(viewMenu, 'Label',...
+        'Tropical Curves (slow)', ...
+        'Checked', 'off',...
+        'Callback', @(figH, ~)setViewType(figH, 'tropical'),...
+        'Tag', 'viewTropical');
     
 %% Menu: Size
 sizeMenu = uimenu(figH, 'Label', 'Size'); 
@@ -250,7 +254,7 @@ uimenu(transformMenu, 'Label',...
         'Callback', @invert);
 uimenu(transformMenu, 'Label',...
         'To non-recurrent', ...
-        'Callback', @(figH, ~)plotPile(toNonRecurrent(getPile(figH)), figH));
+        'Callback', @(figH, ~)plotMain(toNonRecurrent(getPile(figH)), figH));
 uimenu(transformMenu, 'Label',...
         '3 - Pile', ...
         'Callback', @threeMinusPile, 'Separator','on');
@@ -495,13 +499,14 @@ uicontrol('Style', 'text', 'String', 'valid',...
 
 %% Main plot
 axH = axes('Tag', 'Splot', 'Units', 'pixels');
+colors = pileColors();
 colormap(colors)
 cbh = colorbar('south', 'Ticks', (1:size(colors, 1))+0.5, 'TickLabels', [arrayfun(@(x)int2str(x), 0:size(colors, 1)-3, 'UniformOutput', false), {sprintf('%g+', size(colors, 1)-2), 'X'}], 'Units', 'centimeters', 'Tag', 'colorbar');
 if isprop(cbh, 'AxisLocation')
     cbh.AxisLocation = 'out';
 end
 hold on;
-plotPile(data.S, figH, true, false);
+plotMain(data.S, figH, true, false);
 %axis off;
 xlim([0.5, size(data.S, 2)+0.5]);
 ylim([0.5, size(data.S, 1)+0.5]);
@@ -594,7 +599,7 @@ function loadPileAsMat(figH)
         return;
     end
     load(fileName, 'S');
-    plotPile(S, figH);
+    plotMain(S, figH);
     
     axH = findall(figH, 'Tag', 'Splot');
     xlim(axH, [0.5, size(S, 2)+0.5]);
@@ -630,14 +635,21 @@ function setViewType(figH, type)
     figH = ancestor(figH,'figure');
     fieldParticle = findall(figH, 'Tag', 'viewParticle');
     fieldSpanningTree = findall(figH, 'Tag', 'viewSpanningTree');
+    fieldTropical = findall(figH, 'Tag', 'viewTropical');
     if strcmpi(type, 'spanningTree')
         fieldParticle.Checked = 'off';
         fieldSpanningTree.Checked = 'on';
+        fieldTropical.Checked = 'off';
+    elseif strcmpi(type, 'tropical')
+        fieldParticle.Checked = 'off';
+        fieldSpanningTree.Checked = 'off';
+        fieldTropical.Checked = 'on';
     else
         fieldParticle.Checked = 'on';
         fieldSpanningTree.Checked = 'off';
+        fieldTropical.Checked = 'off';
     end
-    plotPile(getPile(figH), figH, true, false);
+    plotMain(getPile(figH), figH, true, false);
 end
 
 function mouseMove(figH, ~)
@@ -690,12 +702,12 @@ function countRecurrent(figH)
     setWindowIcon(h);
     h.Color = ones(1,3);
 end
-function plotPileRelax(S, figH)
+function plotMainRelax(S, figH)
     figH = ancestor(figH, 'figure');
     modeAutoTopple = findall(figH, 'Tag', 'modeAutoTopple');
 
     shouldRelax = (modeAutoTopple.Value == 1) && any(any(S>3));
-    plotPile(S, figH, ~shouldRelax);
+    plotMain(S, figH, ~shouldRelax);
     if shouldRelax
         drawnow();
         tic();
@@ -705,15 +717,15 @@ function plotPileRelax(S, figH)
         if waitTime > 0
             t = timer;
             t.StartDelay = waitTime;
-            t.TimerFcn = @(myTimerObj, thisEvent)plotPile(S, figH, true, false);
+            t.TimerFcn = @(myTimerObj, thisEvent)plotMain(S, figH, true, false);
             start(t)
         else
-            plotPile(S, figH, true, false);
+            plotMain(S, figH, true, false);
         end
     end
 end
 
-function plotPile(S, figH, allowEdits, saveUndo)
+function plotMain(S, figH, allowEdits, saveUndo)
     if nargin < 3
         allowEdits = true;
     end
@@ -723,54 +735,34 @@ function plotPile(S, figH, allowEdits, saveUndo)
   
     figH = ancestor(figH, 'figure');
     fieldSpanningTree = findall(figH, 'Tag', 'viewSpanningTree');
+    fieldTropical = findall(figH, 'Tag', 'viewTropical');
+    cbh = findall(figH, 'Tag', 'colorbar');
     axH = findall(figH, 'Tag', 'Splot');
     axes(axH);
-    cla();
     
     if strcmpi(fieldSpanningTree.Checked, 'on')
-        [parentY, parentX, W] = pile2tree(S);
-        recurrent = all(all(~isnan(parentX)));
-        Y=repmat((1:size(S, 1))', 1, size(S, 2));
-        X=repmat(1:size(S, 2), size(S, 1), 1);
-        idx = parentX ~= 0 & ~isnan(parentX);
-        
-        X = X(idx)';
-        Y = Y(idx)';
-        W = W(idx)';
-        parentX = parentX(idx)';
-        parentY = parentY(idx)';
-        
-        numColors = 10;
-        minThreshold = 1;
-        maxThreshold = 1000*numel(S)/255^2;
-        thresholds = 10.^(log10(minThreshold):(log10(maxThreshold)-log10(minThreshold))/(numColors-1):log10(maxThreshold))
-        colors = flipud(gray(numColors+1));
-        colors(1, :)=[];
-        alreadySelected = false(size(X));
-        for c=numColors:-1:1
-            select = W>=thresholds(c) & ~alreadySelected;
-            alreadySelected = alreadySelected | select;
-            numSelect = sum(select);
-            dataX = NaN(numSelect*3, 1);
-            dataY = NaN(numSelect*3, 1);
-
-            dataX(1:3:end-2) = X(select);
-            dataX(2:3:end-1) = parentX(select);
-            dataY(1:3:end-2) = Y(select);
-            dataY(2:3:end-1) = parentY(select);
-            line(dataX, dataY, 'Color' ,colors(c,:),'LineStyle','-');
+        if allowEdits
+            cla();
+            recurrent = plotTree(axH, S, cbh);
+        else
+            recurrent = isRecurrentPile(S);
+        end
+    elseif strcmpi(fieldTropical.Checked, 'on')
+        if allowEdits
+            cla();
+            recurrent = plotDistances(axH, S, cbh);
+        else
+            recurrent = isRecurrentPile(S);
         end
     else
-        recurrent = isRecurrentPile(S);
-        Stemp = S;
-        Stemp(~isinf(Stemp) & Stemp>9) = 9;
-        Stemp(isinf(Stemp)) = 10;
-        imageH = image(Stemp+1);
-        if allowEdits
-            set(imageH,'ButtonDownFcn',{@dropParticle})
-        else
-            set(imageH,'ButtonDownFcn',{})
-        end
+        cla();
+        recurrent = plotPile(axH, S, cbh);
+    end
+    
+    if allowEdits
+        set(axH,'ButtonDownFcn',{@dropParticle})
+    else
+        set(axH,'ButtonDownFcn',{})
     end
     
     setPile(figH, S, saveUndo);
@@ -799,14 +791,16 @@ function onResize(figH, ~)
     figureDim = get(figH, 'Position');
     set(figH, 'Units', 'pixels');
     figureDim = figureDim(3:4);
-    width = min((figureDim-[0.5+optionsWidth,1.5]).*[1, size(S, 2)/size(S, 1)]);
+    width = min((figureDim-[0.5+optionsWidth,2]).*[1, size(S, 2)/size(S, 1)]);
     height = width / size(S, 2)*size(S, 1);
-    set(axH, 'Units', 'centimeters', 'Position', [0.25, 1.25 + (figureDim(2)-1.5-height)/2, width, height]);
+    set(axH, 'Units', 'centimeters', 'Position', [0.25, 1.5 + (figureDim(2)-1.5-height)/2, width, height]);
     set(axH, 'Units', 'pixels');
     
     % Colorbar
     axH = findall(figH, 'Tag', 'colorbar');
-    axH.Position = [0.5, 0.5, min(figureDim(1)-optionsWidth-1, 6), 0.5];
+    %axH.Position = [1, 0.7, min(figureDim(1)-optionsWidth-2, 6), 0.5];
+    barWidth = min(width, 6);
+    axH.Position = [0.25+width-barWidth, 1, barWidth, 0.5];
     
     % Valid field
     axH = findall(figH, 'Tag', 'validField');
@@ -886,7 +880,7 @@ function setMask(figH, maskName, maskFct)
     set(ancestor(figH,'figure'), 'UserData', data);
     S(isinf(S))=0;
     S(~mask) = -inf;
-    plotPile(S, figH);
+    plotMain(S, figH);
 end
 function clearMask(figH, ~)
     data = getData(figH);
@@ -895,7 +889,7 @@ function clearMask(figH, ~)
     data.currentMaskName = 'none';
     set(ancestor(figH,'figure'), 'UserData', data);
     S(isinf(S))=0;
-    plotPile(S, figH);
+    plotMain(S, figH);
 end
 
 function redo(figH, ~)
@@ -907,7 +901,7 @@ function redo(figH, ~)
     S = data.Sredo{end};
     data.Sredo(end) = [];
     set(ancestor(figH,'figure'), 'UserData', data);
-    plotPile(S, figH, true, false);
+    plotMain(S, figH, true, false);
 end
 function undo(figH, ~)
     data = getData(figH);
@@ -918,7 +912,7 @@ function undo(figH, ~)
     S = data.Sundo{end};
     data.Sundo(end) = [];
     setData(figH, data);
-    plotPile(S, figH, true, false);
+    plotMain(S, figH, true, false);
 end
 function data = getData(figH)
     data = get(ancestor(figH,'figure'), 'UserData');
@@ -935,7 +929,7 @@ function storePile(figH, slot, S)
     figH.UserData.store.(['',slot])=S;
 end
 function customFill(figH)
-    callback = @(T) plotPile(T, figH);
+    callback = @(T) plotMain(T, figH);
     variables = struct();
     variables.S = getPile(figH);
     variables.A = retrievePile(figH, 'A');
@@ -972,7 +966,7 @@ function dropParticle(figH, ~)
         selectedChoice = get(findall(figH, 'Tag', 'modeGroup'), 'SelectedObject');
         if selectedChoice == findall(figH, 'Tag', 'modeAdd')
             S(yData, xData) = S(yData, xData) +1;
-            plotPileRelax(S, figH);
+            plotMainRelax(S, figH);
         elseif selectedChoice == findall(figH, 'Tag', 'modeWave')
             if S(yData, xData)<3
                 return;
@@ -990,13 +984,13 @@ function dropParticle(figH, ~)
             if xData < size(S, 2)
                 S(yData, xData+1) = S(yData, xData+1) +1;
             end
-            plotPile(relaxPile(S), figH);
+            plotMain(relaxPile(S), figH);
         else
             if S(yData, xData)<=0
                 return;
             end
             S(yData, xData) = S(yData, xData) -1;
-            plotPile(S, figH);
+            plotMain(S, figH);
         end
     end
 end
@@ -1004,7 +998,7 @@ function onToppleButton(figH, ~)
     S = getPile(figH);
     Snew = relaxPile(S);
     if any(any(Snew~=S))
-        plotPile(Snew, figH);
+        plotMain(Snew, figH);
     end
 end
 function dropRandom(figH, N, k)
@@ -1017,7 +1011,7 @@ function dropRandom(figH, N, k)
         x = randi(size(S, 2));
         S(y,x) = S(y,x) + 1;
     end
-    plotPileRelax(S, figH);
+    plotMainRelax(S, figH);
 end
 
 function dropRandomCircle(figH, N, k)
@@ -1034,7 +1028,7 @@ function dropRandomCircle(figH, N, k)
         y = 1+round((width-1)/2+r*cos(phi));
         S(y,x) = S(y,x) + 1;
     end
-    plotPileRelax(S, figH);
+    plotMainRelax(S, figH);
 end
 
 function dropRandomSquare45(figH, k)
@@ -1055,7 +1049,7 @@ function dropRandomSquare45(figH, k)
         yy = 1+round((width-1)/2+x*sin(pi/4)+y*cos(pi/4));
         S(yy,xx) = S(yy,xx) + 1;
     end
-    plotPileRelax(S, figH);
+    plotMainRelax(S, figH);
 end
 function dropSquare45(figH, k)
     S = getPile(figH);
@@ -1066,7 +1060,7 @@ function dropSquare45(figH, k)
         return;
     end
     S = S + round(2*k)*double(repmat(abs((1:width)-width/2-0.5), width, 1)+repmat(abs((1:width)'-width/2-0.5), 1, width)<=width/2);
-    plotPileRelax(S, figH);
+    plotMainRelax(S, figH);
 end
 
 function dropOtherPotential(figH, k, potential)
@@ -1086,14 +1080,14 @@ function dropOtherPotential(figH, k, potential)
         return;
     end
     S = S + k*pot;
-    plotPileRelax(S, figH);
+    plotMainRelax(S, figH);
 end
 function dropCenter(figH, numParticles)
     S = getPile(figH);
     height = size(S, 1);
     width = size(S, 2);
     S(floor((height+1)/2), floor((width+1)/2)) = S(floor((height+1)/2), floor((width+1)/2)) + numParticles;
-    plotPileRelax(S, figH);
+    plotMainRelax(S, figH);
 end
 function dropPotential(figH, k, harmonicFct)
     S = getPile(figH);
@@ -1101,7 +1095,7 @@ function dropPotential(figH, k, harmonicFct)
     width = size(S, 2);
     mask = ~isinf(S);
     S = S + k*generateDropZone(harmonicFct, height, width, mask);
-    plotPileRelax(S, figH);
+    plotMainRelax(S, figH);
 end
 
 function dropRandomOtherPotential(figH, k, potential)
@@ -1129,7 +1123,7 @@ function dropRandomOtherPotential(figH, k, potential)
         idx = randi(distriN);
         S(distri(idx, 1), distri(idx, 2)) = S(distri(idx, 1), distri(idx, 2)) + 1;
     end
-    plotPileRelax(S, figH);
+    plotMainRelax(S, figH);
 end
 function dropRandomPotential(figH, k, harmonicFct)
     S = getPile(figH);
@@ -1158,7 +1152,7 @@ function dropRandomPotential(figH, k, harmonicFct)
             S(ys(idx), xs(idx)) = S(ys(idx), xs(idx)) + 1;
         end
     end
-    plotPileRelax(S, figH);
+    plotMainRelax(S, figH);
 end
 function X = find_halfspace(Y,T)
     % returns the index of the first element in the ascending array Y which
@@ -1196,13 +1190,13 @@ function dropCross(figH, k)
         S(1: height, width/2) = S(1: height, width/2) + 1*k;
         S(1: height, width/2+1) = S(1: height, width/2+1) + 1*k;
     end
-    plotPileRelax(S, figH);
+    plotMainRelax(S, figH);
 end
 function dropCircle(figH, k)
     S = getPile(figH);
     width = size(S, 2);
     S = S + k*double(repmat(abs((1:width)-width/2-0.5), width, 1).^2+repmat(abs((1:width)'-width/2-0.5), 1, width).^2<=(width/2)^2);
-    plotPileRelax(S, figH);
+    plotMainRelax(S, figH);
 end
 function fraction = askForInput(figH, text, defaultNum)
     if nargin < 2
@@ -1269,7 +1263,7 @@ function boardSize(width, height, figH)
     figH = ancestor(figH, 'figure');
     axH = findall(figH, 'Tag', 'Splot');
     S = zeros(height, width)*3;
-    plotPile(S, figH);
+    plotMain(S, figH);
     xlim(axH, [0.5, size(S, 2)+0.5]);
     ylim(axH, [0.5, size(S, 1)+0.5]);
     figH.Name = sprintf('InterPile - %gx%g domain', height, width);
@@ -1277,30 +1271,30 @@ function boardSize(width, height, figH)
 end
 function invert(figH, ~)
     S = getPile(figH);
-    plotPile(inversePile(S), figH);
+    plotMain(inversePile(S), figH);
 end
 function threeMinusPile(figH, ~)
     S = getPile(figH);
-    plotPile(3*ones(size(S))-S, figH);
+    plotMain(3*ones(size(S))-S, figH);
 end
 function sixMinusPile(figH, ~)
     S = getPile(figH);
-    plotPileRelax(6*ones(size(S))-S, figH);
+    plotMainRelax(6*ones(size(S))-S, figH);
 end
 function threePlusPile(figH, ~)
     S = getPile(figH);
-    plotPileRelax(3*ones(size(S))+S, figH);
+    plotMainRelax(3*ones(size(S))+S, figH);
 end
 function twoTimesPile(figH, ~)
     S = getPile(figH);
-    plotPileRelax(S+S, figH);
+    plotMainRelax(S+S, figH);
 end
 function fillAll(figH, number)
     S = getPile(figH);
     Sinf = isinf(S);
     S = ones(size(getPile(figH)))*number;
     S(Sinf) = -inf;
-    plotPileRelax(S, figH);
+    plotMainRelax(S, figH);
 end
 
 function fillNullPile(figH, ~)
@@ -1317,10 +1311,10 @@ function fillNullPile(figH, ~)
         end
         S = nullPile(size(S, 1), size(S, 2), mask, currentMaskName);
     end
-    plotPile(S, figH);
+    plotMain(S, figH);
 end
 function fillRandom(figH, ~)
     S = getPile(figH);
     S = randi(4,size(S, 1),size(S, 2))-1;
-    plotPile(S, figH);
+    plotMain(S, figH);
 end

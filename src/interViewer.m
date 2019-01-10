@@ -134,6 +134,11 @@ uimenu(viewMenu, 'Label',...
         'Checked', 'off',...
         'Callback', @(figH, ~)setViewType(figH, 'spanningTree'),...
         'Tag', 'viewSpanningTree');
+uimenu(viewMenu, 'Label',...
+        'Tropical Curves (slow)', ...
+        'Checked', 'off',...
+        'Callback', @(figH, ~)setViewType(figH, 'tropical'),...
+        'Tag', 'viewTropical');
 
 % Generate movie
 generateMenu = uimenu(figH, 'Label', 'Export'); 
@@ -168,9 +173,12 @@ uicontrol('Style', 'text', 'String', 'Time X.XX (XXX of XXX)',...
 %% Main plot
 axH = axes('Tag', 'Splot', 'Units', 'pixels');
 colormap(colors)
-colorbar('north', 'Ticks', (1:size(colors, 1))+0.5, 'TickLabels', [arrayfun(@(x)int2str(x), 0:size(colors, 1)-3, 'UniformOutput', false), {sprintf('%g+', size(colors, 1)-2), 'X'}], 'Units', 'centimeters', 'Tag', 'colorbar');
+cbh = colorbar('north', 'Ticks', (1:size(colors, 1))+0.5, 'TickLabels', [arrayfun(@(x)int2str(x), 0:size(colors, 1)-3, 'UniformOutput', false), {sprintf('%g+', size(colors, 1)-2), 'X'}], 'Units', 'centimeters', 'Tag', 'colorbar');
+if isprop(cbh, 'AxisLocation')
+    cbh.AxisLocation = 'out';
+end
 hold on;
-plotPile(figH);
+plotMain(figH);
 data = getData(figH);
 xlim([0.5, size(data.S, 2)+0.5]);
 ylim([0.5, size(data.S, 1)+0.5]);
@@ -222,7 +230,7 @@ function setIndex(figH, index)
         index = figH.UserData.numSteps;
     end
     figH.UserData.currentIndex = index;
-    plotPile(figH);
+    plotMain(figH);
     timeField = findall(figH, 'Tag', 'timeField');
     timeField.Value = (figH.UserData.currentIndex)/(figH.UserData.numSteps);
 end
@@ -247,7 +255,7 @@ function timeChanged(figH)
     figH = ancestor(figH,'figure');
     timeField = findall(figH, 'Tag', 'timeField');
     figH.UserData.currentIndex = round(timeField.Value*(figH.UserData.numSteps));
-    plotPile(figH);
+    plotMain(figH);
 end
 function mouseMove(figH, ~)
     figH = ancestor(figH,'figure');
@@ -285,22 +293,31 @@ function setViewType(figH, type)
     figH = ancestor(figH,'figure');
     fieldParticle = findall(figH, 'Tag', 'viewParticle');
     fieldSpanningTree = findall(figH, 'Tag', 'viewSpanningTree');
+    fieldTropical = findall(figH, 'Tag', 'viewTropical');
     if strcmpi(type, 'spanningTree')
         fieldParticle.Checked = 'off';
         fieldSpanningTree.Checked = 'on';
+        fieldTropical.Checked = 'off';
+    elseif strcmpi(type, 'tropical')
+        fieldParticle.Checked = 'off';
+        fieldSpanningTree.Checked = 'off';
+        fieldTropical.Checked = 'on';
     else
         fieldParticle.Checked = 'on';
         fieldSpanningTree.Checked = 'off';
+        fieldTropical.Checked = 'off';
     end
-    plotPile(figH);
+    plotMain(figH);
 end
 
-function plotPile(figH)
+function plotMain(figH)
     figH = ancestor(figH, 'figure');
     fieldSpanningTree = findall(figH, 'Tag', 'viewSpanningTree');
+    fieldTropical = findall(figH, 'Tag', 'viewTropical');
+    cbh = findall(figH, 'Tag', 'colorbar');
     axH = findall(figH, 'Tag', 'Splot');
     axes(axH);
-    cla();
+
     fileName = fullfile(figH.UserData.folder, sprintf(figH.UserData.fileTemplate, figH.UserData.currentIndex));
     if exist(fileName, 'file')
         load(fileName, 'S');
@@ -312,48 +329,17 @@ function plotPile(figH)
             S = zeros(100, 100);
         end
     end
+    
     if strcmpi(fieldSpanningTree.Checked, 'on')
-        [parentY, parentX, W] = pile2tree(S);
-        Y=repmat((1:size(S, 1))', 1, size(S, 2));
-        X=repmat(1:size(S, 2), size(S, 1), 1);
-        idx = parentX ~= 0 & ~isnan(parentX);
-        
-        X = X(idx)';
-        Y = Y(idx)';
-        W = W(idx)';
-        parentX = parentX(idx)';
-        parentY = parentY(idx)';
-        
-        numColors = 10;
-        minThreshold = 1;
-        maxThreshold = 1000*numel(S)/255^2;
-        thresholds = 10.^(log10(minThreshold):(log10(maxThreshold)-log10(minThreshold))/(numColors-1):log10(maxThreshold));
-        colors = flipud(gray(numColors+1));
-        colors(1, :)=[];
-        alreadySelected = false(size(X));
-        for c=numColors:-1:1
-            select = W>=thresholds(c) & ~alreadySelected;
-            alreadySelected = alreadySelected | select;
-            numSelect = sum(select);
-            dataX = NaN(numSelect*3, 1);
-            dataY = NaN(numSelect*3, 1);
-
-            dataX(1:3:end-2) = X(select);
-            dataX(2:3:end-1) = parentX(select);
-            dataY(1:3:end-2) = Y(select);
-            dataY(2:3:end-1) = parentY(select);
-            line(dataX, dataY, 'Color' ,colors(c,:),'LineStyle','-');
-        end
+        cla();
+        plotTree(axH, S, cbh);
+    elseif strcmpi(fieldTropical.Checked, 'on')
+        cla();
+        plotDistances(axH, S, cbh);
     else
-        Stemp = S;
-        Stemp(~isinf(Stemp) & Stemp>9) = 9;
-        Stemp(isinf(Stemp)) = 10;
-        image(Stemp+1);
+        cla();
+        plotPile(axH, S, cbh);
     end
-    
-    
-    xlim([0.5, size(S, 2)+0.5]);
-    ylim([0.5, size(S, 1)+0.5]);
 
     setPile(figH, S);
     
@@ -391,7 +377,7 @@ function onResize(figH, ~)
     
     % Colorbar
     colorbar = findall(figH, 'Tag', 'colorbar');
-    colorbar.Position = [0.25, 0.25+bottomHeight+height + (figureDim(2)-bottomHeight-topHeight-height)/2, min(figureDim(1)-1, 6), 0.5];
+    colorbar.Position = [0.5, 0.25+bottomHeight+height + (figureDim(2)-bottomHeight-topHeight-height)/2, min(figureDim(1)-1, 6), 0.5];
     
     timeField = findall(figH, 'Tag', 'timeField');
     timeField.Position = [0.25, 0.75, figureDim(1)-0.5, 0.5];

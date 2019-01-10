@@ -2,13 +2,13 @@ function harmonic = diagHarmonic(dz, direction)
 
 if direction == 1
     if mod(dz, 2) == 0
-        if dz < 0
+        if dz <= 0
             harmonic = @(Y,X) harmonicEven(-Y+dz/2, -X+dz/2);
         else
             harmonic = @(Y,X) harmonicEven(Y-dz/2, X-dz/2);
         end
     else 
-        if dz < 0
+        if dz <= 0
             harmonic =@(Y,X) harmonicOdd(-Y+(dz+1)/2, -X+(dz+1)/2);
         else
             harmonic = @(Y,X) harmonicOdd(Y-(dz-1)/2, X-(dz-1)/2);
@@ -16,16 +16,16 @@ if direction == 1
     end
 elseif direction == 2
     if mod(dz, 2) == 0
-        if dz < 0
-            harmonic = @(Y,X) harmonicEven(+Y+dz/2, -X+dz/2);
+        if dz <= 0
+            harmonic = @(Y,X) -harmonicOdd(+Y+dz/2, -X+dz/2+1);
         else
-            harmonic = @(Y,X) harmonicEven(-Y-dz/2, X-dz/2);
+            harmonic = @(Y,X) -harmonicOdd(-Y-dz/2+1, X-dz/2);
         end
     else 
-        if dz < 0
-            harmonic = @(Y,X) harmonicOdd(+Y+(dz+1)/2, -X+(dz+1)/2);
+        if dz <= 0
+            harmonic = @(Y,X) harmonicEven(+Y+(dz-1)/2, -X+(dz+1)/2);
         else
-            harmonic = @(Y,X) harmonicOdd(-Y-(dz-1)/2, X-(dz-1)/2);
+            harmonic = @(Y,X) harmonicEven(-Y-(dz-1)/2, X-(dz+1)/2);
         end
     end
 else
@@ -58,7 +58,7 @@ if mod(d,2)==0
     elseif e > 0
         h = 4*harmonicEvenValue(y,x-1)-harmonicEvenValue(y-1,x-1)-harmonicEvenValue(y+1,x-1) - harmonicEvenValue(y,x-2);
     else
-        h = 4*harmonicEvenValue(y,x-1)-harmonicEvenValue(y-1,x-1) - harmonicEvenValue(y,x-2);
+        h = harmonicEvenValue(y,x-1)/2;%4*harmonicEvenValue(y,x-1)-harmonicEvenValue(y-1,x-1) - harmonicEvenValue(y,x-2);
     end
 else
     e = (x-y)/2;
