@@ -1,4 +1,4 @@
-function G = pile2graph(S)
+function varargout = pile2graph(S)
 % parent - determines spanning tree of recurrent configuration. Returns
 % empty vector if non-recurrent.
 % Usage:
@@ -43,46 +43,142 @@ Sorg = S;
 S = zeros(size(S)+[2,2]);
 S(2:end-1, 2:end-1) = Sorg;
 
-burning = true(size(S));
-burning(2:end-1, 2:end-1) = false;
-remaining = ~burning;
+Norg = size(Sorg, 1);
+N = size(S, 1);
+M = size(S, 2);
 
-% Filter to count number of remaining neighbours
-neighbourFilter = [0,1,0;1,0,1;0,1,0];
+burnStartInd = sub2ind([N, M], [2:N-1,            2:N-1,              2*ones(1, M-4), (N-1)*ones(1, M-4)], [2*ones(1, N-2),   (M-1)*ones(1, N-2), 3:M-2,          3:M-2]);
+unburned = true(size(S));
+unburned(1, 1) = false;
+unburned(N, 1) = false;
+unburned(1, M) = false;
+unburned(N, M) = false;
+
+boundary = true(N, M);
+boundary(2:end-1, 2:end-1) = false;
+
 % how much we have to add to the idx of a vertex to get each of its
-% neigbors, in the order: top, left, bottom, right (which is also the order
-% in which we choose the parent node in case we have multiple choices).
+% neigbors, in the order: top, left, bottom, right.
 neigbhourIdxDelta = [-1, -size(S, 1), 1, size(S, 1)];
 
-sinkInd = numel(Sorg)+1;
-startEdges = NaN(1, numel(Sorg)*4);
-endEdges = NaN(1, numel(Sorg)*4);
-nextEdgeId = 1;
-while any(any(remaining))
-    lastBurning = burning;
-    lastRemaining = remaining;
-    % Calculate number of non-burnt neigbors for each vertex
-    numNeigbors = imfilter(double(remaining), neighbourFilter);
-    remaining = lastRemaining & (S < numNeigbors);
-    burning = lastRemaining & ~remaining; % newly burning in current step.
-    burningIdx = find(burning)';
-    
-    if isempty(burningIdx)
-        break;
-    end
-    for idx = burningIdx
-        neigbourIdx = idx+neigbhourIdxDelta;
-        lastBurningNeigbourIdx = neigbourIdx(lastBurning(neigbourIdx) | burning(neigbourIdx));
-        [y, x]= ind2sub(size(burning), idx);
-        startInd = sub2ind(size(Sorg), y-1, x-1);
-        [endY, endX] = ind2sub(size(burning), lastBurningNeigbourIdx);
-        isSink = endY == 1 | endY == size(burning, 1) | endX == 1 | endX == size(burning, 1);
-        endInd = (endY-1) + (endX-2)*size(Sorg, 1);
-        endInd(isSink) = sinkInd;
-        startEdges(nextEdgeId:nextEdgeId+length(endInd)-1) = startInd;
-        endEdges(nextEdgeId:nextEdgeId+length(endInd)-1) = endInd;
-        nextEdgeId = nextEdgeId+length(endInd);
+
+vertEdges = false(size(Sorg, 1)-1, size(Sorg, 2));
+horEdges = false(size(Sorg, 1), size(Sorg, 2)-1);
+
+anyBurned = true;
+alreadyBurned = false(size(burnStartInd));
+while anyBurned
+    anyBurned = false;
+    unburnedStart = unburned;
+    for bId = 1:length(burnStartInd)
+        if alreadyBurned(bId)
+            continue;
+        end
+        burning = false(size(S));
+        burning(burnStartInd(bId)+neigbhourIdxDelta) = true;
+        burning = burning & boundary;
+        
+        subUnburned = unburnedStart & ~burning;
+        [subVertEdges, subHorEdges, subUnburned] = burn(S, subUnburned, burning);
+        subUnburned = subUnburned & ~boundary;
+        if ~subUnburned(burnStartInd(bId))
+            alreadyBurned(bId) = true;
+            anyBurned = true;
+            vertEdges = vertEdges | subVertEdges;
+            horEdges = horEdges | subHorEdges;
+            unburned = unburned & subUnburned;
+        end
     end
 end
-G = graph(startEdges(1:nextEdgeId-1), endEdges(1:nextEdgeId-1), [], sinkInd);
-return;
+
+numEdges = sum(sum(horEdges))+sum(sum(vertEdges));
+startEdges = NaN(1, numEdges);
+endEdges = NaN(1, numEdges);
+nextEdge = 1;
+for startY=1:size(vertEdges, 1)
+    for startX=1:size(vertEdges, 2)
+        if vertEdges(startY,startX)
+            startEdges(nextEdge) = startY+(startX-1)*Norg;
+            endEdges(nextEdge) = 1+startY+(startX-1)*Norg;
+            nextEdge = nextEdge+1;
+        end
+    end
+end
+for startY=1:size(horEdges, 1)
+    for startX=1:size(horEdges, 2)
+        if horEdges(startY,startX)
+            startEdges(nextEdge) = startY+(startX-1)*Norg;
+            endEdges(nextEdge) = startY+startX*Norg;
+            nextEdge = nextEdge+1;
+        end
+    end
+end
+
+varargout{1} = graph(startEdges, endEdges, [], numel(Sorg));
+if nargout >= 2
+    varargout{2} = unburned(2:end-1, 2:end-1);
+end
+end
+
+function [vertEdges, horEdges, remaining] = burn(S, remaining, burning)
+    % how much we have to add to the idx of a vertex to get each of its
+    % neigbors, in the order: top, left, bottom, right.
+    neigbhourIdxDelta = [-1, -size(S, 1), 1, size(S, 1)];
+
+    N = size(S, 1);
+    M = size(S, 2);
+    left = spdiags([ones(N,1),ones(N,1)], [-1,1], N, N);
+    right = spdiags(ones(M,2), [-1,1], M, M);
+    
+    orgSize = size(S)-[2,2];
+    vertEdges = false(orgSize(1)-1, orgSize(2));
+    horEdges = false(orgSize(1), orgSize(2)-1);
+    while any(any(remaining)) && any(any(burning))
+        lastBurning = burning;
+        lastRemaining = remaining;
+        % Calculate number of non-burnt neigbors for each vertex
+        %numNeigbors = imfilter(double(remaining), neighbourFilter);
+        numNeigbors = left * remaining + remaining * right;
+        remaining = lastRemaining & (S < numNeigbors);
+        burning = lastRemaining & ~remaining; % newly burning in current step.
+        burningIdx = find(burning)';
+
+        if isempty(burningIdx)
+            break;
+        end
+        for idx = burningIdx
+            y = 1+mod(idx-1, N);
+            x = 1+floor((idx-1)./N);
+            if y == 1 || y == size(burning, 1) || x == 1 || x == size(burning, 1)
+                continue;
+            end
+            neigbourIdx = idx+neigbhourIdxDelta;
+            lastBurningNeigbourIdx = neigbourIdx(lastBurning(neigbourIdx));
+            
+            delta = 1+S(idx)-numNeigbors(idx);
+            if delta > length(lastBurningNeigbourIdx)
+                continue;
+            end
+            SlastBurning = S(lastBurningNeigbourIdx);
+            Ssort = sort(SlastBurning);
+            Schosen = Ssort(delta);
+            lastBurningNeigbourIdx = lastBurningNeigbourIdx(SlastBurning==Schosen);
+
+            endY = 1+mod(lastBurningNeigbourIdx-1, N);
+            endX = 1+floor((lastBurningNeigbourIdx-1)./N);
+            isSink = endY == 1 | endY == size(burning, 1) | endX == 1 | endX == size(burning, 1);
+            
+            for endIdx = 1:length(isSink)
+                if isSink(endIdx)
+                    continue;
+                elseif endY(endIdx) ~= y
+                    % vertical edge
+                    vertEdges(min(y, endY(endIdx))-1, x-1) = true;
+                else
+                    % horizontal edge
+                    horEdges(y-1, min(x, endX(endIdx))-1) = true;
+                end
+            end
+        end
+    end
+end

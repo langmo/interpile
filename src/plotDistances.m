@@ -1,6 +1,6 @@
 function varargout = plotDistances(varargin)
 currentInput = 1;
-if ishandle(varargin{currentInput})
+if nargin>1 && numel(varargin{currentInput}) == 1 && ishandle(varargin{currentInput})
     axH = varargin{1};
     currentInput = currentInput+1;
 end
@@ -22,20 +22,26 @@ end
 
 N = size(S, 1);
 M = size(S, 2);
-G = pile2graph(S);
-if max(N,M) <=64
+[G, unburned] = pile2graph(S);
+if max(N,M) <=64 && false
     D = distances(G);
     %% Vertical distances
     yInd = 1:N-1;
     Dy = zeros(N-1, M);
     for x = 1:M
-        Dy(yInd+(x-1)*(N-1)) = D(sub2ind([N*M+1, N*M+1], yInd+(x-1)*N, yInd+1+(x-1)*N));
+        yIndSub = yInd(~unburned(yInd+(x-1)*N)&~unburned(yInd+1+(x-1)*N));
+        if ~isempty(yIndSub)
+            Dy(yIndSub+(x-1)*(N-1)) = D(sub2ind([N*M, N*M], yIndSub+(x-1)*N, yIndSub+1+(x-1)*N));
+        end
     end
     %% Horizontal distances
     xInd = 1:N:N*(M-1);
     Dx = zeros(N, M-1);
     for y = 1:N
-        Dx(xInd+(y-1)) = D(sub2ind([N*M+1, N*M+1], xInd+(y-1), xInd+(y-1)+N));
+        xIndSub = xInd(~unburned(xInd+(y-1))&~unburned(xInd+(y-1)+N));
+        if ~isempty(xIndSub)
+            Dx(xIndSub+(y-1)) = D(sub2ind([N*M, N*M], xIndSub+(y-1), xIndSub+(y-1)+N));
+        end
     end
 else
     %% Vertical distances
@@ -62,11 +68,18 @@ T(3:2:2*(N-1)-1, 3:2:2*(M-1)-1) = max(...
     max(min(Dy(1:end-1, 2:end-1),Dx(2:end-1, 1:end-1)) , min(Dy(2:end, 2:end-1), Dx(2:end-1, 2:end))),...
     max(min(Dy(1:end-1, 2:end-1),Dx(2:end-1, 2:end)) , min(Dy(2:end, 2:end-1), Dx(2:end-1, 1:end-1)))...
     );
+P = T(1:2:2*N-1, 1:2:2*M-1);
+P(unburned) = NaN;
+T(1:2:2*N-1, 1:2:2*M-1) = P;
 %% plot
 Tlog = log10(T);
-maxT = max(Tlog(~isinf(Tlog)));
-img = round(Tlog/maxT*255);
-img(isinf(Tlog)) = 256;
+maxT = max(Tlog(~isinf(Tlog) & ~isnan(Tlog)));
+if isempty(maxT)
+    maxT = 1;
+end
+img = round(Tlog/maxT*254);
+img(isinf(Tlog)) = 255;
+img(isnan(Tlog)) = 256;
 plotH = image(img);
 set(plotH,'HitTest','off');
 colormap(axH, [flipud(gray(255)); 0.5,0,0]);
