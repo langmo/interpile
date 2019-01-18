@@ -1,30 +1,33 @@
 function varargout = numRecurrentStates(varargin)
 % Calculates the number of recurrent states.
 % Usage:
-%   numRecurrentStates(N)
+%   factors = numRecurrentStates(N)
 %       Calculates the number of recurrent states for an NxN square domain.
-%   numRecurrentStates(N, M)
+%       Instead of the number of recurrent states, the factorization is
+%       returned. This is usually more precise for large numbers of
+%       recurrent states due to rounding errors due to finite precision of
+%       double values. The number of recurrent states can be obtained by
+%       prod(factors).
+%   factors = numRecurrentStates(N, M)
 %       Calculates the number of recurrent states for an NxM rectangular domain.
-%   numRecurrentStates(mask)
+%   factors = numRecurrentStates(mask)
 %       Calculates the number of recurrent states for a domain
 %       corresponding to the non-zero values of the mask.
-%   numRecurrentStates(..., method)
+%   factors = numRecurrentStates(..., method)
 %       Defines the method how the number of recurrent states is
 %       determined. 
 %       Options:
-%        'laplacian' (default). The number of states is determined by
-%           the absolute value of the determinant of the graph laplacian.
-%        'potential'. The number of states is determined by the absolute
+%        'potential' (default). The number of states is determined by the absolute
 %           value of the determinant of the matrix P, where each column of
 %           P corresponds to the potential of one (non-zero) harmonic
 %           diagonal function, restricted to the boundary of the domain.
 %        'potentialPolynoms'. Same as 'potential', only with harmonics of
 %           polynomial type.
-%   nRecturrent = numRecurrentStates(...)
-%       Returns the number of recurrent states. If no return value is
-%       requested, the number is displayed in the console.
+%        'laplacian'. The number of states is determined by
+%           the absolute value of the determinant of the graph laplacian.
+%       
 
-% Copyright (C) 2018 Moritz Lang
+% Copyright (C) 2018, 2019 Moritz Lang
 % 
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -59,18 +62,20 @@ else
 end
 
 if numel(varargin) >= i && ischar(varargin{i})
-    if strcmpi(varargin{i}, 'laplacian')
+    methodString = varargin{i};
+    if strcmpi(methodString, 'laplacian')
         method = 0;
-    elseif strcmpi(varargin{i}, 'potential')
+    elseif strcmpi(methodString, 'potential')
         method = 1;
-    elseif strcmpi(varargin{i}, 'potentialPolynoms')
+    elseif strcmpi(methodString, 'potentialPolynoms')
         method = 2;
     else
-        error('InterPile:UnknownAlgorithm', 'The algorithm %s for the calculation of the number of recurrent states is unknown.', varargin{i});
+        error('InterPile:UnknownAlgorithm', 'The algorithm %s for the calculation of the number of recurrent states is unknown.', methodString);
     end
     i = i+1;
 else
-    method = 0;
+    methodString = 'potential';
+    method = 1;
 end
 if numel(varargin) >= i
     error('InterPile:TooManyArguments', 'Too many arguments provided for the calculation of the number of recurrent states.');
@@ -79,6 +84,8 @@ if nargout > 1
     error('InterPile:TooManyReturnValues', 'The function either returns zero or one value.');
 end
 if method == 1
+    % Calculate via potentials.
+    startTime = tic();
     maskExtended = zeros(size(mask, 1)+2, size(mask, 2)+2);
     maskExtended(2:end-1, 2:end-1) = mask;
     boundary = filter2([0,1,0;1,0,1;0,1,0], ~maskExtended);
@@ -112,12 +119,11 @@ if method == 1
         h = h+1;
     end
     % Calculate determinant. Symbolic toolbox seems to be more precise...
-    nStates = abs(double(det(sym(P))));
-elseif method == 2
-    % remove invalid (empty) columns and rows.
-    %mask(:, all(mask==0)) = [];
-    %mask(all(mask'==0), :) = [];
-    
+    factors = double(factor(abs(det(sym(P)))));
+    calculationTime = toc(startTime);
+elseif method == 2    
+    % Calculate via potential polynoms.
+    startTime = tic();
     maskExtended = zeros(size(mask, 1)+2, size(mask, 2)+2);
     maskExtended(2:end-1, 2:end-1) = mask;
     boundary = filter2([0,1,0;1,0,1;0,1,0], ~maskExtended);
@@ -159,8 +165,11 @@ elseif method == 2
         h = h+1;
     end
     % Calculate determinant. Symbolic toolbox seems to be more precise...
-    nStates = abs(double(det(sym(P))));
+    factors = double(factor(abs(det(sym(P))))); 
+    calculationTime = toc(startTime);
 else
+    % Calculate via graph laplacian.
+    startTime = tic();
     maskIDs = find(mask);
     Delta = zeros(length(maskIDs));
     for i=1:length(maskIDs)
@@ -170,13 +179,29 @@ else
         Delta(i, :) = A(maskIDs);
     end
     % Calculate determinant. Symbolic toolbox seems to be more precise...
-    nStates = abs(double(det(sym(Delta))));
+    factors = double(factor(abs(det(sym(Delta)))));
+    calculationTime = toc(startTime);
 end
 
+% Return or print results.
 if nargout > 0
-    varargout{1} = nStates;
+    varargout{1} = factors;
 else
-    fprintf('Number of recurrent states: %.0f\n', nStates);
+    factorsString = '';
+    for f = unique(factors)
+        factorsString = sprintf('%s%1.0f^%1.0f ', factorsString, f, sum(factors==f));
+    end
+    numStates = sum(log10(factors));
+    if numStates < 8
+        numStatesString = sprintf('%g', 10^numStates);
+    else
+        numStatesString = sprintf('%ge+%02.0g', 10^mod(numStates, 1), floor(numStates));
+    end
+    
+    fprintf('Method:\t\t\t\t\t%s\n', methodString);
+    fprintf('#recurrent:\t\t\t\t%s\n', numStatesString);
+    fprintf('Factorization:\t\t\t%s\n', factorsString);
+    fprintf('Calculation Time:\t\t%.2fs\n', calculationTime);
 end
 
 end

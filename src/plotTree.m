@@ -1,8 +1,10 @@
 function varargout = plotTree(varargin)
 currentInput = 1;
-if ishandle(varargin{currentInput})
+if nargin>1 && numel(varargin{currentInput}) == 1 && ishandle(varargin{currentInput})
     axH = varargin{1};
     currentInput = currentInput+1;
+else
+    axH = gca();
 end
 S = varargin{currentInput};
 currentInput = currentInput+1;
