@@ -34,6 +34,11 @@ colors = pileColors();
 if lessColors
    colors(5:end, :) = []; 
 end
+
+if ~strcmpi(class(S), 'double')
+    S = double(S);
+end
+
 if nargin >= 2 && ~isempty(fgh) && ishandle(fgh)
     figure(fgh);
     plotH = get(fgh.CurrentAxes, 'Children');
@@ -49,7 +54,7 @@ if nargin >= 2 && ~isempty(fgh) && ishandle(fgh)
             axH = gca();
             axH.YDir = 'reverse';
             axis off;
-            fgh.CurrentAxes.Position = [1,1,size(S, 2), size(S, 1)];
+            %fgh.CurrentAxes.Position = [1,1,size(S, 2), size(S, 1)];
         else
             width = 20;
             height = width/size(S, 2)*size(S, 1);

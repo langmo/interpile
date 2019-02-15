@@ -127,6 +127,9 @@ if isempty(HsaveOdd)
     HsaveOdd = NaN(2*maxY+1, 2*maxX+1);
 elseif size(HsaveOdd, 1)<2*maxY+1 || size(HsaveOdd, 2)<2*maxX+1
     % Extend matrix to store already known values.
+    maxY = max(maxY, (size(HsaveOdd, 1)-1)/2);
+    maxX = max(maxX, (size(HsaveOdd, 2)-1)/2);
+    
     Hnew = NaN(2*maxY+1, 2*maxX+1);
     dy = maxY - (size(HsaveOdd, 1)-1)/2;
     dx = maxX - (size(HsaveOdd, 2)-1)/2;

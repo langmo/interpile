@@ -128,7 +128,7 @@ end
 if nargout > 1
     varargout{1} = H;
 end
-if nargout > 1
+if nargout > 2
     varargout{2} = divisor;
 end
 
