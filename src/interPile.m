@@ -126,10 +126,14 @@ if ~isdeployed()
             'Import Pile from Workspace', ...
             'Callback', @(figH, ~)plotMainRelax(evalin('base', 'S'), figH));
 end 
-    
+   
+uimenu(editMenu, 'Label',...
+        'Determine Coordinates', ...
+        'Callback', @(figH, ~)determineCoordinates(figH), 'Separator','on');
+
 uimenu(editMenu, 'Label',...
         'Count Recurrent Configurations', ...
-        'Callback', @(figH, ~)countRecurrent(figH), 'Separator','on');
+        'Callback', @(figH, ~)countRecurrent(figH), 'Separator','off');
 
 
 uimenu(editMenu, 'Label',...
@@ -267,6 +271,14 @@ uimenu(transformMenu, 'Label',...
 uimenu(transformMenu, 'Label',...
         '2 * Pile', ...
         'Callback', @twoTimesPile);
+    
+scaleHomoMenu = uimenu(transformMenu, 'Label', 'Scale (group homomorphism)', 'Separator','on'); 
+scalings = 2:20;
+for scaling = scalings
+    uimenu(scaleHomoMenu, 'Label',...
+        sprintf('%g fold', scaling), ...
+        'Callback', @(figH, ~)scaleHomomorphism(figH, scaling));
+end
 
 %% Menu: Drop deterministic
 dropDeterministicMenu = uimenu(figH, 'Label', 'Drop Deterministic'); 
@@ -707,6 +719,55 @@ function countRecurrent(figH)
                 sprintf('#recurrent^(1/|Gamma|): %.5f', nthroot( numStatesPotential, numVertices)), ...
                 sprintf('Caclulation Time: %.2fs', timePotential) ....
               }, 'Number of Recurrent States');
+    setWindowIcon(h);
+    h.Color = ones(1,3);
+end
+function scaleHomomorphism(figH, scaling)
+    S = getPile(figH);
+    if any(isinf(S(:))) || size(S, 1) ~= size(S, 2) || mod(size(S, 1), 2)
+        errordlg('Function only supported for NxN square domains with N even.', 'Invalid Input');
+        return;
+    end
+    N = size(S, 1);
+    Nnew = scaling*(N+1)-1;
+    if Nnew > 50
+        choice = questdlg('The calculation of the group homomorphism for sandpiles with a width or height larger than 50 can take very long. Continue anyways?', ...
+            'Long calculations', ...
+            'Yes','No', 'No');
+        if strcmpi(choice, 'No')
+            return;
+        end
+    end
+    
+    [c1, c2, time] = pile2coord(S);
+    S = double(coord2pile(c1,c2, time, scaling, 'typeName', 'int64'));
+    plotMain(S, figH);
+end
+function determineCoordinates(figH)
+    S = getPile(figH);
+    if any(isinf(S(:))) || size(S, 1) ~= size(S, 2)
+        errordlg('Function only supported for NxN square domains.', 'Invalid Input');
+        return;
+    end
+    if max(size(S)) > 40
+        choice = questdlg('The calculation of the coordinates of a configuration for domains with a width or height larger than 40 can take very long. Continue anyways?', ...
+            'Long calculations', ...
+            'Yes','No', 'No');
+        if strcmpi(choice, 'No')
+            return;
+        end
+    end
+    
+    [c1, c2, t] = pile2coord(S);
+    c1Coords = ['[', sprintf('%g, ', c1(1:end-1)), sprintf('%g', c1(end)), ']'];
+    c2Coords = ['[', sprintf('%g, ', c2(1:end-1)), sprintf('%g', c1(end)), ']'];
+    
+    
+    h = msgbox({...
+                sprintf('Time: %d/%d', t(1), t(2)), ...
+                sprintf('c1: %s', c1Coords), ...
+                sprintf('c2: %s', c2Coords) ...
+              }, 'Coordinates of sandpile');
     setWindowIcon(h);
     h.Color = ones(1,3);
 end

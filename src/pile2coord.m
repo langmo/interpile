@@ -22,7 +22,7 @@ p = inputParser;
 addOptional(p,'symbolicCalculations', true);
 addOptional(p,'numericThreshold', 1e-3);
 addOptional(p,'symbolicResult', false);
-addOptional(p,'typeName', 'double');
+addOptional(p,'typeName', 'int64');
 parse(p,varargin{:});
 
 

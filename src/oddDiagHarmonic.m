@@ -386,6 +386,6 @@ function result = cast2type(value, typeName)
     if strcmpi(typeName, 'sym')
         result = sym(value);
     else
-        result = cast2type(value, typeName);
+        result = cast(value, typeName);
     end
 end
