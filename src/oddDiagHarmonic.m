@@ -349,7 +349,7 @@ end
 
 function value = nanValue(typeName)
 if strcmpi(typeName, 'double') || strcmpi(typeName, 'single')
-    value = realmax(typeName);
+    value = NaN;
 elseif strcmpi(typeName, 'sym')
     value = {[]};
 else
