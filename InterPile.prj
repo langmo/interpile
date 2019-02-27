@@ -8,7 +8,7 @@
       <file>${PROJECT_ROOT}\InterPile_resources\icon_24.png</file>
       <file>${PROJECT_ROOT}\InterPile_resources\icon_16.png</file>
     </param.icons>
-    <param.version>1.2</param.version>
+    <param.version>1.1</param.version>
     <param.authnamewatermark>Moritz Lang</param.authnamewatermark>
     <param.email>moritz.lang@ist.ac.at</param.email>
     <param.company>IST Austria</param.company>
