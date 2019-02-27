@@ -18,18 +18,28 @@ function [c1, c2, varargout] = pile2coord(S, varargin)
 % For more information, visit the project's website at 
 % https://langmo.github.io/interpile/
 
+if ~isempty(which('sym'))
+    internalTypeName = 'sym';
+elseif ~isempty(which('vpi'))
+    internalTypeName = 'vpi';
+else
+    internalTypeName = 'double';
+end
 p = inputParser;
-addOptional(p,'symbolicCalculations', true);
 addOptional(p,'numericThreshold', 1e-3);
-addOptional(p,'symbolicResult', false);
-addOptional(p,'typeName', 'int64');
+addOptional(p,'internalTypeName', internalTypeName);
+addOptional(p,'typeName', 'double');
+addOptional(p,'returnTypeName', '');
 parse(p,varargin{:});
 
-
-symbolicCalculations = p.Results.symbolicCalculations;
 numericThreshold = p.Results.numericThreshold;
-symbolicResult = p.Results.symbolicResult;
 typeName = p.Results.typeName;
+internalTypeName = p.Results.internalTypeName;
+if isempty(p.Results.returnTypeName)
+    returnTypeName = typeName;
+else
+    returnTypeName = p.Results.returnTypeName;
+end
 
 if nargin < 1
     % A test sandpile where the central two harmonics in c2 should be 0.5,
@@ -74,8 +84,8 @@ end
 X = [X(1, end-1:-1:2), X(2:end-1, 1)', X(end, 2:end-1), X(end-1:-1:2, end)'];
 Y = [Y(1, end-1:-1:2), Y(2:end-1, 1)', Y(end, 2:end-1), Y(end-1:-1:2, end)'];
 
-P1 = zeros(2*N, length(X), typeName);
-P2 = zeros(2*N, length(X), typeName);
+P1 = Types.zeros(2*N, length(X), typeName);
+P2 = Types.zeros(2*N, length(X), typeName);
 
 ids = [-N:-1, 1:N];
 
@@ -106,14 +116,48 @@ T2 = [...
 
 T = [T1;T2]';
 
-if symbolicCalculations
+if strcmpi(internalTypeName, 'vpi')
+    [cN, cD] = solveRational(T,S, 'typeName', 'vpi');
+    c1 = [0; cN(1:size(T1, 1)); 0];
+    c2 = [0; cN(1+size(T2, 1):end); 0];
+
+    % Set outest most harmonic such that integer potential.
+    Ptot = P1'*c1 + P2'*c2;
+    c1(1) = -mod(Ptot(M+1), cD);
+    c2(1) = -mod(Ptot(M+N), cD);
+    c2(end) = -mod(Ptot(1), cD);
+    c1(end) = -mod(Ptot(M+N+M), cD);
+    c1 = mod(c1, cD);
+    c2 = mod(c2, cD);
+
+    % add the zero in the middle
+    if mod(N, 2) == 1
+        c2 = [c2(1:N)', c1(N+1)/2, c2(N+1:end)'];
+        c1 = [c1(1:N)', c1(N+1)/2, 0, c1(N+2:end)'];
+    else
+        c1 = [c1(1:N)', 0, c1(N+1:end)'];
+        c2 = [c2(1:N)', 0, c2(N+1:end)'];
+    end
+
+    if nargout() == 2
+        if strcmpi(returnTypeName, 'double')
+            c1 = Types.cast2type(double(c1)/double(cD));
+            c2 = Types.cast2type(double(c2)/double(cD));
+        end
+    else
+        c1 = Types.cast2type(c1, returnTypeName);
+        c2 = Types.cast2type(c2, returnTypeName);
+        cD = Types.cast2type(cD, returnTypeName);
+        varargout{1} = [1, cD];
+    end
+elseif strcmpi(internalTypeName, 'sym')
     %% symbolic calculations (more robust, probably, but slower)
-    c = sym(T) \ sym(S);
+    c = Types.cast2type(T, 'sym') \ Types.cast2type(S, 'sym');
     c1 = [0; c(1:size(T1, 1)); 0];
     c2 = [0; c(1+size(T2, 1):end); 0];
 
     % Set outest most harmonic such that integer potential.
-    Ptot = P1'*c1 + P2'*c2;
+    Ptot = Types.cast2type(P1', 'sym')*c1 + Types.cast2type(P2', 'sym')*c2;
     c2(end) = -mod(Ptot(1), 1);
     c1(1) = -mod(Ptot(M+1), 1);
     c2(1) = -mod(Ptot(M+N), 1);
@@ -131,10 +175,8 @@ if symbolicCalculations
     end
 
     if nargout() == 2
-        if ~symbolicResult
-            c1 = double(c1);
-            c2 = double(c2);
-        end
+        c1 = Types.cast2type(c1, returnTypeName);
+        c2 = Types.cast2type(c2, returnTypeName);
     else
         [c1_a,c1_b]=numden(c1);
         [c2_a,c2_b]=numden(c2);
@@ -153,12 +195,11 @@ if symbolicCalculations
             c1 = c1 ./ t_a;
             c2 = c2 ./ t_a;
         end
-        if ~symbolicResult
-            c1 = double(c1);
-            c2 = double(c2);
-            t_a = double(t_a);
-            t_b = double(t_b);
-        end
+        
+        c1 = Types.cast2type(c1, returnTypeName);
+        c2 = Types.cast2type(c2, returnTypeName);
+        t_a = Types.cast2type(t_a, returnTypeName);
+        t_b = Types.cast2type(t_b, returnTypeName);
         varargout{1} = [t_a, t_b];
     end
 else
@@ -202,8 +243,8 @@ else
     [c2_a,c2_b]=rat(c2, numericThreshold);
     
     if nargout() == 2
-        c1 = c1_a./c1_b;
-        c2 = c2_a./c2_b;
+        c1 = Types.cast2type(c1_a./c1_b, returnTypeName);
+        c2 = Types.cast2type(c2_a./c2_b, returnTypeName);
     else
         t_b = 1;
         for c_b = [c1_b, c2_b]
@@ -220,9 +261,13 @@ else
             c1 = c1 ./ t_a;
             c2 = c2 ./ t_a;
         end
+        
+        c1 = Types.cast2type(c1, returnTypeName);
+        c2 = Types.cast2type(c2, returnTypeName);
+        t_a = Types.cast2type(t_a, returnTypeName);
+        t_b = Types.cast2type(t_b, returnTypeName);
         varargout{1} = [t_a, t_b];
     end
 end
 
 end
-

@@ -29,10 +29,14 @@ if ~exist('scaleFactor', 'var') || isempty(scaleFactor)
 end
 p = inputParser;
 addOptional(p,'typeName', 'int64');
-addOptional(p,'symbolicCalculations', false);
+addOptional(p,'returnTypeName', []);
 parse(p,varargin{:});
 typeName = p.Results.typeName;
-symbolicCalculations = p.Results.symbolicCalculations;
+if isempty(p.Results.returnTypeName)
+    returnTypeName = typeName;
+else
+    returnTypeName = p.Results.returnTypeName;
+end
 
 Nbase = (length(coeff1)-1)/2;
 N = scaleFactor*(Nbase+1)-1;
@@ -54,8 +58,8 @@ Y = Y(1:N+2, 1:N+2);
 X = [X(2:end-1, 1), X(2:end-1, end), X(1, 2:end-1)', X(end, 2:end-1)'];
 Y = [Y(2:end-1, 1), Y(2:end-1, end), Y(1, 2:end-1)', Y(end, 2:end-1)'];
 
-H = (time(1)*periodicHarmonic(Y, X, coeff1, coeff2, 'typeName', typeName, 'symbolicCalculations', symbolicCalculations));
-assert(~any(any(mod(H, time(2)))), 'InterPile:HarmonicFunctionDivisibility', 'Harmonic function not divisible by time!');
+H = (time(1)*periodicHarmonic(Y, X, coeff1, coeff2, 'typeName', typeName));
+assert(~any(any(double(mod(H, time(2))))), 'InterPile:HarmonicFunctionDivisibility', 'Harmonic function not divisible by time!');
 H = H / time(2);
 % minimum is anyways at the boundary...
 H = H -min(H(:));
@@ -65,12 +69,21 @@ if ~strcmpi(class(H), typeName)
     assert(~any(any(Hold-H)), 'Rounding error during conversion from %s to %s!', class(Hold), class(H));
 end
 
-S = cast(nullPile(N, N), typeName);
+S = Types.cast2type(nullPile(N, N), typeName);
 S(:, 1) = S(:, 1) + H(:, 1);
 S(:, end) = S(:, end) + H(:, 2);
 S(1, :) = S(1, :) + H(:, 3)';
 S(end, :) = S(end, :) + H(:, 4)';
 
-S = relaxPile(S);
+S = Types.cast2type(relaxPile(S), returnTypeName);
 end
 
+function result = cast2type(value, typeName)
+    if strcmpi(typeName, 'sym')
+        result = sym(value);
+    elseif strcmpi(typeName, 'vpi')
+        result = vpi(value);
+    else
+        result = cast(value, typeName);
+    end
+end

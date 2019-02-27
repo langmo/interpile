@@ -26,25 +26,27 @@ end
 
 p = inputParser;
 addOptional(p,'typeName', 'double');
-addOptional(p,'symbolicCalculations', false);
 parse(p,varargin{:});
 typeName = p.Results.typeName;
-symbolicCalculations = p.Results.symbolicCalculations;
 
 maxXY = max(max(abs(X(:))), max(abs(Y(:))));
 
-H = zeros(size(X), typeName);
+if strcmpi(typeName, 'vpi')
+    H = vpi(zeros(size(X)));
+else
+    H = zeros(size(X), typeName);
+end
 for id = -2*maxXY:1:2*maxXY
     coeffID = id2idx(id, length(coeff1));
     if isnan(coeffID)
         continue;
     end
     if coeff1(abs(coeffID)) ~= 0
-        harmonicFct = harmFun(id,1, 'typeName', typeName, 'symbolicCalculations', symbolicCalculations);
+        harmonicFct = harmFun(id,1, 'typeName', typeName);
         H = H + sign(coeffID)*coeff1(abs(coeffID)) * harmonicFct(Y, X);
     end
     if coeff2(abs(coeffID)) ~= 0
-        harmonicFct = harmFun(id,2, 'typeName', typeName, 'symbolicCalculations', symbolicCalculations);
+        harmonicFct = harmFun(id,2, 'typeName', typeName);
         H = H + sign(coeffID)*coeff2(abs(coeffID)) * harmonicFct(Y, X);
     end
 end

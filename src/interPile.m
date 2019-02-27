@@ -126,11 +126,11 @@ if ~isdeployed()
             'Import Pile from Workspace', ...
             'Callback', @(figH, ~)plotMainRelax(evalin('base', 'S'), figH));
 end 
-   
-uimenu(editMenu, 'Label',...
-        'Determine Coordinates', ...
-        'Callback', @(figH, ~)determineCoordinates(figH), 'Separator','on');
-
+if 1||~isdeployed()   
+    uimenu(editMenu, 'Label',...
+            'Determine Coordinates', ...
+            'Callback', @(figH, ~)determineCoordinates(figH), 'Separator','on');
+end
 uimenu(editMenu, 'Label',...
         'Count Recurrent Configurations', ...
         'Callback', @(figH, ~)countRecurrent(figH), 'Separator','off');
@@ -272,12 +272,14 @@ uimenu(transformMenu, 'Label',...
         '2 * Pile', ...
         'Callback', @twoTimesPile);
     
-scaleHomoMenu = uimenu(transformMenu, 'Label', 'Scale (group homomorphism)', 'Separator','on'); 
-scalings = 2:20;
-for scaling = scalings
-    uimenu(scaleHomoMenu, 'Label',...
-        sprintf('%g fold', scaling), ...
-        'Callback', @(figH, ~)scaleHomomorphism(figH, scaling));
+if 1|| ~isdeployed()
+    scaleHomoMenu = uimenu(transformMenu, 'Label', 'Scale (group homomorphism)', 'Separator','on'); 
+    scalings = 2:20;
+    for scaling = scalings
+        uimenu(scaleHomoMenu, 'Label',...
+            sprintf('%g fold', scaling), ...
+            'Callback', @(figH, ~)scaleHomomorphism(figH, scaling));
+    end
 end
 
 %% Menu: Drop deterministic
@@ -730,18 +732,31 @@ function scaleHomomorphism(figH, scaling)
     end
     N = size(S, 1);
     Nnew = scaling*(N+1)-1;
-    if Nnew > 50
-        choice = questdlg('The calculation of the group homomorphism for sandpiles with a width or height larger than 50 can take very long. Continue anyways?', ...
+    if Nnew > 35
+        choice = questdlg('The calculation of the group homomorphism for sandpiles with a width or height larger than 35 can take very long. Continue anyways?', ...
             'Long calculations', ...
             'Yes','No', 'No');
         if strcmpi(choice, 'No')
             return;
         end
     end
-    
-    [c1, c2, time] = pile2coord(S);
-    S = double(coord2pile(c1,c2, time, scaling, 'typeName', 'int64'));
-    plotMain(S, figH);
+    if isempty(which('vpi'))
+        if isempty(which('sym'))
+            typeName = 'double';
+        else
+            typeName = 'sym';
+        end
+    else
+        typeName = 'vpi';
+    end
+    try
+        [c1, c2, time] = pile2coord(S, 'typeName', typeName);
+        S = coord2pile(c1,c2, time, scaling, 'typeName', typeName, 'returnTypeName', 'double');
+        plotMain(S, figH);
+    catch ex
+        errordlg(sprintf('Could not scale configuration: %s',ex.message), 'Error occured');
+        return;
+    end
 end
 function determineCoordinates(figH)
     S = getPile(figH);
@@ -757,19 +772,32 @@ function determineCoordinates(figH)
             return;
         end
     end
-    
-    [c1, c2, t] = pile2coord(S);
-    c1Coords = ['[', sprintf('%g, ', c1(1:end-1)), sprintf('%g', c1(end)), ']'];
-    c2Coords = ['[', sprintf('%g, ', c2(1:end-1)), sprintf('%g', c1(end)), ']'];
-    
-    
-    h = msgbox({...
-                sprintf('Time: %d/%d', t(1), t(2)), ...
-                sprintf('c1: %s', c1Coords), ...
-                sprintf('c2: %s', c2Coords) ...
-              }, 'Coordinates of sandpile');
-    setWindowIcon(h);
-    h.Color = ones(1,3);
+    if isempty(which('vpi'))
+        if isempty(which('sym'))
+            typeName = 'double';
+        else
+            typeName = 'sym';
+        end
+    else
+        typeName = 'vpi';
+    end
+     try
+        [c1, c2, t] = pile2coord(S, 'typeName', typeName, 'returnTypeName', 'double');
+        c1Coords = ['[', sprintf('%g, ', c1(1:end-1)), sprintf('%g', c1(end)), ']'];
+        c2Coords = ['[', sprintf('%g, ', c2(1:end-1)), sprintf('%g', c1(end)), ']'];
+
+
+        h = msgbox({...
+                    sprintf('Time: %d/%d', t(1), t(2)), ...
+                    sprintf('c1: %s', c1Coords), ...
+                    sprintf('c2: %s', c2Coords) ...
+                  }, 'Coordinates of sandpile');
+        setWindowIcon(h);
+        h.Color = ones(1,3);
+    catch ex
+         errordlg(sprintf('Could not determine coordinates: %s',ex.message), 'Invalid Input');
+         return;
+     end
 end
 function plotMainRelax(S, figH)
     figH = ancestor(figH, 'figure');

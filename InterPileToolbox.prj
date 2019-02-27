@@ -7,7 +7,7 @@
     <param.summary>Interactive user interface for the Abelian sandpile model</param.summary>
     <param.description>For more information on Interpile or on the harmonic Abelian sandpile identity dynamics, visit the project's website https://langmo.github.io/interpile/ .</param.description>
     <param.screenshot>${PROJECT_ROOT}\resources\splash.png</param.screenshot>
-    <param.version>1.1</param.version>
+    <param.version>1.2</param.version>
     <param.output>${PROJECT_ROOT}\InterPileToolbox.mltbx</param.output>
     <param.products.name>
       <item>MATLAB Compiler</item>
@@ -98,13 +98,17 @@
       <file>${PROJECT_ROOT}\src\continueMovie.m</file>
       <file>${PROJECT_ROOT}\src\continueScalingMovie.m</file>
       <file>${PROJECT_ROOT}\src\continueTimeMovie.m</file>
+      <file>${PROJECT_ROOT}\src\coord2pile.m</file>
+      <file>${PROJECT_ROOT}\src\custom_potentials</file>
       <file>${PROJECT_ROOT}\src\defaultPotentials.m</file>
       <file>${PROJECT_ROOT}\src\defineMaskDialog.fig</file>
       <file>${PROJECT_ROOT}\src\defineMaskDialog.m</file>
       <file>${PROJECT_ROOT}\src\defineSandpileDialog.fig</file>
       <file>${PROJECT_ROOT}\src\defineSandpileDialog.m</file>
       <file>${PROJECT_ROOT}\src\determineAvalancheDistributionStoch.m</file>
+      <file>${PROJECT_ROOT}\src\diagHarmonic.m</file>
       <file>${PROJECT_ROOT}\src\domainMasks.m</file>
+      <file>${PROJECT_ROOT}\src\evenDiagHarmonic.m</file>
       <file>${PROJECT_ROOT}\src\generateDetFrames.m</file>
       <file>${PROJECT_ROOT}\src\generateDropZone.m</file>
       <file>${PROJECT_ROOT}\src\generateMaskFrames.m</file>
@@ -127,7 +131,18 @@
       <file>${PROJECT_ROOT}\src\movieWaitbar.m</file>
       <file>${PROJECT_ROOT}\src\null_piles</file>
       <file>${PROJECT_ROOT}\src\nullPile.m</file>
+      <file>${PROJECT_ROOT}\src\numRecurrentStates.m</file>
+      <file>${PROJECT_ROOT}\src\numStatesInHarmonic.m</file>
+      <file>${PROJECT_ROOT}\src\oddDiagHarmonic.m</file>
+      <file>${PROJECT_ROOT}\src\periodicHarmonic.m</file>
+      <file>${PROJECT_ROOT}\src\pile2coord.m</file>
+      <file>${PROJECT_ROOT}\src\pile2graph.m</file>
+      <file>${PROJECT_ROOT}\src\pile2potential.m</file>
+      <file>${PROJECT_ROOT}\src\pile2tree.m</file>
       <file>${PROJECT_ROOT}\src\pileColors.m</file>
+      <file>${PROJECT_ROOT}\src\plotDistances.m</file>
+      <file>${PROJECT_ROOT}\src\plotPile.m</file>
+      <file>${PROJECT_ROOT}\src\plotTree.m</file>
       <file>${PROJECT_ROOT}\src\potentialC.m</file>
       <file>${PROJECT_ROOT}\src\potentialCross.m</file>
       <file>${PROJECT_ROOT}\src\potentialDoubleT.m</file>
@@ -143,12 +158,15 @@
       <file>${PROJECT_ROOT}\src\scalingMovieDialog.fig</file>
       <file>${PROJECT_ROOT}\src\scalingMovieDialog.m</file>
       <file>${PROJECT_ROOT}\src\setWindowIcon.m</file>
+      <file>${PROJECT_ROOT}\src\spanningTreeViewer.m</file>
       <file>${PROJECT_ROOT}\src\square45.m</file>
       <file>${PROJECT_ROOT}\src\timeMovieDialog.fig</file>
       <file>${PROJECT_ROOT}\src\timeMovieDialog.m</file>
       <file>${PROJECT_ROOT}\src\toDistribution.m</file>
       <file>${PROJECT_ROOT}\src\toDistributionReal.m</file>
       <file>${PROJECT_ROOT}\src\toNonRecurrent.m</file>
+      <file>${PROJECT_ROOT}\src\tree2pile.m</file>
+      <file>${PROJECT_ROOT}\src\tropicalDynamics.m</file>
     </fileset.rootfiles>
     <fileset.depfun.included />
     <fileset.depfun.excluded />

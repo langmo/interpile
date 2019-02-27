@@ -20,13 +20,8 @@ function harmonic = evenDiagHarmonic(dz, direction, varargin)
 
 p = inputParser;
 addOptional(p,'typeName', 'double');
-addOptional(p,'symbolicCalculations', false);
 parse(p,varargin{:});
-if p.Results.symbolicCalculations
-    typeName = 'sym';
-else
-    typeName = p.Results.typeName;
-end
+typeName = p.Results.typeName;
 
 if direction == 1
     dz = dz+1;
@@ -66,14 +61,27 @@ function H = harmonicEven(Y,X, typeName)
 maxY = max(abs(Y(:)));
 maxX = max(abs(X(:)));
 
-H = arrayfun(@(y,x) harmonicEvenValue(y, x, maxY, maxX, typeName), Y, X);
+if strcmpi(typeName, 'vpi')
+    H = vpi(zeros(size(Y)));
+    for i=1:numel(Y)
+        H(i) = harmonicEvenValue(Y(i), X(i), maxY, maxX, typeName);
+    end
+else
+    H = arrayfun(@(y,x) harmonicEvenValue(y, x, maxY, maxX, typeName), Y, X);
+end
 end
 
 function H = harmonicOdd(Y,X, typeName)
 maxY = max(abs(Y(:)));
 maxX = max(abs(X(:)));
-
-H = arrayfun(@(y,x) harmonicOddValue(y, x, maxY, maxX, typeName), Y, X);
+if strcmpi(typeName, 'vpi')
+    H = vpi(zeros(size(Y)));
+    for i=1:numel(Y)
+        H(i) = harmonicOddValue(Y(i), X(i), maxY, maxX, typeName);
+    end
+else
+    H = arrayfun(@(y,x) harmonicOddValue(y, x, maxY, maxX, typeName), Y, X);
+end
 end
 
 function h = harmonicEvenValue(y,x, maxY, maxX, typeName)
@@ -82,12 +90,12 @@ persistent HsaveEven;
 maxY = max([maxY, (size(HsaveEven, 1)-1)/2, abs(y)]);
 maxX = max([maxX, (size(HsaveEven, 2)-1)/2, abs(x)]);
 
-if isempty(HsaveEven) || ~checkType(HsaveEven, typeName)
+if isempty(HsaveEven) || ~Types.istype(HsaveEven, typeName)
     % create new matrix to store already known values.
-    HsaveEven = repmat(nanValue(typeName), 2*maxY+1, 2*maxX+1);
+    HsaveEven = Types.nanValue(2*maxY+1, 2*maxX+1, typeName);
 elseif size(HsaveEven, 1)<2*maxY+1 || size(HsaveEven, 2)<2*maxX+1
     % Extend matrix to store already known values.
-    Hnew = repmat(nanValue(typeName), 2*maxY+1, 2*maxX+1);
+    Hnew = Types.nanValue(2*maxY+1, 2*maxX+1, typeName);
     dy = maxY - (size(HsaveEven, 1)-1)/2;
     dx = maxX - (size(HsaveEven, 2)-1)/2;
     Hnew(1+dy:2*maxY+1-dy, 1+dx:2*maxX+1-dx) = HsaveEven;
@@ -95,19 +103,18 @@ elseif size(HsaveEven, 1)<2*maxY+1 || size(HsaveEven, 2)<2*maxX+1
 end
 
 % check if value already known
-oldVal = HsaveEven(maxY+y+1, maxX+x+1);
-if ~isNanValue(oldVal, typeName)
-    h = loadValue(oldVal, typeName);
+h = Types.getElem(HsaveEven, maxY+y+1, maxX+x+1);
+if ~Types.isnan(h)
     return;
 end
 
 % calculate value.
 if y < -x
     % default case 1
-    h = cast2type(0, typeName);
+    h = Types.cast2type(0, typeName);
 elseif x==0 && y==0
     % default case 2
-    h = cast2type(1, typeName);
+    h = Types.cast2type(1, typeName);
 else
     % calculate recursively.
     d = y+x;
@@ -124,7 +131,7 @@ else
                 -harmonicEvenValue(y+1,x-1, maxY, maxX, typeName)...
                 -harmonicEvenValue(y,x-2, maxY, maxX, typeName);
         else
-            h = cast2type(0, typeName);
+            h = Types.cast2type(0, typeName);
         end
     else
         e = (x-y)/2;
@@ -157,7 +164,7 @@ else
 end
 
 % store value in matrix
-HsaveEven(maxY+y+1, maxX+x+1) = saveValue(h, typeName);
+HsaveEven(maxY+y+1, maxX+x+1) = Types.toElem(h, typeName);
 end
 
 
@@ -169,12 +176,12 @@ persistent HsaveOdd;
 maxY = max([maxY, (size(HsaveOdd, 1)-1)/2, abs(y)]);
 maxX = max([maxX, (size(HsaveOdd, 2)-1)/2, abs(x)]);
 
-if isempty(HsaveOdd) || ~checkType(HsaveOdd, typeName)
+if isempty(HsaveOdd) || ~Types.istype(HsaveOdd, typeName)
     % create new matrix to store already known values.
-    HsaveOdd = repmat(nanValue(typeName), 2*maxY+1, 2*maxX+1);
+    HsaveOdd = Types.nanValue(2*maxY+1, 2*maxX+1, typeName);
 elseif size(HsaveOdd, 1)<2*maxY+1 || size(HsaveOdd, 2)<2*maxX+1
     % Extend matrix to store already known values.
-    Hnew = repmat(nanValue(typeName), max(2*maxY+1, size(HsaveOdd, 1)), max(2*maxX+1, size(HsaveOdd, 2)));
+    Hnew = Types.nanValue(2*maxY+1, 2*maxX+1, typeName);
     
     dy = maxY - (size(HsaveOdd, 1)-1)/2;
     dx = maxX - (size(HsaveOdd, 2)-1)/2;
@@ -183,22 +190,21 @@ elseif size(HsaveOdd, 1)<2*maxY+1 || size(HsaveOdd, 2)<2*maxX+1
 end
 
 % check if value already known
-oldVal = HsaveOdd(maxY+y+1, maxX+x+1);
-if ~isNanValue(oldVal, typeName)
-    h = loadValue(oldVal, typeName);
+h = Types.getElem(HsaveOdd, maxY+y+1, maxX+x+1);
+if ~Types.isnan(h)
     return;
 end
 
 % calculate value.
 if y <= -x
     % default case 1
-    h = cast2type(0, typeName);
+    h = Types.cast2type(0, typeName);
 elseif x==1 && y==0
     % default case 2
-    h = cast2type(-1, typeName);
+    h = Types.cast2type(-1, typeName);
 elseif x==0 && y==1
     % default case 3
-    h = cast2type(1, typeName);
+    h = Types.cast2type(1, typeName);
 else
     % calculate recursively.
     d = y+x;
@@ -215,7 +221,7 @@ else
                 -harmonicOddValue(y+1,x-1, maxY, maxX, typeName)...
                 -harmonicOddValue(y,x-2, maxY, maxX, typeName);
         else
-            h = cast2type(0, typeName);
+            h = Types.cast2type(0, typeName);
         end
     else
         e = (x-y)/2;
@@ -248,49 +254,6 @@ else
 end
 
 % store value in matrix
-HsaveOdd(maxY+y+1, maxX+x+1) = saveValue(h, typeName);
+HsaveOdd(maxY+y+1, maxX+x+1) = Types.toElem(h, typeName);
 
-end
-
-function value = nanValue(typeName)
-if strcmpi(typeName, 'double') || strcmpi(typeName, 'single')
-    value = NaN;
-elseif strcmpi(typeName, 'sym')
-    value = {[]};
-else
-    value = intmax(typeName);
-end
-end
-function result = checkType(value, typeName)
-    if strcmpi(typeName, 'sym')
-        result = iscell(value);
-    else
-        result = strcmpi(class(value), typeName);
-    end
-end
-function value = loadValue(value, typeName)
-    if strcmpi(typeName, 'sym')
-        value = value{1};        
-    end
-end
-function value = saveValue(value, typeName)
-    if strcmpi(typeName, 'sym')
-        value = {value};        
-    end
-end
-function result = isNanValue(value, typeName)
-if strcmpi(typeName, 'double') || strcmpi(typeName, 'single')
-    result = isnan(value);
-elseif strcmpi(typeName, 'sym')
-    result = isnan(value{1});
-else
-    result = value == intmax(typeName);
-end
-end
-function result = cast2type(value, typeName)
-    if strcmpi(typeName, 'sym')
-        result = sym(value);
-    else
-        result = cast(value, typeName);
-    end
 end
