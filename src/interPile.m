@@ -272,14 +272,12 @@ uimenu(transformMenu, 'Label',...
         '2 * Pile', ...
         'Callback', @twoTimesPile);
     
-if 1|| ~isdeployed()
-    scaleHomoMenu = uimenu(transformMenu, 'Label', 'Scale (group homomorphism)', 'Separator','on'); 
-    scalings = 2:20;
-    for scaling = scalings
-        uimenu(scaleHomoMenu, 'Label',...
-            sprintf('%g fold', scaling), ...
-            'Callback', @(figH, ~)scaleHomomorphism(figH, scaling));
-    end
+scaleHomoMenu = uimenu(transformMenu, 'Label', 'Scale (group homomorphism)', 'Separator','on'); 
+scalings = 2:20;
+for scaling = scalings
+    uimenu(scaleHomoMenu, 'Label',...
+        sprintf('%g fold', scaling), ...
+        'Callback', @(figH, ~)scaleHomomorphism(figH, scaling));
 end
 
 %% Menu: Drop deterministic
@@ -732,28 +730,27 @@ function scaleHomomorphism(figH, scaling)
     end
     N = size(S, 1);
     Nnew = scaling*(N+1)-1;
-    if Nnew > 35
-        choice = questdlg('The calculation of the group homomorphism for sandpiles with a width or height larger than 35 can take very long. Continue anyways?', ...
+    if Nnew > 45
+        choice = questdlg('The calculation of the group homomorphism for sandpiles with a width or height larger than 45 can take very long. Continue anyways?', ...
             'Long calculations', ...
             'Yes','No', 'No');
         if strcmpi(choice, 'No')
             return;
         end
     end
-    if isempty(which('vpi'))
-        if isempty(which('sym'))
-            typeName = 'double';
-        else
-            typeName = 'sym';
-        end
-    else
+    
+    if ~isempty(which('sym'))
+        typeName = 'sym';
+    elseif ~isempty(which('vpi'))
         typeName = 'vpi';
+    else
+        typeName = 'double';
     end
     try
-        [c1, c2, time] = pile2coord(S, 'typeName', typeName);
+        [c1, c2, time] = pile2coord(S, 'typeName', typeName, 'returnTypeName', 'double');
         S = coord2pile(c1,c2, time, scaling, 'typeName', typeName, 'returnTypeName', 'double');
         plotMain(S, figH);
-    catch ex
+    catch ex  
         errordlg(sprintf('Could not scale configuration: %s',ex.message), 'Error occured');
         return;
     end
@@ -772,14 +769,12 @@ function determineCoordinates(figH)
             return;
         end
     end
-    if isempty(which('vpi'))
-        if isempty(which('sym'))
-            typeName = 'double';
-        else
-            typeName = 'sym';
-        end
-    else
+    if ~isempty(which('sym'))
+        typeName = 'sym';
+    elseif ~isempty(which('vpi'))
         typeName = 'vpi';
+    else
+        typeName = 'double';
     end
      try
         [c1, c2, t] = pile2coord(S, 'typeName', typeName, 'returnTypeName', 'double');

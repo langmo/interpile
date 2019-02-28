@@ -1,4 +1,4 @@
-function [c1, c2, varargout] = pile2coord(S, varargin)
+function [c1, c2, time] = pile2coord(S, varargin)
 
 % Copyright (C) 2019 Moritz Lang
 % 
@@ -19,22 +19,20 @@ function [c1, c2, varargout] = pile2coord(S, varargin)
 % https://langmo.github.io/interpile/
 
 if ~isempty(which('sym'))
-    internalTypeName = 'sym';
+    typeName = 'sym';
 elseif ~isempty(which('vpi'))
-    internalTypeName = 'vpi';
+    typeName = 'vpi';
 else
-    internalTypeName = 'double';
+    typeName = 'double';
 end
 p = inputParser;
 addOptional(p,'numericThreshold', 1e-3);
-addOptional(p,'internalTypeName', internalTypeName);
-addOptional(p,'typeName', 'double');
-addOptional(p,'returnTypeName', '');
+addOptional(p,'typeName', typeName);
+addOptional(p,'returnTypeName', 'double');
 parse(p,varargin{:});
 
 numericThreshold = p.Results.numericThreshold;
 typeName = p.Results.typeName;
-internalTypeName = p.Results.internalTypeName;
 if isempty(p.Results.returnTypeName)
     returnTypeName = typeName;
 else
@@ -116,7 +114,7 @@ T2 = [...
 
 T = [T1;T2]';
 
-if strcmpi(internalTypeName, 'vpi')
+if strcmpi(typeName, 'vpi')
     [cN, cD] = solveRational(T,S, 'typeName', 'vpi');
     c1 = [0; cN(1:size(T1, 1)); 0];
     c2 = [0; cN(1+size(T2, 1):end); 0];
@@ -139,18 +137,11 @@ if strcmpi(internalTypeName, 'vpi')
         c2 = [c2(1:N)', 0, c2(N+1:end)'];
     end
 
-    if nargout() == 2
-        if strcmpi(returnTypeName, 'double')
-            c1 = Types.cast2type(double(c1)/double(cD));
-            c2 = Types.cast2type(double(c2)/double(cD));
-        end
-    else
-        c1 = Types.cast2type(c1, returnTypeName);
-        c2 = Types.cast2type(c2, returnTypeName);
-        cD = Types.cast2type(cD, returnTypeName);
-        varargout{1} = [1, cD];
-    end
-elseif strcmpi(internalTypeName, 'sym')
+    c1 = Types.cast2type(c1, returnTypeName);
+    c2 = Types.cast2type(c2, returnTypeName);
+    cD = Types.cast2type(cD, returnTypeName);
+    time = [1, cD];
+elseif strcmpi(typeName, 'sym')
     %% symbolic calculations (more robust, probably, but slower)
     c = Types.cast2type(T, 'sym') \ Types.cast2type(S, 'sym');
     c1 = [0; c(1:size(T1, 1)); 0];
@@ -174,34 +165,29 @@ elseif strcmpi(internalTypeName, 'sym')
         c2 = [c2(1:N)', 0, c2(N+1:end)'];
     end
 
-    if nargout() == 2
-        c1 = Types.cast2type(c1, returnTypeName);
-        c2 = Types.cast2type(c2, returnTypeName);
-    else
-        [c1_a,c1_b]=numden(c1);
-        [c2_a,c2_b]=numden(c2);
-        t_b = 1;
-        for c_b = [c1_b, c2_b]
-            t_b = lcm(t_b, c_b);
-        end
-        c1 = c1_a .* (t_b ./ c1_b);
-        c2 = c2_a .* (t_b ./ c2_b);
-
-        t_a = 0;
-        for c = [c1, c2]
-            t_a = gcd(t_a, c);
-        end
-        if t_a ~= 0
-            c1 = c1 ./ t_a;
-            c2 = c2 ./ t_a;
-        end
-        
-        c1 = Types.cast2type(c1, returnTypeName);
-        c2 = Types.cast2type(c2, returnTypeName);
-        t_a = Types.cast2type(t_a, returnTypeName);
-        t_b = Types.cast2type(t_b, returnTypeName);
-        varargout{1} = [t_a, t_b];
+    [c1_a,c1_b]=numden(c1);
+    [c2_a,c2_b]=numden(c2);
+    t_b = 1;
+    for c_b = [c1_b, c2_b]
+        t_b = lcm(t_b, c_b);
     end
+    c1 = c1_a .* (t_b ./ c1_b);
+    c2 = c2_a .* (t_b ./ c2_b);
+
+    t_a = 0;
+    for c = [c1, c2]
+        t_a = gcd(t_a, c);
+    end
+    if t_a ~= 0
+        c1 = c1 ./ t_a;
+        c2 = c2 ./ t_a;
+    end
+
+    c1 = Types.cast2type(c1, returnTypeName);
+    c2 = Types.cast2type(c2, returnTypeName);
+    t_a = Types.cast2type(t_a, returnTypeName);
+    t_b = Types.cast2type(t_b, returnTypeName);
+    time = [t_a, t_b];
 else
     %% numeric calculations (the numeric error is quite significant, but its faster...so maybe for some kind of first approximation useful)
     c = T \ S;
@@ -242,32 +228,27 @@ else
     [c1_a,c1_b]=rat(c1, numericThreshold);
     [c2_a,c2_b]=rat(c2, numericThreshold);
     
-    if nargout() == 2
-        c1 = Types.cast2type(c1_a./c1_b, returnTypeName);
-        c2 = Types.cast2type(c2_a./c2_b, returnTypeName);
-    else
-        t_b = 1;
-        for c_b = [c1_b, c2_b]
-            t_b = lcm(t_b, c_b);
-        end
-        c1 = c1_a .* (t_b ./ c1_b);
-        c2 = c2_a .* (t_b ./ c2_b);
-
-        t_a = 0;
-        for c = [c1, c2]
-            t_a = gcd(t_a, c);
-        end
-        if t_a ~= 0
-            c1 = c1 ./ t_a;
-            c2 = c2 ./ t_a;
-        end
-        
-        c1 = Types.cast2type(c1, returnTypeName);
-        c2 = Types.cast2type(c2, returnTypeName);
-        t_a = Types.cast2type(t_a, returnTypeName);
-        t_b = Types.cast2type(t_b, returnTypeName);
-        varargout{1} = [t_a, t_b];
+   t_b = 1;
+    for c_b = [c1_b, c2_b]
+        t_b = lcm(t_b, c_b);
     end
+    c1 = c1_a .* (t_b ./ c1_b);
+    c2 = c2_a .* (t_b ./ c2_b);
+
+    t_a = 0;
+    for c = [c1, c2]
+        t_a = gcd(t_a, c);
+    end
+    if t_a ~= 0
+        c1 = c1 ./ t_a;
+        c2 = c2 ./ t_a;
+    end
+
+    c1 = Types.cast2type(c1, returnTypeName);
+    c2 = Types.cast2type(c2, returnTypeName);
+    t_a = Types.cast2type(t_a, returnTypeName);
+    t_b = Types.cast2type(t_b, returnTypeName);
+    time = [t_a, t_b];
 end
 
 end

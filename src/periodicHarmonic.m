@@ -43,11 +43,11 @@ for id = -2*maxXY:1:2*maxXY
     end
     if coeff1(abs(coeffID)) ~= 0
         harmonicFct = harmFun(id,1, 'typeName', typeName);
-        H = H + sign(coeffID)*coeff1(abs(coeffID)) * harmonicFct(Y, X);
+        H = H + sign(coeffID).*coeff1(abs(coeffID)) .* harmonicFct(Y, X);
     end
     if coeff2(abs(coeffID)) ~= 0
         harmonicFct = harmFun(id,2, 'typeName', typeName);
-        H = H + sign(coeffID)*coeff2(abs(coeffID)) * harmonicFct(Y, X);
+        H = H + sign(coeffID).*coeff2(abs(coeffID)) .* harmonicFct(Y, X);
     end
 end
 

@@ -100,15 +100,16 @@ end
 end
 
 function h = harmonicEvenValue(y,x, maxY, maxX, typeName)
-persistent HsaveEven;
+persistent HsaveEven HsaveEvenType;
 maxY = max([maxY, (size(HsaveEven, 1)-1)/2, abs(y)]);
 maxX = max([maxX, (size(HsaveEven, 2)-1)/2, abs(x)]);
-if isempty(HsaveEven) || ~Types.istype(HsaveEven, typeName)
+if isempty(HsaveEven) || ~strcmpi(HsaveEvenType, typeName)
     % create new matrix to store already known values.
-    HsaveEven = Types.nanValue(2*maxY+1, 2*maxX+1, typeName);
+    HsaveEven = Types.container(2*maxY+1, 2*maxX+1, typeName);
+    HsaveEvenType = typeName;
 elseif size(HsaveEven, 1)<2*maxY+1 || size(HsaveEven, 2)<2*maxX+1
     % Extend matrix to store already known values.
-    Hnew = Types.nanValue(2*maxY+1, 2*maxX+1, typeName);
+    Hnew = Types.container(2*maxY+1, 2*maxX+1, typeName);
     dy = maxY - (size(HsaveEven, 1)-1)/2;
     dx = maxX - (size(HsaveEven, 2)-1)/2;
     Hnew(1+dy:2*maxY+1-dy, 1+dx:2*maxX+1-dx) = HsaveEven;
@@ -117,7 +118,7 @@ end
 
 % check if value already known
 h = Types.getElem(HsaveEven, maxY+y+1, maxX+x+1);
-if ~Types.isnan(h)
+if ~Types.isEmptyElem(h, typeName)
     return;
 end
 
@@ -182,17 +183,18 @@ end
 
 
 function h = harmonicNullValue(y,x, maxY, maxX, typeName)
-persistent HsaveNull;
+persistent HsaveNull HsaveNullType;
 maxY = max([maxY, (size(HsaveNull, 1)-1)/2, abs(y)]);
 maxX = max([maxX, (size(HsaveNull, 2)-1)/2, abs(x)]);
 x = abs(x); % completely symmetric
 y = abs(y);
-if isempty(HsaveNull) || ~Types.istype(HsaveNull, typeName)
+if isempty(HsaveNull) || ~strcmpi(HsaveNullType, typeName)
     % create new matrix to store already known values.
-    HsaveNull = Types.nanValue(2*maxY+1, 2*maxX+1, typeName);
+    HsaveNull = Types.container(2*maxY+1, 2*maxX+1, typeName);
+    HsaveNullType = typeName;
 elseif size(HsaveNull, 1)<2*maxY+1 || size(HsaveNull, 2)<2*maxX+1
     % Extend matrix to store already known values.
-    Hnew = Types.nanValue(2*maxY+1, 2*maxX+1, typeName);
+    Hnew = Types.container(2*maxY+1, 2*maxX+1, typeName);
     dy = maxY - (size(HsaveNull, 1)-1)/2;
     dx = maxX - (size(HsaveNull, 2)-1)/2;
     Hnew(1+dy:2*maxY+1-dy, 1+dx:2*maxX+1-dx) = HsaveNull;
@@ -201,7 +203,7 @@ end
 
 % check if value already known
 h = Types.getElem(HsaveNull, maxY+y+1, maxX+x+1);
-if ~Types.isnan(h)
+if ~Types.isEmptyElem(h, typeName)
     return;
 end
 
@@ -271,15 +273,16 @@ HsaveNull(maxY+y+1, maxX+x+1) =  Types.toElem(h, typeName);
 end
 
 function h = harmonicOddValue(y,x, maxY, maxX, typeName)
-persistent HsaveOdd;
+persistent HsaveOdd HsaveOddType;
 maxY = max([maxY, (size(HsaveOdd, 1)-1)/2, abs(y)]);
 maxX = max([maxX, (size(HsaveOdd, 2)-1)/2, abs(x)]);
-if isempty(HsaveOdd) || ~Types.istype(HsaveOdd, typeName)
+if isempty(HsaveOdd) || ~strcmpi(HsaveOddType, typeName)
     % create new matrix to store already known values.
-    HsaveOdd = Types.nanValue(2*maxY+1, 2*maxX+1, typeName);
+    HsaveOdd = Types.container(2*maxY+1, 2*maxX+1, typeName);
+    HsaveOddType = typeName;
 elseif size(HsaveOdd, 1)<2*maxY+1 || size(HsaveOdd, 2)<2*maxX+1
     % Extend matrix to store already known values.
-    Hnew = Types.nanValue(2*maxY+1, 2*maxX+1, typeName);
+    Hnew = Types.container(2*maxY+1, 2*maxX+1, typeName);
     dy = maxY - (size(HsaveOdd, 1)-1)/2;
     dx = maxX - (size(HsaveOdd, 2)-1)/2;
     Hnew(1+dy:2*maxY+1-dy, 1+dx:2*maxX+1-dx) = HsaveOdd;
@@ -288,7 +291,7 @@ end
 
 % check if value already known
 h = Types.getElem(HsaveOdd, maxY+y+1, maxX+x+1);
-if ~Types.isnan(h)
+if ~Types.isEmptyElem(h, typeName)
     return;
 end
 
