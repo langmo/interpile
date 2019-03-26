@@ -14,7 +14,7 @@ classdef Types
                 end
                 value = repmat({[]}, dims);
             else
-                value = nanValue(varargin{:});
+                value = Types.nanValue(varargin{:});
             end
         end
         function value = nanValue(varargin)

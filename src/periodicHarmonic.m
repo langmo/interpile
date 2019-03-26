@@ -1,4 +1,4 @@
-function H = periodicHarmonic(Y,X, coeff1, coeff2, varargin)
+function [H, varargout] = periodicHarmonic(Y,X, coeff1, coeff2, varargin)
 
 % Copyright (C) 2019 Moritz Lang
 % 
@@ -26,8 +26,14 @@ end
 
 p = inputParser;
 addOptional(p,'typeName', 'double');
+addOptional(p,'returnTypeName', []);
 parse(p,varargin{:});
 typeName = p.Results.typeName;
+if isempty(p.Results.returnTypeName)
+    returnTypeName = typeName;
+else
+    returnTypeName = p.Results.returnTypeName;
+end
 
 maxXY = max(max(abs(X(:))), max(abs(Y(:))));
 
@@ -36,7 +42,11 @@ if strcmpi(typeName, 'vpi')
 else
     H = zeros(size(X), typeName);
 end
-for id = -2*maxXY:1:2*maxXY
+harmonicIds = -2*maxXY:1:2*maxXY;
+totalCoeff1 = NaN(1, length(harmonicIds));
+totalCoeff2 = NaN(1, length(harmonicIds));
+for k = 1:length(harmonicIds)
+    id = harmonicIds(k);
     coeffID = id2idx(id, length(coeff1));
     if isnan(coeffID)
         continue;
@@ -49,6 +59,15 @@ for id = -2*maxXY:1:2*maxXY
         harmonicFct = harmFun(id,2, 'typeName', typeName);
         H = H + sign(coeffID).*coeff2(abs(coeffID)) .* harmonicFct(Y, X);
     end
+    
+    totalCoeff1(k) = sign(coeffID).*coeff1(abs(coeffID));
+    totalCoeff2(k) = sign(coeffID).*coeff2(abs(coeffID));
+end
+
+H = Types.cast2type(H, returnTypeName);
+if nargout >= 3
+    varargout{1} = totalCoeff1;
+    varargout{2} = totalCoeff2;
 end
 
 

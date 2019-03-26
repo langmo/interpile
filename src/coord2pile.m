@@ -1,4 +1,4 @@
-function S = coord2pile(coeff1, coeff2, time, scaleFactor, varargin)
+function [S, varargout] = coord2pile(coeff1, coeff2, time, scaleFactor, varargin)
 
 % Copyright (C) 2019 Moritz Lang
 % 
@@ -58,7 +58,8 @@ Y = Y(1:N+2, 1:N+2);
 X = [X(2:end-1, 1), X(2:end-1, end), X(1, 2:end-1)', X(end, 2:end-1)'];
 Y = [Y(2:end-1, 1), Y(2:end-1, end), Y(1, 2:end-1)', Y(end, 2:end-1)'];
 
-H = (time(1)*periodicHarmonic(Y, X, coeff1, coeff2, 'typeName', typeName));
+[Hbase, totalCoeff1, totalCoeff2] = periodicHarmonic(Y, X, coeff1, coeff2, 'typeName', typeName);
+H = (time(1)*Hbase);
 assert(~any(any(double(mod(H, time(2))))), 'InterPile:HarmonicFunctionDivisibility', 'Harmonic function not divisible by time!');
 H = H / time(2);
 % minimum is anyways at the boundary...
@@ -76,6 +77,14 @@ S(1, :) = S(1, :) + H(:, 3)';
 S(end, :) = S(end, :) + H(:, 4)';
 
 S = Types.cast2type(relaxPile(S), returnTypeName);
+
+if nargout >= 3
+    varargout{1} = totalCoeff1;
+    varargout{2} = totalCoeff2;
+end
+if nargout >= 4
+    varargout{3} = time;
+end
 end
 
 function result = cast2type(value, typeName)
