@@ -150,7 +150,7 @@ if ~errorMsg
 end
 fieldName = findall(figH, 'Tag', 'fieldName');
 name = fieldName.String; 
-maskFct = @(y,x,N,M)eval(formula);
+maskFct = @(y,x,i,j,N,M)eval(formula);
 try
     figH.UserData.setMask(name, maskFct);
 catch ex
@@ -202,13 +202,15 @@ save(fullfile(dirName, [maskFileName, '.mat']), 'mask');
 figH.UserData.updateMasks();
 
 function errorMsg = checkMask(formula)
-maskFct = @(y,x,N,M)evalc(formula);
+maskFct = @(y,x,i,j,N,M)evalc(formula);
 height = 63;
 width = 63;
 X=repmat((0:width-1) - (width-1)/2, height, 1);
 Y=repmat(((0:height-1) - (height-1)/2)', 1, width);
+J=repmat((1:width), height, 1);
+I=repmat((1:height)', 1, width);
 try
-    maskFct(Y,X, height, width);
+    maskFct(Y,X,I,J, height, width);
 catch ex
     errorMsg = ex.message;
     return;

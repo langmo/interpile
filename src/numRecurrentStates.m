@@ -13,7 +13,7 @@ function varargout = numRecurrentStates(varargin)
 %   factors = numRecurrentStates(mask)
 %       Calculates the number of recurrent states for a domain
 %       corresponding to the non-zero values of the mask.
-%   factors = numRecurrentStates(..., method)
+%   factors = numRecurrentStates(..., 'method', method)
 %       Defines the method how the number of recurrent states is
 %       determined. 
 %       Options:
@@ -45,83 +45,94 @@ function varargout = numRecurrentStates(varargin)
 % For more information, visit the project's website at 
 % https://langmo.github.io/interpile/
 
-i = 1;
-if numel(varargin{i}) > 1
-    mask = varargin{i};
-    i = i+1;
+inputIdx = 1;
+if numel(varargin{inputIdx}) > 1
+    mask = varargin{inputIdx};
+    N = size(mask, 1);
+    M = size(mask, 2);
+    inputIdx = inputIdx+1;
 else
-    N = varargin{i};
-    i = i+1;
-    if numel(varargin) >= i && isnumeric(varargin{i}) && numel(varargin{i}) == 1
-        M = varargin{i};
-        i = i+1;
+    N = varargin{inputIdx};
+    inputIdx = inputIdx+1;
+    if numel(varargin) >= inputIdx && isnumeric(varargin{inputIdx}) && numel(varargin{inputIdx}) == 1
+        M = varargin{inputIdx};
+        inputIdx = inputIdx+1;
     else
         M = N;
     end
     mask = ones(N, M);
 end
 
-if numel(varargin) >= i && ischar(varargin{i})
-    methodString = varargin{i};
-    if strcmpi(methodString, 'laplacian')
-        method = 0;
-    elseif strcmpi(methodString, 'potential')
-        method = 1;
-    elseif strcmpi(methodString, 'potentialPolynoms')
-        method = 2;
-    else
-        error('InterPile:UnknownAlgorithm', 'The algorithm %s for the calculation of the number of recurrent states is unknown.', methodString);
-    end
-    i = i+1;
+if ~isempty(which('sym'))
+    typeName = 'sym';
+elseif ~isempty(which('vpi'))
+    typeName = 'vpi';
 else
-    methodString = 'potential';
-    method = 1;
+    typeName = 'double';
 end
-if numel(varargin) >= i
-    error('InterPile:TooManyArguments', 'Too many arguments provided for the calculation of the number of recurrent states.');
-end
+
+p = inputParser;
+addOptional(p,'method', 'potential');
+addOptional(p,'typeName', typeName);
+addOptional(p,'returnTypeName', 'double');
+parse(p,varargin{inputIdx:end});
+typeName = p.Results.typeName;
+returnTypeName = p.Results.returnTypeName;
+method = p.Results.method;
+
 if nargout > 1
     error('InterPile:TooManyReturnValues', 'The function either returns zero or one value.');
 end
-if method == 1
+if strcmpi(method, 'potential')
     % Calculate via potentials.
     startTime = tic();
-    maskExtended = zeros(size(mask, 1)+2, size(mask, 2)+2);
+    maskExtended = false(size(mask, 1)+2, size(mask, 2)+2);
     maskExtended(2:end-1, 2:end-1) = mask;
-    boundary = filter2([0,1,0;1,0,1;0,1,0], ~maskExtended);
-    boundary = boundary(2:end-1, 2:end-1);
-    boundary = boundary ~=0 & mask;
-    boundaryIdx = find(boundary);
-    P = NaN(length(boundaryIdx));
-    H0 = diagHarmonic(0,1);
-    P0 = generateDropZone(H0, size(mask, 1), size(mask, 2), mask, false, false);
-    P(1, : ) = P0(boundaryIdx);
-    nextIdx = 2;
+    
+    X=ceil(repmat((0:M+1) - (M+1)/2, N+2, 1));
+    Y=ceil(repmat(((0:N+1) - (N+1)/2)', 1, M+2));
+    
+    outerBoundary = filter2([0,1,0;1,0,1;0,1,0], maskExtended)>0;
+    outerBoundary(maskExtended) = false;
+    innerBoundary = filter2([0,1,0;1,0,1;0,1,0], ~maskExtended)>0;
+    innerBoundary(~maskExtended) = false;
+    
+    outerX = X(outerBoundary);
+    outerY = Y(outerBoundary);
+    
+    innerX = X(innerBoundary);
+    innerY = Y(innerBoundary);
+    
+    outer2inner = Types.cast2type(abs(repmat(innerX,1, length(outerX)) - repmat(outerX',length(innerX), 1))...
+        +abs(repmat(innerY,1, length(outerY)) - repmat(outerY',length(innerY), 1)) == 1, typeName);
+    
+    
+    P = Types.zeros(sum(innerBoundary(:)), typeName); % potential matrix
+    nextIdx = 1;
     h = 1;
     while nextIdx <= size(P, 1)
         for sign = [-1, 1]
-            for type = 1:2
-                if type==1 && h==1 && sign== 1
-                    continue;
-                end
-                Hi = diagHarmonic(sign*h, type);
-                Pi = generateDropZone(Hi, size(mask, 1), size(mask, 2), mask, false, false);
-                Pbound = Pi(boundaryIdx);
-                if any(Pbound)
-                    P(nextIdx, :) = Pbound;
+            for direction = 1:2
+                harmonic = evenDiagHarmonic(sign*h, direction, 'typeName', typeName);
+                Pi = outer2inner * harmonic(outerY,outerX);
+                if any(Pi)
+                    P(nextIdx, :) = Pi;
                     nextIdx = nextIdx+1;
                     if nextIdx > size(P, 1)
                         break;
                     end
                 end
             end
+            if nextIdx > size(P, 1)
+                break;
+            end
         end
         h = h+1;
     end
     % Calculate determinant. Symbolic toolbox seems to be more precise...
-    factors = double(factor(abs(det(sym(P)))));
+    factors = Types.cast2type(factor(abs(det(P))), returnTypeName);
     calculationTime = toc(startTime);
-elseif method == 2    
+elseif strcmpi(method, 'potentialPolynoms')
     % Calculate via potential polynoms.
     startTime = tic();
     maskExtended = zeros(size(mask, 1)+2, size(mask, 2)+2);
@@ -165,9 +176,9 @@ elseif method == 2
         h = h+1;
     end
     % Calculate determinant. Symbolic toolbox seems to be more precise...
-    factors = double(factor(abs(det(sym(P))))); 
+    factors = Types.cast2type(factor(abs(det(Types.cast2type(P, typeName)))), returnTypeName); 
     calculationTime = toc(startTime);
-else
+elseif strcmpi(method, 'laplacian')
     % Calculate via graph laplacian.
     startTime = tic();
     maskIDs = find(mask);
@@ -179,8 +190,10 @@ else
         Delta(i, :) = A(maskIDs);
     end
     % Calculate determinant. Symbolic toolbox seems to be more precise...
-    factors = double(factor(abs(det(sym(Delta)))));
+    factors = Types.cast2type(factor(abs(det(Types.cast2type(Delta, typeName)))), returnTypeName);
     calculationTime = toc(startTime);
+else
+    error('InterPile:UnknownAlgorithm', 'The method %s for the calculation of the number of recurrent states is unknown.', method);
 end
 
 % Return or print results.
@@ -195,10 +208,10 @@ else
     if numStates < 8
         numStatesString = sprintf('%g', 10^numStates);
     else
-        numStatesString = sprintf('%ge+%02.0g', 10^mod(numStates, 1), floor(numStates));
+        numStatesString = sprintf('%ge+%02.0f', 10^mod(numStates, 1), floor(numStates));
     end
     
-    fprintf('Method:\t\t\t\t\t%s\n', methodString);
+    fprintf('Method:\t\t\t\t\t%s\n', method);
     fprintf('#recurrent:\t\t\t\t%s\n', numStatesString);
     fprintf('Factorization:\t\t\t%s\n', factorsString);
     fprintf('Calculation Time:\t\t%.2fs\n', calculationTime);

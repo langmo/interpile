@@ -948,7 +948,7 @@ function updateCustomMasks(figH)
             load(maskPath, 'mask');
             uimenu(fieldCustomMasks, 'Label',...
                 mask.name, ...
-                'Callback', @(figH, ~)setMask(figH, mask.name, @(y,x,N,M)eval(mask.formula)));
+                'Callback', @(figH, ~)setMask(figH, mask.name, @(y,x,i,j,N,M)eval(mask.formula)));
         end
     end
 end
@@ -960,10 +960,12 @@ function setMask(figH, maskName, maskFct)
     width = size(S, 2);
     height = size(S, 1);
     
+    X=repmat((0:width-1) - (width-1)/2, height, 1);
+    Y=repmat(((0:height-1) - (height-1)/2)', 1, width);
+    J=repmat((1:width), height, 1);
+    I=repmat((1:height)', 1, width);
     try
-        X=repmat((0:width-1) - (width-1)/2, height, 1);
-        Y=repmat(((0:height-1) - (height-1)/2)', 1, width);
-        mask = maskFct(Y,X, height, width);
+        mask = maskFct(Y,X,I,J, height, width);
     catch ex
         errordlg(sprintf('Could not set mask: %s',ex.message), 'Invalid Input');
         return;
