@@ -18,11 +18,19 @@ function H = scaleHarmonic(H0, scaling, varargin)
 % For more information, visit the project's website at 
 % https://langmo.github.io/interpile/
 
-typeName = Types.gettype(H0);
+if ~isempty(which('sym'))
+    typeName = 'sym';
+elseif ~isempty(which('vpi'))
+    typeName = 'vpi';
+else
+    typeName = 'double';
+end
+
+returnTypeName = Types.gettype(H0);
 
 p = inputParser;
 addOptional(p,'typeName', typeName);
-addOptional(p,'returnTypeName', []);
+addOptional(p,'returnTypeName', returnTypeName);
 addOptional(p,'verify', false);
 parse(p,varargin{:});
 

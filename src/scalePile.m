@@ -18,11 +18,19 @@ function S = scalePile(S, scaling, varargin)
 % For more information, visit the project's website at 
 % https://langmo.github.io/interpile/
 
-typeName = Types.gettype(S);
+if ~isempty(which('sym'))
+    typeName = 'sym';
+elseif ~isempty(which('vpi'))
+    typeName = 'vpi';
+else
+    typeName = 'double';
+end
+
+returnTypeName = Types.gettype(S);
 
 p = inputParser;
 addOptional(p,'typeName', typeName);
-addOptional(p,'returnTypeName', []);
+addOptional(p,'returnTypeName', returnTypeName);
 parse(p,varargin{:});
 
 typeName = p.Results.typeName;
@@ -38,16 +46,24 @@ if ~exist('scaling', 'var') || isempty(scaling)
     scaling = 3;
 end
 
-H = pile2harmonic(S, 'typeName', typeName, 'returnTypeName', typeName);
+[H, divisor] = pile2harmonic(S, 'typeName', typeName, 'returnTypeName', typeName);
 H = scaleHarmonic(H, scaling, 'typeName', typeName, 'returnTypeName', typeName);
 N = size(H, 1)-2;
 M = size(H, 2)-2;
-P = [H(1, 2:end-1); H(end, 2:end-1); H(2:end-1, 1)'; H(2:end-1, end)'];
-P = P-min(min(P));
+P = {H(1, 2:end-1)/divisor; H(end, 2:end-1)/divisor; H(2:end-1, 1)/divisor; H(2:end-1, end)/divisor};
+% Subtract minimum. We do this a bit more complicated, since cellfun
+% without UniformOutput=true behaves strange for VPIs...
+minPs = cellfun(@(x)min(x), P, 'UniformOutput', false);
+minP = minPs{1};
+for i=2:length(minPs)
+    minP = min(minP, minPs{i});
+end
+P = cellfun(@(x)x-minP, P, 'UniformOutput', false);
+
 S = nullPile(N, M);
-S(1, :) = S(1, :) + P(1, :);
-S(end, :) = S(end, :) + P(2, :);
-S(:, 1) = S(:, 1) + P(3, :)';
-S(:, end) = S(:, end) + P(4, :)';
+S(1, :) = S(1, :) + P{1};
+S(end, :) = S(end, :) + P{2};
+S(:, 1) = S(:, 1) + P{3};
+S(:, end) = S(:, end) + P{4};
 S= Types.cast2type(relaxPile(S), returnTypeName);
 end
