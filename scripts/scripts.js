@@ -91,13 +91,11 @@ function createMostRecent(releases, elementID)
 	{
 		releasesElement.removeChild(releasesElement.firstChild);
 	}
-	var latestStable = -1;
 	var header;
 	for(var i=0; i<releases.length; i++)
 	{
 		if(!releases[i].prerelease)
 		{
-			latestStable = i;
 			header = document.createElement("p");
 			var headerText = document.createElement("span");
 			if(i==0)
@@ -114,19 +112,19 @@ function createMostRecent(releases, elementID)
 			releasesElement.appendChild(document.createElement("hr"));
 			break;
 		}
-	}
-	if(latestStable != 0)
-	{
-		header = document.createElement("p");
-		var headerText = document.createElement("span");
-		headerText.appendChild(document.createTextNode("Latest Pre-Release: "));
-		headerText.style.fontWeight="bold";
-		header.appendChild(headerText);
-		header.appendChild(document.createElement("br"));
-		header.appendChild(document.createTextNode(releases[0].name+" ("+releases[0].tag_name+")"));
-		releasesElement.appendChild(header);
-		releasesElement.appendChild(displayReleaseLinks(releases[0]));		
-		releasesElement.appendChild(document.createElement("hr"));
+		else if(i==0)
+		{
+			header = document.createElement("p");
+			var headerText = document.createElement("span");
+			headerText.appendChild(document.createTextNode("Latest Pre-Release: "));
+			headerText.style.fontWeight="bold";
+			header.appendChild(headerText);
+			header.appendChild(document.createElement("br"));
+			header.appendChild(document.createTextNode(releases[0].name+" ("+releases[0].tag_name+")"));
+			releasesElement.appendChild(header);
+			releasesElement.appendChild(displayReleaseLinks(releases[0]));		
+			releasesElement.appendChild(document.createElement("hr"));
+		}
 	}
 }
 window.onload = function()
