@@ -78,23 +78,20 @@ end
 %% Separate values which correspond to drop zone, and the ones which correspond to the board
 F = H;
 F(~extended) = 0;
+if requirePositive
+    minVal = min(min(F));
+    if minVal < 0
+        H = H-minVal;
+        F = F-minVal;
+        F(~extended) = 0;
+    end
+end
 % Shrink F to drop zone
 F = filter2(addFilter, F, 'valid');
 F(~mask) = 0;
 
 H(~table) =0;
 H = H(2:end-1, 2:end-1);
-
-if requirePositive
-    minVal = min(min(min(H)), min(min(F)));
-    H = H-minVal;
-    F = F-minVal;
-    H(~mask) =0;
-    F(~boundary) = 0;
-end
-%H = H(2:end-1, 2:end-1);
-
-
 
 %% divide by greatest common divisor
 if divideByCommonDivisor
@@ -117,12 +114,9 @@ end
 DeltaH = filter2([0,1,0;1,-4,1;0,1,0], H);
 DeltaH(~mask) = 0;
 DeltaH(boundary) = 0;
-%DeltaH(extended(2:end-1, 2:end-1)) = 0;
 if ~all(all(abs(DeltaH)==0))
     warning('InterPile:NotHarmonic', 'Function to generate potential is not harmonic.');
 end
-%assert(all(all(H>=0)), 'InterPile:HarmonicFunctionNegative', 'Harmonic function takes negative values.');
-%assert(all(all(F>=0)), 'InterPile:PotentialNegative', 'Potential takes negative values');
 
 %% Return values
 if nargout > 1
