@@ -18,7 +18,13 @@ function H = scaleHarmonic(H0, scaling, varargin)
 % For more information, visit the project's website at 
 % https://langmo.github.io/interpile/
 
-typeName = Types.gettype(H0);
+if ~isempty(which('sym'))
+    typeName = 'sym';
+elseif ~isempty(which('vpi'))
+    typeName = 'vpi';
+else
+    typeName = 'double';
+end
 
 p = inputParser;
 addOptional(p,'typeName', typeName);
@@ -199,7 +205,7 @@ if verify
     assert(all(all(abs(test(2:end-1, 2:end-1))<100*eps)), 'InterPile:ScalingFailed', 'Scaled harmonic is not harmonic.');
 end
 
-Types.cast2type(H, returnTypeName);
+H = Types.cast2type(H, returnTypeName);
 end
 function Hcorr = extendTop(Hcorr, yIdx)
     for y = yIdx-1:-1:1

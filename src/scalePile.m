@@ -18,7 +18,13 @@ function S = scalePile(S, scaling, varargin)
 % For more information, visit the project's website at 
 % https://langmo.github.io/interpile/
 
-typeName = Types.gettype(S);
+if ~isempty(which('sym'))
+    typeName = 'sym';
+elseif ~isempty(which('vpi'))
+    typeName = 'vpi';
+else
+    typeName = 'double';
+end
 
 p = inputParser;
 addOptional(p,'typeName', typeName);
@@ -42,12 +48,20 @@ H = pile2harmonic(S, 'typeName', typeName, 'returnTypeName', typeName);
 H = scaleHarmonic(H, scaling, 'typeName', typeName, 'returnTypeName', typeName);
 N = size(H, 1)-2;
 M = size(H, 2)-2;
-P = [H(1, 2:end-1); H(end, 2:end-1); H(2:end-1, 1)'; H(2:end-1, end)'];
-P = P-min(min(P));
+Pt = H(1, 2:end-1);
+Pb = H(end, 2:end-1);
+Pl = H(2:end-1, 1); 
+Pr = H(2:end-1, end);
+minVal = min([min(Pt), min(Pb), min(Pl), min(Pr)]);
+Pt = Pt - minVal;
+Pb = Pb - minVal;
+Pl = Pl - minVal;
+Pr = Pr - minVal;
+
 S = nullPile(N, M);
-S(1, :) = S(1, :) + P(1, :);
-S(end, :) = S(end, :) + P(2, :);
-S(:, 1) = S(:, 1) + P(3, :)';
-S(:, end) = S(:, end) + P(4, :)';
+S(1, :) = S(1, :) + Pt;
+S(end, :) = S(end, :) + Pb;
+S(:, 1) = S(:, 1) + Pl;
+S(:, end) = S(:, end) + Pr;
 S= Types.cast2type(relaxPile(S), returnTypeName);
 end

@@ -55,6 +55,6 @@ Y=round(Y+0.5);
 X = X(1:N+2, 1:N+2);
 Y = Y(1:N+2, 1:N+2);
 
-Hint = periodicHarmonic(Y, X, c1, c2, 'returnTypeName', typeName, 'typeName', typeName);
+[Hint, c1tot, c2tot] = periodicHarmonic(Y, X, c1, c2, 'returnTypeName', typeName, 'typeName', typeName);
 H = Types.cast2type(Hint*time(1)/time(2), returnTypeName);
 end

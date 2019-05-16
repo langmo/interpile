@@ -75,7 +75,7 @@ end
 
 function idx = id2idx(id, numCoeff)
     id = id + (numCoeff+1)/2;
-    vals = [(1:numCoeff), (numCoeff+1)/2, (-1).^(1:numCoeff).*(numCoeff:-1:1), (numCoeff+1)/2];
+    vals = [(1:numCoeff), NaN, (-1).^(1:numCoeff).*(numCoeff:-1:1), NaN];
     while id <= 0
         id = id+length(vals);
     end
