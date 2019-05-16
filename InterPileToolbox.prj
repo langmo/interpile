@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.toolbox" plugin-version="1.0">
-  <configuration build-checksum="4108859787" file="C:\interpile\InterPileToolbox.prj" location="C:\interpile" name="InterPileToolbox" target="target.toolbox" target-name="Package Toolbox">
+  <configuration build-checksum="3402607453" file="C:\interpile\interpile\InterPileToolbox.prj" location="C:\interpile\interpile" name="InterPileToolbox" target="target.toolbox" target-name="Package Toolbox">
     <param.appname>InterPileToolbox</param.appname>
     <param.authnamewatermark>Moritz Lang</param.authnamewatermark>
     <param.email />
@@ -118,6 +118,7 @@
       <file>${PROJECT_ROOT}\src\generateTimeMovie.m</file>
       <file>${PROJECT_ROOT}\src\harmonicFunctions.m</file>
       <file>${PROJECT_ROOT}\src\harmonicHalfplane.m</file>
+      <file>${PROJECT_ROOT}\src\harmonicTemplate.template</file>
       <file>${PROJECT_ROOT}\src\icon.tif</file>
       <file>${PROJECT_ROOT}\src\imagHarmonicMonomial.m</file>
       <file>${PROJECT_ROOT}\src\interPile.m</file>
@@ -128,6 +129,7 @@
       <file>${PROJECT_ROOT}\src\maskMovieDialog.m</file>
       <file>${PROJECT_ROOT}\src\movieDialog.m</file>
       <file>${PROJECT_ROOT}\src\movieWaitbar.m</file>
+      <file>${PROJECT_ROOT}\src\null_piles</file>
       <file>${PROJECT_ROOT}\src\nullPile.m</file>
       <file>${PROJECT_ROOT}\src\numRecurrentStates.m</file>
       <file>${PROJECT_ROOT}\src\numStatesInHarmonic.m</file>
@@ -135,6 +137,7 @@
       <file>${PROJECT_ROOT}\src\periodicHarmonic.m</file>
       <file>${PROJECT_ROOT}\src\pile2coord.m</file>
       <file>${PROJECT_ROOT}\src\pile2graph.m</file>
+      <file>${PROJECT_ROOT}\src\pile2harmonic.m</file>
       <file>${PROJECT_ROOT}\src\pile2potential.m</file>
       <file>${PROJECT_ROOT}\src\pile2tree.m</file>
       <file>${PROJECT_ROOT}\src\pileColors.m</file>
@@ -148,11 +151,14 @@
       <file>${PROJECT_ROOT}\src\potentialL.m</file>
       <file>${PROJECT_ROOT}\src\potentials.m</file>
       <file>${PROJECT_ROOT}\src\potentialT.m</file>
+      <file>${PROJECT_ROOT}\src\printHarmonic.m</file>
       <file>${PROJECT_ROOT}\src\printPile.m</file>
       <file>${PROJECT_ROOT}\src\randomSandPile.m</file>
       <file>${PROJECT_ROOT}\src\randomSquare45.m</file>
       <file>${PROJECT_ROOT}\src\realHarmonicMonomial.m</file>
       <file>${PROJECT_ROOT}\src\relaxPile.m</file>
+      <file>${PROJECT_ROOT}\src\scaleHarmonic.m</file>
+      <file>${PROJECT_ROOT}\src\scalePile.m</file>
       <file>${PROJECT_ROOT}\src\scalingMovieDialog.fig</file>
       <file>${PROJECT_ROOT}\src\scalingMovieDialog.m</file>
       <file>${PROJECT_ROOT}\src\setWindowIcon.m</file>
@@ -172,7 +178,7 @@
     <fileset.depfun.excluded />
     <fileset.package />
     <build-deliverables>
-      <file location="C:\interpile" name="InterPileToolbox.mltbx" optional="false">C:\interpile\InterPileToolbox.mltbx</file>
+      <file location="C:\interpile\interpile" name="InterPileToolbox.mltbx" optional="false">C:\interpile\interpile\InterPileToolbox.mltbx</file>
     </build-deliverables>
     <workflow />
     <matlab>
@@ -188,7 +194,7 @@
       <vista>false</vista>
       <linux>false</linux>
       <solaris>false</solaris>
-      <osver>10.0</osver>
+      <osver>6.1</osver>
       <os32>false</os32>
       <os64>true</os64>
       <arch>win64</arch>

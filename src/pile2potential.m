@@ -1,4 +1,4 @@
-function P = pile2potential(S, positive)
+function P = pile2potential(S, positive, varargin)
 
 % Copyright (C) 2019 Moritz Lang
 % 
@@ -21,14 +21,39 @@ function P = pile2potential(S, positive)
 if nargin < 1
     S = 3*ones(14,14);
 end
-if nargin < 2
+if nargin < 2 || isempty(positive)
     positive = false;
 end
-Delta = cast([0,1,0;1,-4,1;0,1,0], class(S));
 
-S = [zeros(1, size(S, 2)+2); ...
-    zeros(size(S, 1), 1), S-cast(nullPile(size(S, 1), size(S, 2)), class(S)), zeros(size(S, 1), 1);...
-    zeros(1, size(S, 2)+2)];
+if ~isempty(which('sym'))
+    typeName = 'sym';
+elseif ~isempty(which('vpi'))
+    typeName = 'vpi';
+else
+    typeName = 'double';
+end
+
+returnTypeName = Types.gettype(S);
+
+p = inputParser;
+addOptional(p,'typeName', typeName);
+addOptional(p,'returnTypeName', returnTypeName);
+parse(p,varargin{:});
+
+typeName = p.Results.typeName;
+if isempty(p.Results.returnTypeName)
+    returnTypeName = typeName;
+else
+    returnTypeName = p.Results.returnTypeName;
+end
+
+
+
+Delta = Types.cast2type([0,1,0;1,-4,1;0,1,0], typeName);
+
+S = [Types.zeros(1, size(S, 2)+2, typeName); ...
+    Types.zeros(size(S, 1), 1, typeName), S-Types.cast2type(nullPile(size(S, 1), size(S, 2)), typeName), Types.zeros(size(S, 1), 1, typeName);...
+    Types.zeros(1, size(S, 2)+2, typeName)];
 
 N = size(S, 1);
 M = size(S, 2);
@@ -76,4 +101,5 @@ if positive
     P(:, 1) = P(:, 1)-minP;
     P(:, end) = P(:, end)-minP;
 end
+P = Types.cast2type(P, returnTypeName);
 end

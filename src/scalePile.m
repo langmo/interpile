@@ -26,9 +26,11 @@ else
     typeName = 'double';
 end
 
+returnTypeName = Types.gettype(S);
+
 p = inputParser;
 addOptional(p,'typeName', typeName);
-addOptional(p,'returnTypeName', []);
+addOptional(p,'returnTypeName', returnTypeName);
 parse(p,varargin{:});
 
 typeName = p.Results.typeName;
@@ -44,24 +46,24 @@ if ~exist('scaling', 'var') || isempty(scaling)
     scaling = 3;
 end
 
-H = pile2harmonic(S, 'typeName', typeName, 'returnTypeName', typeName);
+[H, divisor] = pile2harmonic(S, 'typeName', typeName, 'returnTypeName', typeName);
 H = scaleHarmonic(H, scaling, 'typeName', typeName, 'returnTypeName', typeName);
 N = size(H, 1)-2;
 M = size(H, 2)-2;
-Pt = H(1, 2:end-1);
-Pb = H(end, 2:end-1);
-Pl = H(2:end-1, 1); 
-Pr = H(2:end-1, end);
-minVal = min([min(Pt), min(Pb), min(Pl), min(Pr)]);
-Pt = Pt - minVal;
-Pb = Pb - minVal;
-Pl = Pl - minVal;
-Pr = Pr - minVal;
+P = {H(1, 2:end-1)/divisor; H(end, 2:end-1)/divisor; H(2:end-1, 1)/divisor; H(2:end-1, end)/divisor};
+% Subtract minimum. We do this a bit more complicated, since cellfun
+% without UniformOutput=true behaves strange for VPIs...
+minPs = cellfun(@(x)min(x), P, 'UniformOutput', false);
+minP = minPs{1};
+for i=2:length(minPs)
+    minP = min(minP, minPs{i});
+end
+P = cellfun(@(x)x-minP, P, 'UniformOutput', false);
 
 S = nullPile(N, M);
-S(1, :) = S(1, :) + Pt;
-S(end, :) = S(end, :) + Pb;
-S(:, 1) = S(:, 1) + Pl;
-S(:, end) = S(:, end) + Pr;
+S(1, :) = S(1, :) + P{1};
+S(end, :) = S(end, :) + P{2};
+S(:, 1) = S(:, 1) + P{3};
+S(:, end) = S(:, end) + P{4};
 S= Types.cast2type(relaxPile(S), returnTypeName);
 end

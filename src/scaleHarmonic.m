@@ -26,9 +26,11 @@ else
     typeName = 'double';
 end
 
+returnTypeName = Types.gettype(H0);
+
 p = inputParser;
 addOptional(p,'typeName', typeName);
-addOptional(p,'returnTypeName', []);
+addOptional(p,'returnTypeName', returnTypeName);
 addOptional(p,'verify', false);
 parse(p,varargin{:});
 

@@ -70,6 +70,10 @@ spaceText(1:max(length(spaceText), length(p.Results.spaceText)))=p.Results.space
 if isempty(fileName)
     fID = 1;
 else
+    [filepath,~,~] = fileparts(fileName);
+    if ~isempty(filepath) && ~exist(filepath, 'dir')
+        mkdir(filepath);
+    end
     fID = fopen(fileName, 'w');
     fTemplate = fopen('harmonicTemplate.template', 'r');
     tline = fgetl(fTemplate);

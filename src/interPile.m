@@ -724,14 +724,16 @@ function countRecurrent(figH)
 end
 function scaleHomomorphism(figH, scaling)
     S = getPile(figH);
-    if any(isinf(S(:))) || size(S, 1) ~= size(S, 2) || mod(size(S, 1), 2)
-        errordlg('Function only supported for NxN square domains with N even.', 'Invalid Input');
+    if any(isinf(S(:)))
+        errordlg('Function only supported on NxM rectangular domains.', 'Invalid Input');
         return;
     end
     N = size(S, 1);
     Nnew = scaling*(N+1)-1;
-    if Nnew > 45
-        choice = questdlg('The calculation of the group homomorphism for sandpiles with a width or height larger than 45 can take very long. Continue anyways?', ...
+    M = size(S, 2);
+    Mnew = scaling*(M+1)-1;
+    if max(Nnew, Mnew) > 45
+        choice = questdlg('The calculation of the group homomorphism for sandpiles with a resulting width or height greater than 45 can take very long. Continue anyways?', ...
             'Long calculations', ...
             'Yes','No', 'No');
         if strcmpi(choice, 'No')
@@ -747,9 +749,10 @@ function scaleHomomorphism(figH, scaling)
         typeName = 'double';
     end
     try
-        [c1, c2, time] = pile2coord(S, 'typeName', typeName, 'returnTypeName', 'double');
-        S = coord2pile(c1,c2, time, scaling, 'typeName', typeName, 'returnTypeName', 'double');
-        plotMain(S, figH);
+       S = scalePile(S, scaling, 'typeName', typeName, 'returnTypeName', 'double');
+       % [c1, c2, time] = pile2coord(S, 'typeName', typeName, 'returnTypeName', 'double');
+       % S = coord2pile(c1,c2, time, scaling, 'typeName', typeName, 'returnTypeName', 'double');
+       plotMain(S, figH);
     catch ex  
         errordlg(sprintf('Could not scale configuration: %s',ex.message), 'Error occured');
         return;
