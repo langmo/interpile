@@ -703,7 +703,7 @@ function countRecurrent(figH)
     numStatesTotal = 4^(numVertices);
     
     calcTime = tic();
-    factorsStatesPotential = numRecurrentStates(mask, 'potential');
+    factorsStatesPotential = numRecurrentStates(mask, 'method', 'laplacian');
     timePotential = toc(calcTime);
     factorsStringPotential = '';
     for f = unique(factorsStatesPotential)

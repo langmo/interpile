@@ -152,6 +152,8 @@ classdef Types
                 if strcmpi(class(value), 'sym')
                     temp = arrayfun(@(x)vpi(char(x)), value, 'UniformOutput', false);
                     result = reshape([temp{:}], size(value));
+                elseif islogical(value)
+                    result = vpi(double(value));
                 else
                     result = vpi(value);
                 end
