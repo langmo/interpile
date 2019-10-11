@@ -2,29 +2,27 @@ function varargout = calculateInvariantFactors(varargin)
 % Calculates the invariant factors of the sandpile group.
 % Usage:
 %   factors = calculateInvariantFactors(N)
-%       Calculates the number of recurrent states for an NxN square domain.
-%       Instead of the number of recurrent states, the factorization is
-%       returned. This is usually more precise for large numbers of
-%       recurrent states due to rounding errors due to finite precision of
-%       double values. The number of recurrent states can be obtained by
-%       prod(factors).
+%       Calculates the invariant factors for an NxN square domain.
 %   factors = calculateInvariantFactors(N, M)
-%       Calculates the number of recurrent states for an NxM rectangular domain.
+%       Calculates the invariant factors for an NxM rectangular domain.
 %   factors = calculateInvariantFactors(mask)
-%       Calculates the number of recurrent states for a domain
-%       corresponding to the non-zero values of the mask.
+%       Calculates the invariant factors for a domain
+%       corresponding to the non-zero values of the mask. The mask must
+%       only contain 0s and 1s, otherwise it is interpreted as a matrix
+%       whose invariant factors should be calculated directly.
+%   factors = calculateInvariantFactors(laplacian)
+%       Calculates the invariant factor of the graph laplacian. The graph
+%       laplacian must contain at least one value unequal 0 or 1 to be not
+%       interpreted as a mask.
 %   factors = calculateInvariantFactors(..., 'method', method)
-%       Defines the method how the number of recurrent states is
-%       determined. 
+%       Defines the method how the invariant factors are determined. 
 %       Options:
-%        'potential' (default). The number of states is determined by the absolute
-%           value of the determinant of the matrix P, where each column of
+%        'potential' (default). By the smith normal form of the matrix P, where each column of
 %           P corresponds to the potential of one (non-zero) harmonic
 %           diagonal function, restricted to the boundary of the domain.
 %        'potentialPolynoms'. Same as 'potential', only with harmonics of
 %           polynomial type.
-%        'laplacian'. The number of states is determined by
-%           the absolute value of the determinant of the graph laplacian.
+%        'laplacian'. By the smith normal form of the graph laplacian.
 %       
 
 % Copyright (C) 2018, 2019 Moritz Lang
@@ -74,11 +72,19 @@ end
 p = inputParser;
 addOptional(p,'method', 'potential');
 addOptional(p,'typeName', typeName);
-addOptional(p,'returnTypeName', 'double');
+addOptional(p,'returnTypeName', []);
 parse(p,varargin{inputIdx:end});
 typeName = p.Results.typeName;
 returnTypeName = p.Results.returnTypeName;
-method = p.Results.method;
+if isempty(returnTypeName)
+    returnTypeName = typeName;
+end
+if all(all(mask==0 | mask==1))
+    method = p.Results.method;
+else
+    method = 'direct';
+end
+
 
 if nargout > 1
     error('InterPile:TooManyReturnValues', 'The function either returns zero or one value.');
@@ -130,9 +136,9 @@ if strcmpi(method, 'potential')
         h = h+1;
     end
     if strcmpi(typeName, 'sym')
-        invFactors = abs(diag(smithForm(P))');
+        invFactors = abs(diag(smithForm(Types.cast2type(P, typeName)))');
     else
-        [~,~,invFactors] = SNF(P);
+        [~,~,invFactors] = SNF(Types.cast2type(P, typeName));
     end
     
     calculationTime = toc(startTime);
@@ -205,13 +211,22 @@ elseif strcmpi(method, 'laplacian')
     end
     % Calculate determinant. Symbolic toolbox seems to be more precise...
     calculationTime = toc(startTime);
+elseif strcmpi(method, 'direct')
+    startTime = tic();
+    if strcmpi(typeName, 'sym')
+        invFactors = abs(diag(smithForm(Types.cast2type(mask, typeName)))');
+    else
+        [~,~,invFactors] = SNF(Types.cast2type(mask, typeName));
+    end
+    
+    calculationTime = toc(startTime);
 else
     error('InterPile:UnknownAlgorithm', 'The method %s for the calculation of the number of recurrent states is unknown.', method);
 end
 
 % Return or print results.
 if nargout > 0
-    varargout{1} = invFactors;
+    varargout{1} = Types.cast2type(invFactors, returnTypeName);
 else
     invFactors = invFactors(invFactors~=1);
     for f = 1:length(invFactors)
@@ -230,7 +245,7 @@ end
 
 end
 
-function [U, V, S] = SNF(A)
+function [U, V, S] = SNF(A, typeName)
 %
 %  This program determines the Smith Normal Form S of the M x N matrix A,
 %  where S = U*A*V with U and V unimodular.  The returned S is a vector of
@@ -240,8 +255,9 @@ function [U, V, S] = SNF(A)
 %  Adapted to Matlab with multiplier systems by Greg Wilson.
 %  Adapted to use variable precision integers, and multiplier system
 %  removed again, by Moritz Lang.
-
-typeName = class(A);
+if ~exist('typeName', 'var') || isempty(typeName)
+    typeName = class(A);
+end
 
 [M,N] = size(A);
 MPLUSN=M+N;
@@ -249,13 +265,12 @@ B = Types.zeros(MPLUSN, typeName);
 B(1:M,1:N) = A;
 
 L = min(M,N);
-S = vpi(zeros(L,1));
 
 % Set U = I and V = I
 B(1:M,N+1:MPLUSN) = Types.cast2type(eye(M), typeName);
 B(M+1:MPLUSN,1:N) = Types.cast2type(eye(N), typeName);
-U = vpi(eye(L));
-V = vpi(eye(L));
+U = Types.cast2type(eye(L), typeName);
+V = Types.cast2type(eye(L), typeName);
 
 K=1;
 while (K <= L)
@@ -353,8 +368,8 @@ while (K <= L)
     if (GOTO5 == 0)
         U = B(1:M,N+1:MPLUSN) * U;
         V = V * B(M+1:MPLUSN,1:N);
-        B(1:M,N+1:MPLUSN) = vpi(eye(M));
-        B(M+1:MPLUSN,1:N) = vpi(eye(N));
+        B(1:M,N+1:MPLUSN) = Types.cast2type(eye(M), typeName);
+        B(M+1:MPLUSN,1:N) =  Types.cast2type(eye(N), typeName);
         K = K + 1;
     end
     
