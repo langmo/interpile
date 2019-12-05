@@ -91,7 +91,7 @@ else
         axH.Position = [1,1,size(S, 2), size(S, 1)];
 
     else
-        width = 20;
+        width = 16;
         height = width/size(S, 2)*size(S, 1);
         
         fgh = figure('Units', 'centimeters', 'Position', [3,3, width+2*borderWidth, height+1.5+borderWidth], 'Color', ones(1,3));

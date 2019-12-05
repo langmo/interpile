@@ -19,6 +19,7 @@ function assembleMovie(filePath, configPath, timePerRound, smallMovie, scaling, 
 % https://langmo.github.io/interpile/
 
 mode = []; % forward declaration to circumvent error in Matlab.
+
 load(configPath);
 [~,~,ext] = fileparts(filePath);
 [folder, ~, ~] = fileparts(configPath);
@@ -86,6 +87,10 @@ while true
         if firstRound
             firstRound = false;
             fgh = printPile(S, [], [], true, 0);
+             ppp = fgh.Position;
+             ppp(1)=0;
+             ppp(2)=0;
+             fgh.Position = ppp;
             drawnow();
             if showText
                 pos = get(gca(), 'Position');
