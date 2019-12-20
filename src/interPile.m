@@ -775,22 +775,23 @@ function scaleHomomorphism(figH, scaling)
     Nnew = scaling*(N+1)-1;
     M = size(S, 2);
     Mnew = scaling*(M+1)-1;
-    if max(Nnew, Mnew) > 45
-        choice = questdlg('The calculation of the group homomorphism for sandpiles with a resulting width or height greater than 45 can take very long. Continue anyways?', ...
-            'Long calculations', ...
-            'Yes','No', 'No');
-        if strcmpi(choice, 'No')
-            return;
-        end
-    end
-    
-    if ~isempty(which('sym'))
-        typeName = 'sym';
-    elseif ~isempty(which('vpi'))
-        typeName = 'vpi';
-    else
-        typeName = 'double';
-    end
+%     if max(Nnew, Mnew) > 45
+%         choice = questdlg('The calculation of the group homomorphism for sandpiles with a resulting width or height greater than 45 can take very long. Continue anyways?', ...
+%             'Long calculations', ...
+%             'Yes','No', 'No');
+%         if strcmpi(choice, 'No')
+%             return;
+%         end
+%     end
+%     
+%     if ~isempty(which('sym'))
+%         typeName = 'sym';
+%     elseif ~isempty(which('vpi'))
+%         typeName = 'vpi';
+%     else
+%         typeName = 'double';
+%     end
+    typeName = 'double';
     try
        S = scalePile(S, scaling, 'typeName', typeName, 'returnTypeName', 'double');
        % [c1, c2, time] = pile2coord(S, 'typeName', typeName, 'returnTypeName', 'double');

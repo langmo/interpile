@@ -27,6 +27,8 @@ else
 end
 
 returnTypeName = Types.gettype(S);
+Norg = size(S, 1);
+Morg = size(S, 2);
 
 p = inputParser;
 addOptional(p,'typeName', typeName);
@@ -40,30 +42,35 @@ else
     returnTypeName = p.Results.returnTypeName;
 end
 
-S = Types.cast2type(S, typeName);
+Sorg = Types.cast2type(toNonRecurrent(S), typeName);
 
 if ~exist('scaling', 'var') || isempty(scaling)
     scaling = 3;
 end
 
-[H, divisor] = pile2harmonic(S, 'typeName', typeName, 'returnTypeName', typeName);
-H = scaleHarmonic(H, scaling, 'typeName', typeName, 'returnTypeName', typeName);
-N = size(H, 1)-2;
-M = size(H, 2)-2;
-P = {H(1, 2:end-1)/divisor; H(end, 2:end-1)/divisor; H(2:end-1, 1)/divisor; H(2:end-1, end)/divisor};
-% Subtract minimum. We do this a bit more complicated, since cellfun
-% without UniformOutput=true behaves strange for VPIs...
-minPs = cellfun(@(x)min(x), P, 'UniformOutput', false);
-minP = minPs{1};
-for i=2:length(minPs)
-    minP = min(minP, minPs{i});
+N = (Norg+1)*scaling -1;
+M = (Morg+1)*scaling -1;
+S = Types.zeros(N,M, typeName);
+idxNorigin = ceil(scaling/2);
+idxMorigin = ceil(scaling/2);
+flips = cell(2,2);
+for idxN = 1:scaling
+    for idxM = 1:scaling
+        flipN = mod(idxN-idxNorigin, 2)+1;
+        flipM = mod(idxM-idxMorigin, 2)+1;
+        if isempty(flips{flipN, flipM})
+            flips{flipN, flipM} = Sorg;
+            if flipN ~= 1
+                flips{flipN, flipM} = -flipud(flips{flipN, flipM});
+            end
+            if flipM ~= 1
+                flips{flipN, flipM} = -fliplr(flips{flipN, flipM});
+            end
+        end
+        S((idxN-1)*(Norg+1)+(1:Norg), (idxM-1)*(Morg+1)+(1:Morg)) = flips{flipN, flipM};
+    end
 end
-P = cellfun(@(x)x-minP, P, 'UniformOutput', false);
+S = toRecurrent(S);
 
-S = nullPile(N, M);
-S(1, :) = S(1, :) + P{1};
-S(end, :) = S(end, :) + P{2};
-S(:, 1) = S(:, 1) + P{3};
-S(:, end) = S(:, end) + P{4};
 S= Types.cast2type(relaxPile(S), returnTypeName);
 end
