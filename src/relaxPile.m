@@ -102,7 +102,7 @@ if strcmpi(typeName, 'double')
 
     while true
         % how often do we topple in the current step?
-        topplings = floor(max(S, 0)/4);
+        topplings = floor(S/4);
         if ~any(topplings(:))
             break;
         end
@@ -142,7 +142,7 @@ elseif strcmpi(typeName, 'sym')
         end
         
         % how often do we topple in the current step?
-        topplings = floor(max(S, 0)/4);
+        topplings = floor(S/4);
         minTopplings = min(topplings(:));
         if minTopplings > 1
             % every vertex topples at least twice. This means that there
@@ -187,7 +187,7 @@ else
             break;
         end
         % how often do we topple in the current step?
-        topplings = Types.idivide(max(S, Types.cast2type(0, typeName)), 4);
+        topplings = Types.idivide(S, 4);
         
         minTopplings = min(topplings(:));
         if minTopplings > 1

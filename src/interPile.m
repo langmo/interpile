@@ -539,11 +539,11 @@ modeH = uibuttongroup('visible','off', 'Units', 'centimeters',...
     'Position', [0.25, 0.25, 5, 5], 'Title', 'Actions',...
     'Tag', 'modeGroup',...
     'BackgroundColor', [1,1,1]);
-addToppleH = uicontrol('Style','Radio','String','Drop particle',...
+addToppleH = uicontrol('Style','Radio','String','Add particle',...
     'Units', 'centimeters','pos',[0.25,4.5,3,0.5],'parent', modeH,'HandleVisibility','off',...
     'Tag', 'modeAdd',...
     'BackgroundColor', [1,1,1]);
-uicontrol('Style','Radio','String','Remove particle',...
+uicontrol('Style','Radio','String','Subtract particle',...
     'Units', 'centimeters','pos',[0.25,3.75,3,0.5],'parent', modeH,'HandleVisibility','off',...
     'Tag', 'modeDecrease',...
     'BackgroundColor', [1,1,1]);
@@ -844,7 +844,7 @@ function plotMainRelax(S, figH)
     figH = ancestor(figH, 'figure');
     modeAutoTopple = findall(figH, 'Tag', 'modeAutoTopple');
 
-    shouldRelax = (modeAutoTopple.Value == 1) && any(any(S>3));
+    shouldRelax = (modeAutoTopple.Value == 1) && any(any(S>3|S<0));
     plotMain(S, figH, ~shouldRelax);
     if shouldRelax
         drawnow();
@@ -1132,12 +1132,9 @@ function dropParticle(figH, ~)
                 S(yData, xData+1) = S(yData, xData+1) +1;
             end
             plotMainRelax(S, figH);
-        else
-            if S(yData, xData)<=0
-                return;
-            end
+        elseif selectedChoice == findall(figH, 'Tag', 'modeDecrease')
             S(yData, xData) = S(yData, xData) -1;
-            plotMain(S, figH);
+            plotMainRelax(S, figH);
         end
     end
 end
