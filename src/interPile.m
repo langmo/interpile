@@ -312,7 +312,7 @@ for h=1:length(harmonicFcts)
     subMenu = uimenu(potentialMenu, 'Label', sprintf('Potential of %s = %s', harmonicFctIdentifier, harmonicFctName));
     uimenu(subMenu, 'Label',...
             'Custom amount', ...
-            'Callback', @(figH, ~)dropPotential(figH, round(askForInput(figH, sprintf('Number of times to add potential of harmonic %s:',harmonicFctName))), harmonicFct));
+            'Callback', @(figH, ~)dropPotential(figH, askForInput(figH, sprintf('Number of times to add potential of harmonic %s:',harmonicFctName)), harmonicFct));
     sizes = 2.^(0:8);
     for mySize = sizes
         name = sprintf('%g x potential of %s = %s', mySize, harmonicFctIdentifier, harmonicFctName);
@@ -1239,7 +1239,7 @@ function dropPotential(figH, k, harmonicFct)
     height = size(S, 1);
     width = size(S, 2);
     mask = ~isinf(S);
-    S = S + k*generateDropZone(harmonicFct, height, width, mask);
+    S = S + floor(k*generateDropZone(harmonicFct, height, width, mask));
     plotMainRelax(S, figH);
 end
 

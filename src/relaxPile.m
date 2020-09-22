@@ -103,6 +103,7 @@ if strcmpi(typeName, 'double')
     while true
         % how often do we topple in the current step?
         topplings = floor(S/4);
+        topplings(isinf(S))=0;
         if ~any(topplings(:))
             break;
         end
