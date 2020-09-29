@@ -75,7 +75,11 @@ while true
             St = zeros([size(S)+[1,1], 3]);
             for i=1:size(S, 1)
                 for j=1:size(S, 2)
-                    St(i, j, :) = colors(S(i, j)+1, :);
+                    if isinf(S(i, j))
+                        St(i, j, :) = ones(1,3);
+                    else
+                        St(i, j, :) = colors(S(i, j)+1, :);
+                    end
                 end
             end
             writeVideo(v, uint8(round(St*255)));
