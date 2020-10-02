@@ -22,19 +22,26 @@ if nargin < 1
     width = 12;
     height = 6;
 end
-assert(mod(width, 2)==0&&mod(height, 2)==0, 'Only NxM domains supported for N and M even.');
+totalWidth = width;
+if mod(width, 2)~=0
+    width = width-1;
+end
+totalHeight = height;
+if mod(height, 2)~=0
+    height = height-1;
+end
 
-S = zeros(height, width);
+S = zeros(totalHeight, totalWidth);
 S(height/2, 1:width/2) = S(height/2, 1:width/2) + (1:width/2);
 S(height/2+1, 1:width/2) = S(height/2+1, 1:width/2) + (1:width/2);
 
-S(height/2, width/2+1:end) = S(height/2, width/2+1:end) + (width/2:-1:1);
-S(height/2+1, width/2+1:end) = S(height/2+1, width/2+1:end) + (width/2:-1:1);
+S(height/2, width/2+1:width) = S(height/2, width/2+1:width) + (width/2:-1:1);
+S(height/2+1, width/2+1:width) = S(height/2+1, width/2+1:width) + (width/2:-1:1);
 
 S(1:height/2, width/2) = S(1:height/2, width/2) + (1:height/2)';
 S(1:height/2, width/2+1) = S(1:height/2, width/2+1) + (1:height/2)';
 
-S(height/2+1:end, width/2) = S(height/2+1:end, width/2) + (height/2:-1:1)';
-S(height/2+1:end, width/2+1) = S(height/2+1:end, width/2+1) + (height/2:-1:1)';
+S(height/2+1:height, width/2) = S(height/2+1:height, width/2) + (height/2:-1:1)';
+S(height/2+1:height, width/2+1) = S(height/2+1:height, width/2+1) + (height/2:-1:1)';
 end
 
