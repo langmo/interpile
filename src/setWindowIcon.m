@@ -13,6 +13,7 @@ try
     [img] = imread(iconFile);
 
     oldWarn = warning('off', 'MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
+	warning('off', 'MATLAB:ui:javaframe:PropertyToBeRemoved');
     jimage = im2java(img);
     jframe=get(figureH, 'javaframe') ; %#ok<JAVFM>
     jIcon=javax.swing.ImageIcon(jimage);
