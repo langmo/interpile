@@ -1,4 +1,4 @@
-function fgh = printPile(S, fgh, rawPlot, lessColors, borderWidth)
+function fgh = printPile(S, fgh, rawPlot, lessColors, borderWidth, rawWidth)
 
 % Copyright (C) 2018 Moritz Lang
 % 
@@ -29,6 +29,9 @@ if nargin < 4 || isempty(lessColors)
 end
 if nargin < 5 || isempty(borderWidth)
     borderWidth = 0.5;
+end
+if nargin < 6 || isempty(rawWidth)
+    rawWidth = 16;
 end
 colors = pileColors();
 if lessColors
@@ -91,7 +94,7 @@ else
         axH.Position = [1,1,size(S, 2), size(S, 1)];
 
     else
-        width = 16;
+        width = rawWidth;
         height = width/size(S, 2)*size(S, 1);
         
         fgh = figure('Units', 'centimeters', 'Position', [3,3, width+2*borderWidth, height+1.5+borderWidth], 'Color', ones(1,3));

@@ -135,6 +135,13 @@ classdef Types
                 result = isnan(value);
             end
         end
+        function result = tostring(value)
+            if strcmpi(class(value), 'sym') || strcmpi(typeName, 'vpi')
+                result = char(value);
+            else
+                result = num2str(value, '%1.0f');
+            end
+        end
         function result = cast2type(value, typeName)
             if strcmpi(class(value), typeName)
                 result = value;

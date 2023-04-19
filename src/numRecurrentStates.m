@@ -70,11 +70,15 @@ elseif ~isempty(which('vpi'))
 else
     typeName = 'double';
 end
-
 p = inputParser;
 addOptional(p,'method', 'potential');
 addOptional(p,'typeName', typeName);
-addOptional(p,'returnTypeName', 'double');
+if nargout < 1
+    returnTypeName = typeName;
+else
+    returnTypeName = 'double';
+end
+addOptional(p,'returnTypeName', returnTypeName);
 parse(p,varargin{inputIdx:end});
 typeName = p.Results.typeName;
 returnTypeName = p.Results.returnTypeName;
@@ -115,7 +119,7 @@ if strcmpi(method, 'potential')
             for direction = 1:2
                 harmonic = evenDiagHarmonic(sign*h, direction, 'typeName', typeName);
                 Pi = outer2inner * harmonic(outerY,outerX);
-                if any(Pi)
+                if any(Pi ~= 0)
                     P(nextIdx, :) = Pi;
                     nextIdx = nextIdx+1;
                     if nextIdx > size(P, 1)
@@ -130,7 +134,9 @@ if strcmpi(method, 'potential')
         h = h+1;
     end
     % Calculate determinant. Symbolic toolbox seems to be more precise...
-    factors = Types.cast2type(factor(abs(det(P))), returnTypeName);
+    numStates = abs(det(P));
+    factors = Types.cast2type(factor(numStates), returnTypeName);
+    numStates = Types.cast2type(numStates, returnTypeName);
     calculationTime = toc(startTime);
 elseif strcmpi(method, 'potentialPolynoms')
     % Calculate via potential polynoms.
@@ -176,7 +182,9 @@ elseif strcmpi(method, 'potentialPolynoms')
         h = h+1;
     end
     % Calculate determinant. Symbolic toolbox seems to be more precise...
-    factors = Types.cast2type(factor(abs(det(Types.cast2type(P, typeName)))), returnTypeName); 
+    numStates = abs(det(Types.cast2type(P, typeName)));
+    factors = Types.cast2type(factor(numStates), returnTypeName); 
+    numStates = Types.cast2type(numStates, returnTypeName);
     calculationTime = toc(startTime);
 elseif strcmpi(method, 'laplacian')
     % Calculate via graph laplacian.
@@ -190,7 +198,9 @@ elseif strcmpi(method, 'laplacian')
         Delta(i, :) = A(maskIDs);
     end
     % Calculate determinant. Symbolic toolbox seems to be more precise...
-    factors = Types.cast2type(factor(abs(det(Types.cast2type(Delta, typeName)))), returnTypeName);
+    numStates = abs(det(Types.cast2type(Delta, typeName)));
+    factors = Types.cast2type(factor(numStates), returnTypeName);
+    numStates = Types.cast2type(numStates, returnTypeName);
     calculationTime = toc(startTime);
 else
     error('InterPile:UnknownAlgorithm', 'The method %s for the calculation of the number of recurrent states is unknown.', method);
@@ -202,17 +212,13 @@ if nargout > 0
 else
     factorsString = '';
     for f = unique(factors)
-        factorsString = sprintf('%s%1.0f^%1.0f ', factorsString, f, sum(factors==f));
-    end
-    numStates = sum(log10(factors));
-    if numStates < 8
-        numStatesString = sprintf('%g', 10^numStates);
-    else
-        numStatesString = sprintf('%ge+%02.0f', 10^mod(numStates, 1), floor(numStates));
+        numF = sum(arrayfun(@(x)isequal(x, f), factors, 'UniformOutput', true));
+        valString = Types.tostring(f);
+        factorsString = sprintf('%s%s^%1.0f ', factorsString, valString, numF);
     end
     
     fprintf('Method:\t\t\t\t\t%s\n', method);
-    fprintf('#recurrent:\t\t\t\t%s\n', numStatesString);
+    fprintf('#recurrent:\t\t\t\t%s\n', Types.tostring(numStates));
     fprintf('Factorization:\t\t\t%s\n', factorsString);
     fprintf('Calculation Time:\t\t%.2fs\n', calculationTime);
 end

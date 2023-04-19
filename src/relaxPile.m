@@ -37,8 +37,10 @@ switchThreshold = round(flintmax('double')/100);
 
 p = inputParser;
 addOptional(p,'returnTypeName', typeName);
+addOptional(p,'toppleNegative', true);
 parse(p,varargin{:});
 returnTypeName = p.Results.returnTypeName;
+toppleNegative = p.Results.toppleNegative;
 
 if nargout > 1
     % how often do we topple in total?
@@ -102,7 +104,11 @@ if strcmpi(typeName, 'double')
 
     while true
         % how often do we topple in the current step?
-        topplings = floor(S/4);
+        if toppleNegative
+            topplings = floor(S/4);
+        else
+            topplings = max(floor(S/4), 0);
+        end
         topplings(isinf(S))=0;
         if ~any(topplings(:))
             break;
@@ -143,7 +149,11 @@ elseif strcmpi(typeName, 'sym')
         end
         
         % how often do we topple in the current step?
-        topplings = floor(S/4);
+        if toppleNegative
+            topplings = floor(S/4);
+        else
+            topplings = max(floor(S/4), 0);
+        end
         minTopplings = min(topplings(:));
         if minTopplings > 1
             % every vertex topples at least twice. This means that there

@@ -78,7 +78,7 @@ while true
                     if isinf(S(i, j))
                         St(i, j, :) = ones(1,3);
                     else
-                        St(i, j, :) = colors(S(i, j)+1, :);
+                        St(i, j, :) = colors(max(S(i, j),0)+1, :);
                     end
                 end
             end

@@ -233,6 +233,9 @@ uimenu(fillMenu, 'Label',...
     'Custom Sandpile', ...
     'Callback', @(figH, ~)customFill(figH));
 uimenu(fillMenu, 'Label',...
+    'Background Pattern', ...
+    'Callback', @(figH, ~)customBackground(figH));
+uimenu(fillMenu, 'Label',...
     'All 0', ...
     'Callback', @(figH, ~)fillAll(figH, 0),'Separator','on');
 uimenu(fillMenu, 'Label',...
@@ -278,12 +281,27 @@ uimenu(transformMenu, 'Label',...
         '2 * Pile', ...
         'Callback', @twoTimesPile);
     
-scaleHomoMenu = uimenu(transformMenu, 'Label', 'Scale (group homomorphism)', 'Separator','on'); 
-scalings = 2:20;
+scaleHomoMenu = uimenu(transformMenu, 'Label', 'Scale (sandpile monomorphism)', 'Separator','on'); 
+scalings = 2:40;
 for scaling = scalings
     uimenu(scaleHomoMenu, 'Label',...
         sprintf('%g fold', scaling), ...
         'Callback', @(figH, ~)scaleHomomorphism(figH, scaling));
+end
+scaleHomoMenu = uimenu(transformMenu, 'Label', 'Scale (sandpile epimorphism)'); 
+scalings = 2:40;
+for scaling = scalings
+    uimenu(scaleHomoMenu, 'Label',...
+        sprintf('%g fold', scaling), ...
+        'Callback', @(figH, ~)scaleEpimorphism(figH, scaling));
+end
+
+scaleHomoMenu = uimenu(transformMenu, 'Label', 'Scale back (sandpile epimorphism)'); 
+scalings = 2:40;
+for scaling = scalings
+    uimenu(scaleHomoMenu, 'Label',...
+        sprintf('%g fold', scaling), ...
+        'Callback', @(figH, ~)scaleEpimorphismBack(figH, scaling));
 end
 
 %% Menu: Drop deterministic
@@ -771,31 +789,39 @@ function scaleHomomorphism(figH, scaling)
         errordlg('Function only supported on NxM rectangular domains.', 'Invalid Input');
         return;
     end
-    N = size(S, 1);
-    Nnew = scaling*(N+1)-1;
-    M = size(S, 2);
-    Mnew = scaling*(M+1)-1;
-%     if max(Nnew, Mnew) > 45
-%         choice = questdlg('The calculation of the group homomorphism for sandpiles with a resulting width or height greater than 45 can take very long. Continue anyways?', ...
-%             'Long calculations', ...
-%             'Yes','No', 'No');
-%         if strcmpi(choice, 'No')
-%             return;
-%         end
-%     end
-%     
-%     if ~isempty(which('sym'))
-%         typeName = 'sym';
-%     elseif ~isempty(which('vpi'))
-%         typeName = 'vpi';
-%     else
-%         typeName = 'double';
-%     end
     typeName = 'double';
     try
        S = scalePile(S, scaling, 'typeName', typeName, 'returnTypeName', 'double');
-       % [c1, c2, time] = pile2coord(S, 'typeName', typeName, 'returnTypeName', 'double');
-       % S = coord2pile(c1,c2, time, scaling, 'typeName', typeName, 'returnTypeName', 'double');
+       plotMain(S, figH);
+    catch ex  
+        errordlg(sprintf('Could not scale configuration: %s',ex.message), 'Error occured');
+        return;
+    end
+end
+function scaleEpimorphismBack(figH, scaling)
+    S = getPile(figH);
+    if any(isinf(S(:)))
+        errordlg('Function only supported on NxM rectangular domains.', 'Invalid Input');
+        return;
+    end
+    typeName = 'double';
+    try
+       S = scaleEpiBackPile(S, scaling, 'typeName', typeName, 'returnTypeName', 'double');
+       plotMain(S, figH);
+    catch ex  
+        errordlg(sprintf('Could not scale configuration: %s',ex.message), 'Error occured');
+        return;
+    end
+end
+function scaleEpimorphism(figH, scaling)
+    S = getPile(figH);
+    if any(isinf(S(:)))
+        errordlg('Function only supported on NxM rectangular domains.', 'Invalid Input');
+        return;
+    end
+    typeName = 'double';
+    try
+       S = scaleEpiPile(S, scaling, 'typeName', typeName, 'returnTypeName', 'double');
        plotMain(S, figH);
     catch ex  
         errordlg(sprintf('Could not scale configuration: %s',ex.message), 'Error occured');
@@ -1079,6 +1105,23 @@ function customFill(figH)
     variables.D = retrievePile(figH, 'D');
     defineSandpileDialog(variables, callback);
 
+end
+function createPileFromBackground(figH, background)
+    S = getPile(figH);
+    N = size(S, 1);
+    M = size(S, 2);
+    n = size(background, 1);
+    m = size(background, 2);
+    S = repmat(background, ceil(N/n), ceil(M/m));
+    N1 = size(S, 1);
+    M1 = size(S, 2);
+    S = S(1+floor((N1-N)/2): end-ceil((N1-N)/2), 1+floor((M1-M)/2): end-ceil((M1-M)/2));
+    plotMain(S, figH);
+end
+function customBackground(figH)
+    callback = @(T) createPileFromBackground(figH, T);
+    variables = struct();
+    defineBackgroundDialog(variables, callback);
 end
 function S = retrievePile(figH, slot)
     figH = ancestor(figH,'figure');

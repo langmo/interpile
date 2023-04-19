@@ -170,6 +170,11 @@ else
     end
 end
 
+% Calculate these values again, since HsaveEven might have changed in inner
+% loop
+maxY = max([maxY, (size(HsaveEven, 1)-1)/2, abs(y)]);
+maxX = max([maxX, (size(HsaveEven, 2)-1)/2, abs(x)]);
+
 % store value in matrix
 HsaveEven(maxY+y+1, maxX+x+1) = Types.toElem(h, typeName);
 end
@@ -260,6 +265,12 @@ else
         end
     end
 end
+
+
+% Calculate these values again, since HsaveEven might have changed in inner
+% loop
+maxY = max([maxY, (size(HsaveOdd, 1)-1)/2, abs(y)]);
+maxX = max([maxX, (size(HsaveOdd, 2)-1)/2, abs(x)]);
 
 % store value in matrix
 HsaveOdd(maxY+y+1, maxX+x+1) = Types.toElem(h, typeName);
