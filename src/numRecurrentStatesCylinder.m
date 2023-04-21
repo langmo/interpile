@@ -4,6 +4,11 @@ function varargout = numRecurrentStatesCylinder(N,M,C, varargin)
 % vertex, where n=1..N and m=1..M. Glue the vertex (i,1) to
 % (i+c, M). Let k be the number of direct neighbors of a vertex in the
 % resulting domain. The vertex has than 4-k additional edges to the sink.
+% Usage:
+% - numRecurrentStatesCylinder(N,M,C)
+%   Prints the result to the console.
+% - result = numRecurrentStatesCylinder(N,M,C)
+%   Returns the factorization of the group order.
 
 % Copyright (C) 2018-2023 Moritz Lang
 % 
